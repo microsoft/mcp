@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.MySql.Services;
+using Azure.ResourceManager;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using NSubstitute;
 using Xunit;
 
@@ -18,7 +21,11 @@ public class MySqlServiceServerNameValidationTests
 
     public MySqlServiceServerNameValidationTests()
     {
-        var azureService = Substitute.For<IAzureService>();
+        var azureService = AzureServiceTestHelpers.CreateAzureService();
+        var cloudConfiguration = Substitute.For<IAzureCloudConfiguration>();
+        cloudConfiguration.CloudType.Returns(AzureCloudConfiguration.AzureCloud.AzurePublicCloud);
+        cloudConfiguration.ArmEnvironment.Returns(ArmEnvironment.AzurePublicCloud);
+        azureService.CloudConfiguration.Returns(cloudConfiguration);
 
         _mysqlService = new MySqlService(azureService);
     }
@@ -41,6 +48,50 @@ public class MySqlServiceServerNameValidationTests
                 TestContext.Current.CancellationToken));
 
         Assert.Contains("not a valid Azure Database for MySQL hostname", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("server.mysql.database.azure.com", "public")]
+    [InlineData("server.mysql.database.chinacloudapi.cn", "china")]
+    [InlineData("server.mysql.database.usgovcloudapi.net", "government")]
+    public void ValidateServerHostname_ValidCloudHost_ReturnsCanonicalHost(string hostname, string cloud)
+    {
+        var armEnvironment = cloud switch
+        {
+            "china" => ArmEnvironment.AzureChina,
+            "government" => ArmEnvironment.AzureGovernment,
+            _ => ArmEnvironment.AzurePublicCloud
+        };
+
+        Assert.Equal(hostname, MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), hostname));
+    }
+
+    [Theory]
+    [InlineData("server.mysql.database.chinacloudapi.cn")]
+    [InlineData("server.mysql.database.azure.com.evil.example")]
+    [InlineData("evil.example@server.mysql.database.azure.com")]
+    [InlineData("server.mysql.database.azure.com:3306")]
+    public void ValidateServerHostname_InvalidPublicCloudHost_ThrowsArgumentException(string hostname)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: ArmEnvironment.AzurePublicCloud), hostname));
+    }
+
+    [Theory]
+    [InlineData("mysql.database.azure.com", "public")]
+    [InlineData("mysql.database.chinacloudapi.cn", "china")]
+    [InlineData("mysql.database.usgovcloudapi.net", "government")]
+    public void ValidateServerHostname_DomainRoot_ThrowsArgumentException(string hostname, string cloud)
+    {
+        var armEnvironment = cloud switch
+        {
+            "china" => ArmEnvironment.AzureChina,
+            "government" => ArmEnvironment.AzureGovernment,
+            _ => ArmEnvironment.AzurePublicCloud
+        };
+
+        Assert.Throws<ArgumentException>(() =>
+            MySqlService.ValidateServerHostname(AzureServiceTestHelpers.CreateAzureService(armEnvironment: armEnvironment), hostname));
     }
 
     [Theory]

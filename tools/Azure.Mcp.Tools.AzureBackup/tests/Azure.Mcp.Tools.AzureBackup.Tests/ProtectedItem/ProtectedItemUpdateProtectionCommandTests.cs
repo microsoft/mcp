@@ -290,4 +290,37 @@ public class ProtectedItemUpdateProtectionCommandTests : SubscriptionCommandUnit
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ExecuteAsync_OperationIdOnly_SurfacesOperationIdAndLeavesJobIdNull()
+    {
+        // Arrange: the service could not resolve a ConfigureBackup job and instead returns the
+        // async operation id. The operation id must surface in its own field and must NOT be
+        // reported as a jobId (which would 404 on 'azurebackup job get').
+        const string operationId = "11111111-2222-3333-4444-555555555555";
+        Service.UpdateProtectionAsync(
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<DiskExclusionSpec?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(new ProtectResult(
+                "Accepted", "vm1-backup", JobId: null,
+                $"VM protection update initiated. Operation id '{operationId}' tracks the request.",
+                OperationId: operationId));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--datasource-id", VmId,
+            "--policy", "NewPolicy");
+
+        // Assert
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ProtectedItemUpdateProtectionCommandResult);
+        Assert.Equal("Accepted", result.Result.Status);
+        Assert.Null(result.Result.JobId);
+        Assert.Equal(operationId, result.Result.OperationId);
+    }
 }
+

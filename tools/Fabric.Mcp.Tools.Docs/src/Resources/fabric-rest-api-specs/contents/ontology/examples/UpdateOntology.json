@@ -14,7 +14,10 @@
                 "displayName": "Ontology_New_Name",
                 "description": "A new description for ontology.",
                 "type": "Ontology",
-                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "properties": {
+                    "generation": 2
+                }
             }
         }
     }

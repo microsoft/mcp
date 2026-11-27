@@ -1,12 +1,51 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Core;
+using Azure.ResourceManager.ResilienceManagement;
 using Microsoft.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Drills;
 
 internal static class DrillActionValidation
 {
+    private static readonly ResourceType ServiceGroupResourceType = new("Microsoft.Management/serviceGroups");
+
+    public static void ValidateSelectedResourceIds(IReadOnlyList<string>? resourceIds, string serviceGroup, ValidationResult validationResult, string? drill = null)
+    {
+        if (resourceIds is not null && (resourceIds.Count == 0 ||
+            resourceIds.Any(id => string.IsNullOrWhiteSpace(id) || !IsSelectedResourceId(id, serviceGroup, drill))))
+        {
+            var expectedResource = drill is null
+                ? "recovery-resource ID under the requested service group"
+                : "drill-resource ID under the requested service group and drill";
+            validationResult.Errors.Add($"Selected resource IDs must contain at least one full {expectedResource} with a GUID resource name.");
+        }
+    }
+
+    public static bool IsDrillResourceId(string resourceId, string serviceGroup, string drill)
+        => !string.IsNullOrWhiteSpace(resourceId) && IsSelectedResourceId(resourceId, serviceGroup, drill);
+
+    private static bool IsSelectedResourceId(string resourceId, string serviceGroup, string? drill)
+    {
+        try
+        {
+            var parsed = new ResourceIdentifier(resourceId);
+            ResourceIdentifier? parentId = parsed.Parent;
+            ResourceIdentifier? serviceGroupId = parentId?.Parent;
+            return parsed.ResourceType == (drill is null ? RecoveryMembersResource.ResourceType : DrillTargetResource.ResourceType) &&
+                parentId?.ResourceType == (drill is null ? RecoveryPlanResource.ResourceType : ResilienceManagementDrillResource.ResourceType) &&
+                (drill is null || string.Equals(parentId.Name, drill, StringComparison.OrdinalIgnoreCase)) &&
+                serviceGroupId?.ResourceType == ServiceGroupResourceType &&
+                string.Equals(serviceGroupId.Name, serviceGroup, StringComparison.OrdinalIgnoreCase) &&
+                Guid.TryParse(parsed.Name, out _);
+        }
+        catch (Exception ex) when (ex is ArgumentException or FormatException)
+        {
+            return false;
+        }
+    }
+
     private static readonly HashSet<string> s_modes = new(StringComparer.OrdinalIgnoreCase)
     {
         "Failover",

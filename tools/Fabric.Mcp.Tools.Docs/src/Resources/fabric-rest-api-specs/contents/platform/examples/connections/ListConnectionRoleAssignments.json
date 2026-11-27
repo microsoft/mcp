@@ -37,6 +37,14 @@
                             "type": "User"
                         },
                         "role": "UserWithReshare"
+                    },
+                    {
+                        "id": "7f2c9a10-4d3e-4b8a-9c1f-2e6d8b0a5c4e",
+                        "principal": {
+                            "id": "7f2c9a10-4d3e-4b8a-9c1f-2e6d8b0a5c4e",
+                            "type": "User"
+                        },
+                        "role": "PendingOwner"
                     }
                 ]
             }

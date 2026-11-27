@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
 using Microsoft.Mcp.Core.Areas.Server.Commands.Discovery;
+using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Configuration;
 using NSubstitute;
 using Xunit;
@@ -13,9 +14,11 @@ namespace Azure.Mcp.Core.Tests.Areas.Server.Commands.Discovery;
 
 public class ConsolidatedToolDiscoveryStrategyTests
 {
-    private static ConsolidatedToolDiscoveryStrategy CreateStrategy(ServerRuntimeConfiguration? configuration = null)
+    private static ConsolidatedToolDiscoveryStrategy CreateStrategy(
+        ServerRuntimeConfiguration? configuration = null,
+        ICommandFactory? commandFactory = null)
     {
-        var factory = CommandFactoryHelpers.CreateCommandFactory();
+        ICommandFactory factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
         var runtimeConfiguration = Microsoft.Extensions.Options.Options.Create(configuration ?? new ServerRuntimeConfiguration());
         var configurationOptions = Microsoft.Extensions.Options.Options.Create(new McpServerConfiguration
@@ -66,6 +69,23 @@ public class ConsolidatedToolDiscoveryStrategyTests
     }
 
     [Fact]
+    public void CreateConsolidatedCommandFactory_PreservesOriginalRegistrations()
+    {
+        ICommandFactory original = CommandFactoryHelpers.CreateCommandFactory();
+        ConsolidatedToolDiscoveryStrategy strategy = CreateStrategy(commandFactory: original);
+        ICommandFactory consolidated = strategy.CreateConsolidatedCommandFactory();
+
+        Assert.NotEmpty(consolidated.AllCommands);
+        foreach ((string routingName, CommandRegistration registration) in consolidated.AllCommands)
+        {
+            string displayedArea = Assert.IsType<string>(consolidated.GetServiceArea(routingName));
+            string originalName = routingName[(displayedArea.Length + 1)..];
+            Assert.Same(original.FindCommandRegistration(originalName), registration);
+            Assert.Equal(original.GetServiceArea(originalName), registration.ToolNamespaceName);
+        }
+    }
+
+    [Fact]
     public void CreateConsolidatedCommandFactory_WithNamespaceFilter_FiltersCommands()
     {
         // Arrange
@@ -96,7 +116,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var allCommands = factory.AllCommands;
         Assert.NotEmpty(allCommands);
         // All commands should be read-only
-        Assert.All(allCommands.Values, cmd => Assert.True(cmd.Metadata.ReadOnly));
+        Assert.All(allCommands.Values, registration => Assert.True(registration.Command.Metadata.ReadOnly));
     }
 
     [Fact]

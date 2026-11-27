@@ -41,7 +41,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger, ICosmosSe
             var result = CosmosQueryValidator.EnsureReadOnlySelect(options.Query);
             if (!string.IsNullOrEmpty(result))
             {
-                validationResult.Errors.Add(result);
+                validationResult.AddError(result, "Invalid Cosmos query.");
             }
         }
     }

@@ -54,7 +54,7 @@ public sealed class CreateDataflowCommand(ILogger<CreateDataflowCommand> logger,
         {
             _logger.LogError("Error creating dataflow '{DisplayName}' in workspace {WorkspaceId}: {Error}",
                 options.DisplayName, options.WorkspaceId, result.Error);
-            HandleException(context, new Exception(result.Error));
+            HandleException(context, new InvalidOperationException(result.Error));
         }
 
         return context.Response;

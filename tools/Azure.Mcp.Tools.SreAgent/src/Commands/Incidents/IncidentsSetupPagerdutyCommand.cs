@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     OpenWorld = false,
     ReadOnly = false,
     Secret = true,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetupPagerdutyCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<IncidentConnectorPagerDutyOptions, SreAgentTextResult>(subscriptionResolver)
 {
@@ -43,7 +43,8 @@ public sealed partial class IncidentsSetupPagerdutyCommand(ILogger<IncidentsSetu
         var apiKey = Environment.GetEnvironmentVariable(options.ApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            validationResult.Errors.Add($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.");
+            validationResult.AddError($"PagerDuty API key environment variable '{options.ApiKeyEnv}' is not set.",
+                "PagerDuty API key environment variable not set.");
         }
     }
 

@@ -37,7 +37,7 @@
       },
       "CreateReportRequest": {
           "description": "Create report request payload.",
-          "required": ["displayName", "definition"],
+          "required": ["displayName"],
           "properties": {
               "displayName": {
                   "description": "The report display name. The display name must follow naming rules according to item type.",
@@ -56,13 +56,30 @@
                   "readOnly": false
               },
               "definition": {
-                  "description": "The report public definition.",
+                  "description": "The report public definition. Either `definition` or `creationPayload` is required. You can't use both at the same time.",
                   "$ref": "#/definitions/ReportDefinition",
+                  "readOnly": false
+              },
+              "creationPayload": {
+                  "description": "The creation payload for creating a report connected to an existing semantic model. Either `definition` or `creationPayload` is required. You can't use both at the same time.",
+                  "$ref": "#/definitions/ReportCreationPayload",
                   "readOnly": false
               },
               "sensitivityLabelSettings": {
                   "description": "The sensitivity label settings for the report.",
                   "$ref": "../common/definitions.json#/definitions/SensitivityLabelSettings",
+                  "readOnly": false
+              }
+          }
+      },
+      "ReportCreationPayload": {
+          "description": "Creation payload for creating a report without a definition.",
+          "type": "object",
+          "required": ["semanticModelReference"],
+          "properties": {
+              "semanticModelReference": {
+                  "description": "A reference to the semantic model to connect the report to. The semantic model must be accessible to the caller.",
+                  "$ref": "../common/definitions.json#/definitions/ItemReferenceById",
                   "readOnly": false
               }
           }

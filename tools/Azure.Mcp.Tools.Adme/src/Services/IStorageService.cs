@@ -18,7 +18,8 @@ public interface IStorageService
         long? version,
         IReadOnlyList<string>? attributes,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists the numeric versions of a record.
@@ -28,7 +29,8 @@ public interface IStorageService
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task<AdmeResponse<QueryRecordsResponse>> QueryRecordsByKindAsync(
         string endpoint,
@@ -37,7 +39,8 @@ public interface IStorageService
         int limit,
         string? cursor,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task<AdmeResponse<FetchRecordsResponse>> FetchRecordsAsync(
         string endpoint,
@@ -46,19 +49,22 @@ public interface IStorageService
         IReadOnlyList<string>? attributes,
         bool frameOfReference,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task<AdmeResponse<UpsertRecordsResponse>> UpsertRecordsAsync(
         string endpoint,
         string dataPartition,
         IReadOnlyList<StorageRecord> records,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     Task DeleteRecordAsync(
         string endpoint,
         string dataPartition,
         string id,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

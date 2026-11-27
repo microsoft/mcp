@@ -35,7 +35,8 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger, ICliG
 
         if (!s_allowedCliTypeValues.Contains(options.CliType.ToLowerInvariant()))
         {
-            validationResult.Errors.Add($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}");
+            validationResult.AddError($"Invalid CLI type: {options.CliType}. Supported values are: {string.Join(", ", s_allowedCliTypeValues)}",
+                "Invalid CLI type.");
         }
     }
 

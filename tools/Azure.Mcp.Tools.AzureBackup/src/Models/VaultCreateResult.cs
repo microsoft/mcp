@@ -8,4 +8,6 @@ public sealed record VaultCreateResult(
     string Name,
     string VaultType,
     string? Location,
-    string? ProvisioningState);
+    string? ProvisioningState,
+    string? PublicNetworkAccess = null,
+    string? StorageRedundancy = null);

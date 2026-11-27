@@ -1,0 +1,21 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "deploymentPlanId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "updateDeploymentPlanRequest": {
+            "displayName": "DeploymentPlan's New name",
+            "description": "Deployment plan's new description."
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "displayName": "DeploymentPlan's New name",
+                "description": "Deployment plan's new description.",
+                "type": "DeploymentPlan",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        }
+    }
+}

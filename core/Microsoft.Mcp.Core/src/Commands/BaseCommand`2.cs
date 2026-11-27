@@ -16,6 +16,7 @@ using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Core.Options;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Microsoft.Mcp.Core.Commands;
 
@@ -114,6 +115,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             var errorMessage = string.Join('\n', validationResult.Errors);
             SetValidationError(context.Response, errorMessage, HttpStatusCode.BadRequest);
+            context.Response.TelemetryFailureMessage = validationResult.TelemetrySafeMessage;
+            CaptureTelemetryFailureMessage(context, context.Response);
             return context.Response!;
         }
 
@@ -174,9 +177,8 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
                 response.Message = cve.Message;
             }
 
-            // Include the command validation exception message as it should be safe. Requires custom validators to
-            // exclude any sensitive information from their error messages.
-            context.Activity?.SetTag(TagName.ExceptionMessage, response.Message);
+            response.TelemetryFailureMessage = cve.TelemetrySafeMessage;
+            context.Activity?.SetTag(TagName.ExceptionMessage, cve.TelemetrySafeMessage);
             response.Results = null;
             return;
         }
@@ -194,12 +196,14 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
             // For MsalServiceException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalServiceException.ErrorCode);
             exceptionDetails.Add("CorrelationId", msalServiceException.CorrelationId);
+            AddAadStsErrorCode(exceptionDetails, msalServiceException.Message);
         }
         else if (ex is MsalClientException msalClientException)
         {
             // For MsalClientException, we can include the error code and correlation ID.
             exceptionDetails.Add("ErrorCode", msalClientException.ErrorCode);
             exceptionDetails.Add("CorrelationId", msalClientException.CorrelationId);
+            AddAadStsErrorCode(exceptionDetails, msalClientException.Message);
         }
 
         context.Activity?.SetTag(TagName.ExceptionMessage, exceptionDetails);
@@ -218,11 +222,21 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         response.Results = ResponseResult.Create(result, CoreJsonContext.Default.ExceptionResult);
     }
 
+    private static void AddAadStsErrorCode(JsonObject exceptionDetails, string? message)
+    {
+        // MSAL error codes like "invalid_request" are generic; the AADSTS code identifies the actual cause.
+        if (MsalErrorHelper.GetAadStsErrorCode(message) is string aadStsErrorCode)
+        {
+            exceptionDetails.Add("AadStsErrorCode", aadStsErrorCode);
+        }
+    }
+
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
 
     protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
         ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
+        OnBehalfOfUserTokenRequiredException => HttpStatusCode.Forbidden,
         InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
         HttpRequestException httpEx => httpEx.StatusCode ?? HttpStatusCode.ServiceUnavailable,
         RequestFailedException reqFailedEx => (HttpStatusCode)reqFailedEx.Status,
@@ -257,6 +271,7 @@ public abstract class BaseCommand<[DynamicallyAccessedMembers(TrimAnnotations.Co
         {
             commandResponse.Status = HttpStatusCode.BadRequest;
             commandResponse.Message = string.Join('\n', result.Errors);
+            commandResponse.TelemetryFailureMessage = result.TelemetrySafeMessage;
         }
 
         return result;

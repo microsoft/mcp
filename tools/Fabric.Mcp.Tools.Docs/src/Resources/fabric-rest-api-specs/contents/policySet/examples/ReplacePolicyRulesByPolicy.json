@@ -1,0 +1,120 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "policySetId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "beta": true,
+        "replacePolicyRulesByPolicyRequest": {
+            "policy": "ItemCreation",
+            "policyRules": [
+                {
+                    "displayName": "Item creation rule 1",
+                    "description": "Allow item creation under specified conditions.",
+                    "conditions": [
+                        {
+                            "type": "Dynamic",
+                            "targetProperty": "workspace.id",
+                            "predicate": {
+                                "operator": "AnyOf",
+                                "values": [
+                                    "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                ]
+                            }
+                        }
+                    ],
+                    "effects": [
+                        {
+                            "type": "Allow"
+                        }
+                    ]
+                },
+                {
+                    "displayName": "Item creation rule 2",
+                    "description": "Allow item creation for principals in a specific group.",
+                    "conditions": [
+                        {
+                            "type": "Dynamic",
+                            "targetProperty": "principal.groups.id",
+                            "predicate": {
+                                "operator": "AnyOf",
+                                "values": [
+                                    "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                ]
+                            }
+                        }
+                    ],
+                    "effects": [
+                        {
+                            "type": "Allow"
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "6c4c2de8-2e80-4e1e-9fb0-4edc6cb2a6d2",
+                        "displayName": "Item creation rule 1",
+                        "description": "Allow item creation under specified conditions.",
+                        "policy": "ItemCreation",
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "targetProperty": "workspace.id",
+                                "predicate": {
+                                    "operator": "AnyOf",
+                                    "values": [
+                                        "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                    ]
+                                }
+                            }
+                        ],
+                        "createdDateTime": "2026-01-29T00:00:00Z",
+                        "lastModifiedDateTime": "2026-01-29T00:00:00Z",
+                        "modifiedByUser": {
+                            "id": "5b5d6d9f-2f3a-4ce2-9d3b-5b65f82f9bf1",
+                            "type": "User"
+                        },
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "6cf1f2e4-4c35-4bba-8d3f-3fdd2a1d6e22",
+                        "displayName": "Item creation rule 2",
+                        "description": "Allow item creation for principals in a specific group.",
+                        "policy": "ItemCreation",
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "targetProperty": "principal.groups.id",
+                                "predicate": {
+                                    "operator": "AnyOf",
+                                    "values": [
+                                        "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                    ]
+                                }
+                            }
+                        ],
+                        "createdDateTime": "2026-01-29T00:00:00Z",
+                        "lastModifiedDateTime": "2026-01-29T00:00:00Z",
+                        "modifiedByUser": {
+                            "id": "5b5d6d9f-2f3a-4ce2-9d3b-5b65f82f9bf1",
+                            "type": "User"
+                        },
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

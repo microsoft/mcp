@@ -5,10 +5,13 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models.Search;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -48,7 +51,7 @@ public sealed class SearchServiceTests
                 ExcludedFields = ["data.Big"],
                 HighlightedFields = ["data.FieldID"],
             },
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(2, response.Result.TotalCount);
         Assert.Equal(2, Assert.Single(response.Result.Aggregations!).Count);
@@ -68,7 +71,7 @@ public sealed class SearchServiceTests
         await service.QueryAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             new SearchQueryRequest { Kind = ["*:*:*:*"] }, null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("""{"kind":["*:*:*:*"]}""", handler.LastRequestBody);
     }
@@ -91,7 +94,7 @@ public sealed class SearchServiceTests
                 ReturnedFields = ["id"],
             },
             false,
-            TestConstants.Tenant, TestContext.Current.CancellationToken);
+            TestConstants.Tenant, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("NEXT", response.Result.Cursor);
         Assert.Equal(42, response.Result.TotalCount);
@@ -115,7 +118,7 @@ public sealed class SearchServiceTests
             new SearchCursorRequest { Kind = [TestConstants.WellKind] },
             true,
             null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(
             "/api/search/v2/query_with_cursor?search_after=true",
@@ -137,25 +140,25 @@ public sealed class SearchServiceTests
         await Assert.ThrowsAnyAsync<ArgumentException>(() => service.QueryAsync(
             TestConstants.Endpoint, TestConstants.DataPartition,
             new SearchQueryRequest { Kind = kinds! }, null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Null(handler.LastRequest);
     }
 
     private static SearchService CreateService(StubHttpMessageHandler handler) =>
-        new(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
     private static SearchService CreateService(IHttpClientFactory httpClientFactory) =>
-        new(CreateCredentialProvider(), httpClientFactory);
+        new(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), httpClientFactory);
 
-    private static IAzureTokenCredentialProvider CreateCredentialProvider()
+    private static IAzureService CreateAzureService()
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken("fake-token", DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return provider;
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        return azureService;
     }
 
     private static StubHttpMessageHandler JsonHandler(HttpStatusCode status, string content) =>

@@ -16,11 +16,11 @@ param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string = newGuid()
 
-@description('The VM size to use for testing.')
-param vmSize string = 'Standard_B2s'
+@description('The location of the resources. Defaults to westus2 because some test subscriptions have no VM SKUs enabled in westus.')
+param location string = 'westus2'
 
-// Compute ignores the default location from eng/common
-var location string = 'eastus2'
+@description('The VM size to use for testing.')
+param vmSize string = 'Standard_B2as_v2'
 
 // Virtual Network
 resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
@@ -240,6 +240,8 @@ output resourceGroupName string = resourceGroup().name
 output diskName string = testDisk.name
 output location string = location
 output galleryImageVersionId string = galleryImageVersion.id
+output availableVmSku string = vmSize
+output availableVmSkuLocation string = location
 
 // Create a test managed disk
 resource testDisk 'Microsoft.Compute/disks@2023-10-02' = {

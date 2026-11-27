@@ -1,0 +1,266 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Buffers;
+using System.Text.Json;
+using Azure.Mcp.Tools.Monitor.Models.HealthModels;
+
+namespace Azure.Mcp.Tools.Monitor.Services;
+
+/// <summary>
+/// The calculations of an inspection over CloudHealth API payloads: which entities it selects, and which of their
+/// fields it keeps. Payloads are never rearranged, renamed or merged. A projection only leaves fields out. No I/O.
+/// </summary>
+internal static class HealthModelInspection
+{
+    internal static readonly TimeSpan DefaultWindow = TimeSpan.FromHours(24);
+
+    internal static string? Name(JsonElement entity) => Text(entity, "name");
+
+    internal static string? HealthState(JsonElement entity) => Text(Property(entity, "properties"), "healthState");
+
+    internal static bool Admits(HealthModelHealthFilter? filter, string? state) => filter switch
+    {
+        null => true,
+        HealthModelHealthFilter.NotHealthy => Admits(HealthModelHealthFilter.Degraded, state)
+            || Admits(HealthModelHealthFilter.Unhealthy, state)
+            || Admits(HealthModelHealthFilter.Unknown, state),
+        _ => Is(state, filter.ToString()!),
+    };
+
+    /// <summary>
+    /// The window to send for history and annotations: it ends at <paramref name="endAt"/>, else <paramref name="timestamp"/>,
+    /// and starts a day before its end unless given. With neither, the service's own default applies.
+    /// For example, an endAt of 2026-11-01T12:00Z alone gives the window from 2026-10-31T12:00Z to then.
+    /// </summary>
+    internal static (DateTimeOffset? StartAt, DateTimeOffset? EndAt) Window(DateTimeOffset? startAt, DateTimeOffset? endAt, DateTimeOffset? timestamp)
+    {
+        var end = endAt ?? timestamp;
+        return (startAt ?? end - DefaultWindow, end);
+    }
+
+    /// <summary>The page of <paramref name="items"/> after the first <paramref name="skip"/>, and where the next page starts while more remain.</summary>
+    internal static (List<T> Page, int? NextSkip) Page<T>(IReadOnlyList<T> items, int skip, int max) =>
+        ([.. items.Skip(skip).Take(max)], max < items.Count - skip ? skip + max : null);
+
+    /// <summary>
+    /// Walks the dependency graph breadth-first from <paramref name="start"/> and returns it and each entity reached,
+    /// once, with the step it was first reached from. <see cref="HealthModelWalk.Causes"/> follows only children that drive
+    /// their parent's state. A walk reaches each listed entity at most once, so it needs no cap of its own.
+    /// </summary>
+    internal static List<HealthModelWalkStep> Walk(
+        IReadOnlyDictionary<string, JsonElement> entities,
+        IEnumerable<JsonElement> relationships,
+        string start,
+        HealthModelWalk walk)
+    {
+        var next = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var properties in relationships.Select(edge => Property(edge, "properties")))
+        {
+            if (Text(properties, "parentEntityName") is { } parent && Text(properties, "childEntityName") is { } child)
+            {
+                var (from, to) = walk == HealthModelWalk.Dependents ? (child, parent) : (parent, child);
+                (next.TryGetValue(from, out var list) ? list : next[from] = []).Add(to);
+            }
+        }
+
+        var found = new List<HealthModelWalkStep> { new(null, start, entities[start]) };
+        var seen = new HashSet<string>([start], StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < found.Count; index++)
+        {
+            var step = found[index];
+            var children = next.GetValueOrDefault(Name(step.Entity) ?? string.Empty) ?? [];
+            var best = children.Select(child => entities.TryGetValue(child, out var entity) && !Suppressed(entity) ? Severity(entity) : null).Min();
+            foreach (var name in children)
+            {
+                if (entities.TryGetValue(name, out var reached) && (walk != HealthModelWalk.Causes || Drives(step.Entity, reached, best)) && seen.Add(name))
+                {
+                    found.Add(new(step, name, reached));
+                }
+            }
+        }
+        return found;
+    }
+
+    // A child that is not suppressed drives a parent that is Degraded or Unhealthy when it is Degraded or Unhealthy
+    // itself. A healthy parent has no state to explain, for example a MinHealthy rollup that is within its threshold.
+    // BestOf takes the least severe state of the children (best), so there a child drives only when no sibling is
+    // healthier. An Unknown child never beats a known state under WorstOf (the default) or BestOf, and MinHealthy and
+    // MaxNotHealthy count it only when the parent's dependencies set ignoreUnknown to false. Otherwise it drives only a
+    // parent that is Unknown itself.
+    private static bool Drives(JsonElement parent, JsonElement child, int? best)
+    {
+        if (Suppressed(child))
+        {
+            return false;
+        }
+        var dependencies = Property(Property(Property(parent, "properties"), "signalGroups"), "dependencies");
+        var parentNotHealthy = Severity(parent) > 0;
+        return Severity(child) is int severity and > 0
+            ? parentNotHealthy && (!Is(Text(dependencies, "aggregationType"), "BestOf") || severity <= best)
+            : Is(HealthState(child), "Unknown") && (Is(HealthState(parent), "Unknown") || (parentNotHealthy && CountsUnknown(dependencies)));
+    }
+
+    private static bool Suppressed(JsonElement entity) => Is(Text(Property(entity, "properties"), "impact"), "Suppressed");
+
+    // How severe a known state is: Healthy 0, Degraded 1, Unhealthy 2. Unknown has no severity.
+    private static int? Severity(JsonElement entity) =>
+        HealthState(entity) is { } state && s_severity.TryGetValue(state, out var severity) ? severity : null;
+
+    private static readonly Dictionary<string, int> s_severity = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Healthy"] = 0,
+        ["Degraded"] = 1,
+        ["Unhealthy"] = 2,
+    };
+
+    private static bool CountsUnknown(JsonElement dependencies) =>
+        (Is(Text(dependencies, "aggregationType"), "MinHealthy") || Is(Text(dependencies, "aggregationType"), "MaxNotHealthy"))
+        && Property(dependencies, "ignoreUnknown").ValueKind == JsonValueKind.False;
+
+    // API values such as states and rollup types are compared ignoring case, as the health filter compares them.
+    private static bool Is(string? value, string expected) => string.Equals(value, expected, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>The names of the entity's signals and of the signal definitions they name, across every signal group.</summary>
+    internal static (List<string> Signals, List<string> Definitions) SignalNames(JsonElement entity)
+    {
+        var signals = new List<string>();
+        var definitions = new List<string>();
+        if (Property(Property(entity, "properties"), "signalGroups") is { ValueKind: JsonValueKind.Object } groups)
+        {
+            foreach (var group in groups.EnumerateObject())
+            {
+                // A group's Resource Health signal has a history of its own while it is enabled.
+                if (Property(group.Value, "resourceHealth") is { ValueKind: JsonValueKind.Object } resourceHealth
+                    && (Text(resourceHealth, "enabled") is not { } enabled || Is(enabled, "Enabled"))
+                    && Text(resourceHealth, "signalName") is { } resourceHealthSignal)
+                {
+                    signals.Add(resourceHealthSignal);
+                }
+                // A group lists its signals under "signals", as in azureResource.signals.
+                // externalSignals is the list itself.
+                var held = Property(group.Value, "signals") is { ValueKind: JsonValueKind.Array } list ? list : group.Value;
+                if (held.ValueKind != JsonValueKind.Array)
+                {
+                    continue;
+                }
+                foreach (var signal in held.EnumerateArray())
+                {
+                    if (Text(signal, "name") is { } name)
+                    {
+                        signals.Add(name);
+                    }
+                    if (Text(signal, "signalDefinitionName") is { } definition)
+                    {
+                        definitions.Add(definition);
+                    }
+                }
+            }
+        }
+        return (signals, definitions);
+    }
+
+    /// <summary>
+    /// The paths of <paramref name="fields"/> inside one payload of an item, such as entity, relative to it. A field
+    /// names its payload by its first segment, so entity.properties.healthState gives properties.healthState. A field
+    /// that keeps the whole payload, the payload's name, gives an empty path.
+    /// </summary>
+    internal static List<string> PathsFor(IEnumerable<string> fields, string payload) =>
+    [
+        .. fields
+            .Where(field => field == payload || field.StartsWith(payload + ".", StringComparison.Ordinal))
+            .Select(field => field.Length > payload.Length ? field[(payload.Length + 1)..] : string.Empty),
+    ];
+
+    /// <summary>
+    /// Keeps only the fields of <paramref name="source"/> named by dotted <paramref name="paths"/>, in place: names,
+    /// nesting and array order stay as they are. A path keeps everything below it, and array elements are walked
+    /// through, so <c>properties.signalGroups.azureResource.signals.status</c> keeps the status of every signal. An
+    /// empty path keeps everything.
+    /// </summary>
+    internal static JsonElement Project(JsonElement source, IEnumerable<string> paths)
+    {
+        var keep = new Fields();
+        foreach (var path in paths)
+        {
+            if (path.Length == 0)
+            {
+                return source;
+            }
+
+            var segments = path.Split('.');
+            var count = segments.Length;
+            var node = keep;
+            for (var index = 0; index < count && node is not null; index++)
+            {
+                var last = index == count - 1;
+                if (!node.TryGetValue(segments[index], out var child) || (last && child is not null))
+                {
+                    node[segments[index]] = child = last ? null : new Fields();
+                }
+                node = child;
+            }
+        }
+
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer))
+        {
+            Write(writer, source, keep);
+        }
+        using var document = JsonDocument.Parse(buffer.WrittenMemory);
+        return document.RootElement.Clone();
+    }
+
+    private static void Write(Utf8JsonWriter writer, JsonElement element, Fields? keep)
+    {
+        if (keep is null)
+        {
+            element.WriteTo(writer);
+        }
+        else if (element.ValueKind == JsonValueKind.Object)
+        {
+            writer.WriteStartObject();
+            foreach (var property in element.EnumerateObject())
+            {
+                if (keep.TryGetValue(property.Name, out var child) && Keeps(property.Value, child))
+                {
+                    writer.WritePropertyName(property.Name);
+                    Write(writer, property.Value, child);
+                }
+            }
+            writer.WriteEndObject();
+        }
+        else if (element.ValueKind == JsonValueKind.Array)
+        {
+            writer.WriteStartArray();
+            foreach (var item in element.EnumerateArray())
+            {
+                Write(writer, item, keep);
+            }
+            writer.WriteEndArray();
+        }
+        else
+        {
+            element.WriteTo(writer);
+        }
+    }
+
+    // Whether a projection keeps any field of the value. A value that no path matches is left out.
+    // For example, properties.signalGroups.azureResource.signals.status drops a signals list whose signals have no status.
+    private static bool Keeps(JsonElement element, Fields? keep) =>
+        keep is null || element.ValueKind switch
+        {
+            JsonValueKind.Object => element.EnumerateObject().Any(property => keep.TryGetValue(property.Name, out var child) && Keeps(property.Value, child)),
+            JsonValueKind.Array => element.EnumerateArray().Any(item => Keeps(item, keep)),
+            _ => false,
+        };
+
+    private static JsonElement Property(JsonElement element, string name) =>
+        element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var value) ? value : default;
+
+    private static string? Text(JsonElement element, string name) =>
+        Property(element, name) is { ValueKind: JsonValueKind.String } value ? value.GetString() : null;
+
+    // The fields a projection keeps below one object: a name with no children keeps that whole value.
+    private sealed class Fields() : Dictionary<string, Fields?>(StringComparer.Ordinal);
+}

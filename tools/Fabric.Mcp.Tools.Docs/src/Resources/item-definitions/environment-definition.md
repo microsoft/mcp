@@ -55,7 +55,6 @@ Describes the fields used to construct the `dynamic_executor_allocation`.
 | min_executors         | Integer             | true            | The minimum executor number for dynamic allocation. Minimum value is 1. The maximum value must be lower than the `maxExecutors`.  |
 | max_executors         | Integer             | true            | The maximum executor number for dynamic allocation. Minimum value is 1. The maximum value must be lower than the `maxNodeCount` instance pool.  |
 
-
 ### Example of spark public libraries `environment.yml` content decoded from Base64
 
 ```yaml

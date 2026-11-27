@@ -1,0 +1,33 @@
+{
+    "title": "List pool activations example",
+    "parameters": {
+        "workspaceId": "11111111-2222-3333-4444-555555555555",
+        "environmentId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "jobInstanceId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                        "name": "WeekdayMorningActivation",
+                        "capacityId": "99999999-8888-7777-6666-555555555555",
+                        "state": "Succeeded",
+                        "scheduledStartDateTime": "2025-06-01T08:00:00Z",
+                        "startDateTime": "2025-06-01T08:00:12Z",
+                        "scheduledEndDateTime": "2025-06-01T18:00:00Z",
+                        "endDateTime": "2025-06-01T18:00:05Z",
+                        "maxClustersToHydrate": 5,
+                        "clusterIdleTimeout": "PT30M",
+                        "customLivePoolLifespan": "PT12H",
+                        "isRecurring": true,
+                        "jobType": "SparkPool",
+                        "runtimeVersion": "1.3"
+                    }
+                ],
+                "continuationToken": "eyJjb250aW51YXRpb24iOiJ0b2tlbiJ9",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/11111111-2222-3333-4444-555555555555/environments/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee/poolActivations?continuationToken=eyJjb250aW51YXRpb24iOiJ0b2tlbiJ9"
+            }
+        }
+    }
+}

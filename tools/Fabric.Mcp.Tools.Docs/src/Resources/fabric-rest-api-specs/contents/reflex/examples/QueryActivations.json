@@ -1,0 +1,48 @@
+{
+  "title": "Query activations example",
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "reflexId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "queryActivationsRequest": {
+      "query": "ruleactivations_341301deecbd499ca5e60fcdc17ca3e2 | where ___time > ago(24h) | project ___time, System.RuleName, System.ObjectName, System.ActionType, System.Action.Teams.Headline | take 10"
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "tables": [
+          {
+            "tableName": "PrimaryResult",
+            "columns": [
+              {
+                "columnName": "___time",
+                "columnType": "DateTime"
+              },
+              {
+                "columnName": "System.RuleName",
+                "columnType": "String"
+              },
+              {
+                "columnName": "System.ObjectName",
+                "columnType": "String"
+              },
+              {
+                "columnName": "System.ActionType",
+                "columnType": "String"
+              },
+              {
+                "columnName": "System.Action.Teams.Headline",
+                "columnType": "String"
+              }
+            ],
+            "rows": [
+              ["2026-04-29T10:15:00Z", "High Temperature Alert", "Sensor-5", "Teams", "Temperature exceeded threshold"],
+              ["2026-04-29T10:20:00Z", "Low Battery Warning", "Device-12", "Email", "Battery below 10%"],
+              ["2026-04-29T11:05:00Z", "Disk Space Critical", "Server-3", "Teams", "Disk usage above 95%"]
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -3,6 +3,8 @@
 
 namespace VallyEvaluator.Models;
 
+using YamlDotNet.Serialization;
+
 public class Stimulus
 {
     public required string Name { get; set; }
@@ -11,6 +13,7 @@ public class Stimulus
 
     public Dictionary<string, string>? Tags { get; set; }
 
+    [YamlMember(Alias = "agent_environment", ApplyNamingConventions = false)]
     public string? Environment { get; set; }
 
     public List<StimulusGraderConfig>? Graders { get; set; }

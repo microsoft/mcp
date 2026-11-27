@@ -12,4 +12,5 @@ public record IoTHubDescription(
     string Sku,
     long Capacity,
     string State,
-    string HostName);
+    string HostName,
+    IReadOnlyList<RoutingEndpointDetails>? RoutingEndpoints = null);

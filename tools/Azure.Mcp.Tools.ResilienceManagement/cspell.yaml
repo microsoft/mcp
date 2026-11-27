@@ -7,11 +7,14 @@ version: "0.2"
 import:
   - ../../.vscode/cspell.json
 words:
+  - automationaccountid
   - deletedrillname
   - drillname
   - drillresourcename
   - drillrunsourcelocation
+  - drillsrecoveryplanname
   - enrollmentname
+  - failoverrunbookname
   - faultinjection
   - goalassignmentname
   - goaltemplatename
@@ -23,5 +26,6 @@ words:
   - reprotection
   - reprotects
   - resiliencemanagement
+  - rhro
   - servicegroupname
   - usageplanname

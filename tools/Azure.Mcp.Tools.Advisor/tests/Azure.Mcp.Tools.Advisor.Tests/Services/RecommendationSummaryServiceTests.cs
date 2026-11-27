@@ -11,28 +11,42 @@ namespace Azure.Mcp.Tools.Advisor.Tests.Services;
 public class RecommendationSummaryServiceTests
 {
     [Theory]
-    [InlineData("recommendation-type", true)]
-    [InlineData("category", true)]
-    [InlineData("impact", true)]
-    [InlineData("resource-type", false)]
-    [InlineData("status", false)]
-    [InlineData("sub-category", true)]
-    [InlineData("retirement-date", true)]
-    public void RequiresMetadata_RoutesEveryGrouping(string groupBy, bool expected)
+    [InlineData("recommendation-type")]
+    [InlineData("category")]
+    [InlineData("impact")]
+    [InlineData("resource-type")]
+    [InlineData("status")]
+    [InlineData("sub-category")]
+    [InlineData("retirement-date")]
+    public void BuildSummaryQuery_EveryGrouping_InnerJoinsEnglishMetadata(string groupBy)
     {
-        Assert.Equal(expected, RecommendationSummaryService.RequiresMetadata(groupBy, null));
+        var query = RecommendationSummaryService.BuildSummaryQuery("subscription-id", null, groupBy, null);
+
+        Assert.Contains("join kind=inner", query);
+        Assert.DoesNotContain("leftouter", query);
+        Assert.Contains("properties.language) =~ 'en'", query);
+        Assert.EndsWith("summarize count() by key, label", query);
+    }
+    [Theory]
+    [InlineData("true")]
+    [InlineData("True")]
+    public void EnsureFullTenantCoverage_SubscriptionLimitHit_Throws(string headerValue)
+    {
+        Assert.Throws<InvalidOperationException>(() =>
+            AdvisorResourceGraphQueryExecutor.EnsureFullTenantCoverage(headerValue));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("false")]
+    [InlineData("")]
+    public void EnsureFullTenantCoverage_FullCoverage_DoesNotThrow(string? headerValue)
+    {
+        AdvisorResourceGraphQueryExecutor.EnsureFullTenantCoverage(headerValue);
     }
 
     [Fact]
-    public void RequiresMetadata_MetadataFilterOnInstanceGrouping_UsesJoin()
-    {
-        Assert.True(RecommendationSummaryService.RequiresMetadata(
-            "resource-type",
-            new RecommendationFilters(Impact: "High")));
-    }
-
-    [Fact]
-    public void BuildSummaryQuery_Category_UsesMetadataWithInstanceFallback()
+    public void BuildSummaryQuery_Category_UsesMetadataOnly()
     {
         var query = RecommendationSummaryService.BuildSummaryQuery(
             "subscription-id",
@@ -42,15 +56,117 @@ public class RecommendationSummaryServiceTests
 
         Assert.Contains("subscriptionId =~ 'subscription-id'", query);
         Assert.Contains("resourceGroup =~ 'rg-name'", query);
-        Assert.Contains("join kind=leftouter", query);
+        Assert.Contains("join kind=inner", query);
         Assert.Contains("properties.language) =~ 'en'", query);
-        Assert.Contains(
-            "category = iff(isnotempty(metadataCategory), metadataCategory, instanceCategory)",
-            query);
+        Assert.Contains("category = metadataCategory", query);
+        Assert.DoesNotContain("instanceCategory", query);
+        Assert.DoesNotContain("instanceImpact", query);
+        Assert.DoesNotContain("instanceSubCategory", query);
+        Assert.DoesNotContain("instanceRetirementDate", query);
         Assert.Contains(RecommendationQueryBuilder.CurrentRecommendationNameClause, query);
         Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
         Assert.Contains(RecommendationQueryBuilder.ActiveRecommendationClause, query);
         Assert.EndsWith("summarize count() by key, label", query);
+    }
+
+    [Fact]
+    public void BuildSummaryQuery_MultipleSubscriptionsUsesInPredicate()
+    {
+        var scope = RecommendationQueryScope.ForSubscriptions(
+            ["sub-123", "sub-456", "SUB-123"],
+            null);
+
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            scope,
+            "category",
+            null);
+
+        Assert.Contains("subscriptionId in~ ('sub-123', 'sub-456')", query);
+        Assert.DoesNotContain("subscriptionId =~", query);
+    }
+
+    [Theory]
+    [InlineData("category", false)]
+    [InlineData("status", false)]
+    [InlineData("recommendation-type", true)]
+    public void BuildSummaryQuery_ExplicitStatusAppliesWithAndWithoutHistoricalWindow(string groupBy, bool prioritized)
+    {
+        foreach (var status in Enum.GetValues<RecommendationStatus>())
+        {
+            foreach (var historical in new[] { false, true })
+            {
+                var query = RecommendationSummaryService.BuildSummaryQuery(
+                    "subscription-id", null, groupBy,
+                    new RecommendationFilters(
+                        Category: "Cost",
+                        SubCategory: "IdleResources",
+                        Status: status,
+                        Prioritized: prioritized,
+                        SavingsFrom: historical ? new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero) : null));
+
+                Assert.Contains($"tostring(properties.recommendationStatus) =~ '{status}'", query);
+                if (status != RecommendationStatus.New)
+                {
+                    Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+                }
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BuildSummaryQuery_HistoricalWindowWithoutStatusDefaultsToCompleted(bool prioritized)
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            "subscription-id", null, prioritized ? "recommendation-type" : "category",
+            new RecommendationFilters(
+                Category: "Cost",
+                SubCategory: "IdleResources",
+                Prioritized: prioritized,
+                SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
+                SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
+
+        Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+        Assert.Contains("tostring(properties.recommendationStatus) =~ 'Completed'", query);
+        Assert.Contains("tostring(properties.recommendationStatus) !~ 'Completed' or (", query);
+        Assert.Contains("resourceDeletedOn) >= datetime(2026-09-01T00:00:00.0000000Z)", query);
+        Assert.Contains("resourceDeletedOn) <= datetime(2026-09-30T23:59:59.0000000Z)", query);
+    }
+
+    [Fact]
+    public void BuildServiceGroupSummaryQuery_Category_UsesExactScopeWithoutSubscription()
+    {
+        var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
+            "service-group-test",
+            "category",
+            null);
+
+        Assert.DoesNotContain("subscriptionId =~", query);
+        Assert.DoesNotContain("resourceGroup =~", query);
+        Assert.Contains(
+            "isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ " +
+            $"'{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
+            query);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
+        Assert.Contains("join kind=inner", query);
+        Assert.Contains(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+    }
+
+    [Fact]
+    public void BuildServiceGroupSummaryQuery_StatusIncludesEveryLifecycleState()
+    {
+        var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
+            "service-group-test",
+            "status",
+            null);
+
+        Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
+        Assert.Contains(
+            $"{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test",
+            query);
+        Assert.Contains("join kind=inner", query);
+        Assert.Contains("key = iff(isempty(recommendationStatus), 'Unknown', recommendationStatus)", query);
     }
 
     [Fact]
@@ -65,6 +181,7 @@ public class RecommendationSummaryServiceTests
         Assert.Contains("tolower(tostring(properties.recommendationTypeId))", query);
         Assert.Contains("metadataDisplayName", query);
         Assert.Contains("metadataLabel", query);
+        Assert.Contains("iff(isnotempty(metadataLabel), metadataLabel, recommendationTypeId)", query);
         Assert.Contains("recommendationTypeId", query);
         Assert.DoesNotContain("key = tostring(properties.shortDescription.problem)", query);
     }
@@ -76,14 +193,12 @@ public class RecommendationSummaryServiceTests
             "subscription-id",
             null,
             "resource-type",
-            new RecommendationFilters(ResourceType: "Microsoft.Web/sites"));
+            new RecommendationFilters(ResourceTypes: ["Microsoft.Web/sites"]));
 
-        Assert.DoesNotContain("join kind=leftouter", query);
+        Assert.Contains("join kind=inner", query);
         Assert.Contains("tostring(properties.impactedField) =~ 'Microsoft.Web/sites'", query);
-        Assert.Contains("tolower(tostring(properties.impactedField))", query);
-        Assert.Contains(
-            "extract(@'/providers/([^/]+/[^/]+)', 1, tostring(properties.resourceMetadata.resourceId))",
-            query);
+        Assert.Contains("impactedResourceType = tolower(impactedField)", query);
+        Assert.Contains("extract(@'/providers/([^/]+/[^/]+)', 1, resourceId)", query);
     }
 
     [Fact]
@@ -95,7 +210,7 @@ public class RecommendationSummaryServiceTests
             "resource-type",
             new RecommendationFilters(Impact: "High"));
 
-        Assert.Contains("join kind=leftouter", query);
+        Assert.Contains("join kind=inner", query);
         Assert.Contains("where impact =~ 'High'", query);
         Assert.Contains("extend resourceType =", query);
     }
@@ -112,8 +227,8 @@ public class RecommendationSummaryServiceTests
         Assert.DoesNotContain(RecommendationQueryBuilder.ActiveRecommendationClause, query);
         Assert.Contains(RecommendationQueryBuilder.CurrentRecommendationNameClause, query);
         Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
-        Assert.DoesNotContain("join kind=leftouter", query);
-        Assert.Contains("groupValue = tostring(properties.recommendationStatus)", query);
+        Assert.Contains("join kind=inner", query);
+        Assert.Contains("key = iff(isempty(recommendationStatus), 'Unknown', recommendationStatus)", query);
     }
 
     [Fact]
@@ -127,7 +242,7 @@ public class RecommendationSummaryServiceTests
 
         Assert.Contains("subCategory =~ 'ServiceUpgradeAndRetirement'", query);
         Assert.Contains(
-            "format_datetime(startofday(todatetime(retirementDateRaw)), 'yyyy-MM-dd')",
+            "format_datetime(startofday(todatetime(metadataRetirementDate)), 'yyyy-MM-dd')",
             query);
         Assert.Contains("iff(isempty(retirementDate), 'Unknown', retirementDate)", query);
     }
@@ -159,9 +274,9 @@ public class RecommendationSummaryServiceTests
         Assert.DoesNotContain("sub'|id", query);
         Assert.DoesNotContain("rg'|name", query);
         Assert.DoesNotContain("it's|unsafe", query);
-        Assert.Contains("sub''id", query);
-        Assert.Contains("rg''name", query);
-        Assert.Contains("it''s", query);
+        Assert.Contains(@"sub\'|id", query);
+        Assert.Contains(@"rg\'|name", query);
+        Assert.Contains(@"it\'s|unsafe", query);
     }
 
     [Fact]
@@ -234,6 +349,56 @@ public class RecommendationSummaryServiceTests
 
         Assert.Throws<OverflowException>(() =>
             RecommendationSummaryService.ParseSummary("category", document.RootElement));
+    }
+
+    [Theory]
+    [InlineData("Compute")]
+    [InlineData("Storage")]
+    [InlineData("Web")]
+    [InlineData("Analytics")]
+    public void BuildMetadataSummaryQuery_ProductFamilyFiltersUsingOnlyMetadata(string family)
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription("sub-123", null),
+            RecommendationSummaryService.GroupByRecommendationType,
+            new RecommendationFilters(ProductFamily: family));
+
+        Assert.Contains("metadataServiceFamily=tostring(properties.serviceFamily)", query);
+        Assert.Contains($"| where (tolower(tostring(metadataServiceFamily)) =~ '{family.ToLowerInvariant()}')", query);
+        Assert.DoesNotContain("isempty(tostring(metadataServiceFamily))", query);
+        Assert.DoesNotContain("startswith 'microsoft.", query);
+        Assert.DoesNotContain("contains '/providers/", query);
+    }
+
+    [Fact]
+    public void BuildProductFamilyFilterClause_WithoutFamilyDoesNotRequireMetadata()
+    {
+        Assert.Equal(string.Empty, RecommendationSummaryService.BuildProductFamilyFilterClause(null));
+        Assert.Equal(string.Empty, RecommendationSummaryService.BuildProductFamilyFilterClause(new RecommendationFilters()));
+    }
+
+    [Fact]
+    public void BuildSummaryQuery_HistoricalWindowRequiresCompletedDeletionDateWithinAllBounds()
+    {
+        var query = RecommendationSummaryService.BuildSummaryQuery(
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            RecommendationSummaryService.GroupByCategory,
+            new RecommendationFilters(
+                Category: "Cost",
+                SubCategory: "IdleResources",
+                SavingsFrom: new DateTimeOffset(2026, 9, 1, 0, 0, 0, TimeSpan.Zero),
+                SavingsTo: new DateTimeOffset(2026, 9, 30, 23, 59, 59, TimeSpan.Zero)));
+
+        Assert.Contains(
+            "tostring(properties.recommendationStatus) !~ 'Completed' or " +
+            "(todatetime(properties.savings.resourceDeletedOn) >= datetime(2026-09-01",
+            query);
+        Assert.Contains(
+            "T00:00:00.0000000Z) and todatetime(properties.savings.resourceDeletedOn) <= datetime(2026-09-30",
+            query);
+        Assert.DoesNotContain(
+            "tostring(properties.recommendationStatus) !~ 'Completed' or todatetime(",
+            query);
     }
 
     [Theory]

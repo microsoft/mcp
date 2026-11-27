@@ -1,0 +1,25 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "eventstreamId": "8c500070-073f-4a88-b478-8fabe1941c52",
+        "sourceId": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "type": "KafkaEndpoint",
+                "bootstrapServer": "namespace.servicebus.windows.net:9093",
+                "topicName": "eventhub",
+                "securityProtocol": "SASL_SSL",
+                "authentications": [
+                    {
+                        "saslMechanism": "Plain",
+                        "primaryConnectionString": "Endpoint=sb://namespace.servicebus.windows.net/;SharedAccessKeyName=key;SharedAccessKey=primary",
+                        "secondaryConnectionString": "Endpoint=sb://namespace.servicebus.windows.net/;SharedAccessKeyName=key;SharedAccessKey=secondary",
+                        "saslJaasConfig": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"$ConnectionString\" password=\"Endpoint=sb://namespace.servicebus.windows.net/;SharedAccessKeyName=key;SharedAccessKey=primary\";"
+                    }
+                ]
+            }
+        }
+    }
+}

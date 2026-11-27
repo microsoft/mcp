@@ -20,6 +20,24 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
         new BodyKeySanitizer(new BodyKeySanitizerBody("$..displayName")
         {
             Value = "Sanitized"
+        }),
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id")
+        {
+            Regex = @"(?<=/tenants/)[0-9a-fA-F-]{36}",
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    ];
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers =>
+    [
+        ..base.HeaderRegexSanitizers,
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-operation-identifier")
+        {
+            Value = "Sanitized"
+        }),
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("x-ms-owner")
+        {
+            Value = "00000000-0000-0000-0000-000000000000"
         })
     ];
 
@@ -195,36 +213,137 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_list_blobs_in_container()
     {
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_blob_get",
+            "blobs",
             new()
             {
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" },
             });
-
-        var actual = result.AssertProperty("blobs");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
     }
 
     [Fact]
     public async Task Should_list_blobs_in_container_with_prefix()
     {
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_blob_get",
+            "blobs",
             new()
             {
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             { "container", "bar" },
-            { "prefix", "REA" }
+            { "prefix", "pagination-" }
+            });
+    }
+
+    [Fact]
+    public async Task Should_list_blob_hierarchy()
+    {
+        var result = await CallToolAsync(
+            "storage_blob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "hierarchy/" },
+                { "delimiter", "/" }
             });
 
-        var actual = result.AssertProperty("blobs");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
+        Assert.NotNull(result);
+        var blobs = result.AssertProperty("blobs");
+        Assert.Equal(["hierarchy/root.txt", "hierarchy/second.txt"],
+            blobs.EnumerateArray().Select(blob => blob.GetProperty("name").GetString()));
+        var prefixes = result.AssertProperty("prefixes");
+        Assert.Equal(["hierarchy/subfolder/"], prefixes.EnumerateArray().Select(prefix => prefix.GetString()));
+        Assert.False(result.Value.TryGetProperty("nextCursor", out _));
+    }
+
+    [Fact]
+    public async Task Should_browse_blob_subfolder()
+    {
+        var result = await CallToolAsync(
+            "storage_blob_get",
+            new()
+            {
+                { "tenant", Settings.TenantId },
+                { "account", Settings.ResourceBaseName },
+                { "container", "bar" },
+                { "prefix", "hierarchy/subfolder/" },
+                { "delimiter", "/" }
+            });
+
+        Assert.NotNull(result);
+        var blobs = result.AssertProperty("blobs");
+        Assert.Equal("hierarchy/subfolder/child.txt", Assert.Single(blobs.EnumerateArray()).GetProperty("name").GetString());
+        var prefixes = result.AssertProperty("prefixes");
+        Assert.Equal("hierarchy/subfolder/nested/", Assert.Single(prefixes.EnumerateArray()).GetString());
+        Assert.False(result.Value.TryGetProperty("nextCursor", out _));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("/")]
+    public async Task Should_page_blob_listing(string? delimiter)
+    {
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        var prefixes = new HashSet<string>(StringComparer.Ordinal);
+        var tokens = new HashSet<string>(StringComparer.Ordinal);
+        Dictionary<string, object?> arguments = new()
+        {
+            { "tenant", Settings.TenantId },
+            { "account", Settings.ResourceBaseName },
+            { "container", "bar" },
+            { "prefix", "pagination-" }
+        };
+        if (delimiter is not null)
+        {
+            arguments["delimiter"] = delimiter;
+        }
+
+        string? cursor;
+        var pageCount = 0;
+        do
+        {
+            Assert.InRange(++pageCount, 1, 10);
+            var result = await CallToolAsync("storage_blob_get", arguments);
+            Assert.NotNull(result);
+            var blobs = result.AssertProperty("blobs");
+            var pagePrefixes = delimiter is null ? default : result.AssertProperty("prefixes");
+            Assert.InRange(blobs.GetArrayLength() + (delimiter is null ? 0 : pagePrefixes.GetArrayLength()), 0, 100);
+            foreach (var blob in blobs.EnumerateArray())
+            {
+                var name = blob.GetProperty("name").GetString();
+                Assert.NotNull(name);
+                Assert.StartsWith("pagination-", name);
+                Assert.True(names.Add(name), $"Duplicate blob: {name}");
+            }
+
+            if (delimiter is not null)
+            {
+                foreach (var prefix in pagePrefixes.EnumerateArray())
+                {
+                    var name = prefix.GetString();
+                    Assert.NotNull(name);
+                    Assert.StartsWith("pagination-", name);
+                    Assert.True(prefixes.Add(name), $"Duplicate prefix: {name}");
+                }
+            }
+
+            cursor = result.Value.TryGetProperty("nextCursor", out var token) ? token.GetString() : null;
+            if (cursor is not null)
+            {
+                Assert.True(tokens.Add(cursor), "The cursor must advance on each page.");
+                arguments["cursor"] = cursor;
+            }
+        } while (cursor is not null);
+
+        Assert.True(pageCount > 1);
+        Assert.Equal(101, names.Count);
+        Assert.Empty(prefixes);
     }
 
     [Fact]
@@ -313,34 +432,28 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     [Fact]
     public async Task Should_list_containers()
     {
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_blob_container_get",
+            "containers",
             new()
             {
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName }
             });
-
-        var actual = result.AssertProperty("containers");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
     }
 
     [Fact]
     public async Task Should_list_containers_with_prefix()
     {
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_blob_container_get",
+            "containers",
             new()
             {
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
-            { "prefix", "ba" }
+            { "prefix", "pagination-" }
             });
-
-        var actual = result.AssertProperty("containers");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
     }
 
     [Fact]
@@ -419,19 +532,40 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     }
 
     [Fact]
+    public async Task Should_CreateStorageAccount_WithSharedKeyAccess()
+    {
+        var accountName = RegisterOrRetrieveVariable(
+            "createdAccountWithSharedKeyAccess",
+            $"testacct{Guid.NewGuid():N}"[..24]);
+
+        var result = await CallToolAsync(
+            "storage_account_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "account", accountName },
+                { "resource-group", Settings.ResourceGroupName },
+                { "location", "eastus" },
+                { "allow-shared-key-access", true }
+            });
+
+        var account = result.AssertProperty("account");
+        Assert.Equal(TestMode == TestMode.Playback ? "Sanitized" : accountName, account.GetProperty("name").GetString());
+        var properties = account.GetProperty("properties");
+        Assert.True(properties.GetProperty("allowSharedKeyAccess").GetBoolean());
+    }
+
+    [Fact]
     public async Task Should_list_storage_tables_with_tenant_id()
     {
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_table_list",
+            "tables",
             new()
             {
             { "tenant", Settings.TenantId },
             { "account", Settings.ResourceBaseName },
             });
-
-        var actual = result.AssertProperty("tables");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
     }
 
     [Fact]
@@ -439,16 +573,49 @@ public class StorageCommandTests(ITestOutputHelper output, TestProxyFixture fixt
     {
         Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
-        var result = await CallToolAsync(
+        await AssertListingPagesAsync(
             "storage_table_list",
+            "tables",
             new()
             {
             { "tenant", Settings.TenantName },
             { "account", Settings.ResourceBaseName },
             });
+    }
 
-        var actual = result.AssertProperty("tables");
-        Assert.Equal(JsonValueKind.Array, actual.ValueKind);
-        Assert.NotEmpty(actual.EnumerateArray());
+    private async Task AssertListingPagesAsync(string tool, string collection, Dictionary<string, object?> parameters)
+    {
+        var cursors = new HashSet<string>(StringComparer.Ordinal);
+        var names = new HashSet<string>(StringComparer.Ordinal);
+        while (true)
+        {
+            var result = await CallToolAsync(tool, parameters);
+            var items = result.AssertProperty(collection);
+            Assert.Equal(JsonValueKind.Array, items.ValueKind);
+            Assert.InRange(items.GetArrayLength(), 0, 100);
+            foreach (var item in items.EnumerateArray())
+            {
+                var name = collection == "tables" ? item.GetString() : item.GetProperty("name").GetString();
+                Assert.NotNull(name);
+                Assert.True(names.Add(name), "The service returned a duplicate resource across pages.");
+                if (parameters.TryGetValue("prefix", out var prefix) && prefix is string namePrefix)
+                {
+                    Assert.StartsWith(namePrefix, name, StringComparison.Ordinal);
+                }
+            }
+            if (!result!.Value.TryGetProperty("nextCursor", out var nextCursor) || nextCursor.ValueKind == JsonValueKind.Null)
+            {
+                break;
+            }
+
+            var cursor = nextCursor.GetString();
+            Assert.False(string.IsNullOrEmpty(cursor));
+            Assert.True(cursors.Add(cursor), "The service repeated a continuation cursor.");
+            parameters["cursor"] = cursor;
+        }
+
+        Assert.NotEmpty(cursors);
+        var fixturePrefix = collection == "tables" ? "Pagination" : "pagination-";
+        Assert.Equal(101, names.Count(name => name.StartsWith(fixturePrefix, StringComparison.Ordinal)));
     }
 }

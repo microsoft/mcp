@@ -112,11 +112,57 @@ public sealed class PolicyCreateCommand(ILogger<PolicyCreateCommand> logger, IAz
         {
             _logger.LogError(ex, "Error creating policy. Policy: {Policy}, Vault: {Vault}, WorkloadType: {WorkloadType}",
                 options.Policy, options.Vault, options.WorkloadType);
-            HandleException(context, ex);
+            HandleAzureBackupException(context, ex, "policy create", GetSuppliedValueOptions(options), AzureBackupErrorGuidance.VmPolicyLimitsHint);
         }
 
         return context.Response;
     }
+
+    internal static IReadOnlyList<string> GetSuppliedValueOptions(PolicyCreateOptions o) => AzureBackupErrorGuidance.Supplied(
+        ("--time-zone", o.TimeZone is not null),
+        ("--schedule-frequency", o.ScheduleFrequency is not null),
+        ("--schedule-times", o.ScheduleTimes is not null),
+        ("--schedule-days-of-week", o.ScheduleDaysOfWeek is not null),
+        ("--hourly-interval-hours", o.HourlyIntervalHours != 0),
+        ("--hourly-window-start-time", o.HourlyWindowStartTime is not null),
+        ("--hourly-window-duration-hours", o.HourlyWindowDurationHours != 0),
+        ("--daily-retention-days", o.DailyRetentionDays is not null),
+        ("--weekly-retention-weeks", o.WeeklyRetentionWeeks != 0),
+        ("--weekly-retention-days-of-week", o.WeeklyRetentionDaysOfWeek is not null),
+        ("--monthly-retention-months", o.MonthlyRetentionMonths != 0),
+        ("--monthly-retention-week-of-month", o.MonthlyRetentionWeekOfMonth is not null),
+        ("--monthly-retention-days-of-week", o.MonthlyRetentionDaysOfWeek is not null),
+        ("--monthly-retention-days-of-month", o.MonthlyRetentionDaysOfMonth is not null),
+        ("--yearly-retention-years", o.YearlyRetentionYears != 0),
+        ("--yearly-retention-months", o.YearlyRetentionMonths is not null),
+        ("--yearly-retention-week-of-month", o.YearlyRetentionWeekOfMonth is not null),
+        ("--yearly-retention-days-of-week", o.YearlyRetentionDaysOfWeek is not null),
+        ("--yearly-retention-days-of-month", o.YearlyRetentionDaysOfMonth is not null),
+        ("--archive-tier-after-days", o.ArchiveTierAfterDays is not null),
+        ("--archive-tier-mode", o.ArchiveTierMode is not null),
+        ("--smart-tier", o.SmartTier),
+        ("--policy-sub-type", o.PolicySubType is not null),
+        ("--instant-rp-retention-days", o.InstantRpRetentionDays is not null),
+        ("--instant-rp-resource-group", o.InstantRpResourceGroup is not null),
+        ("--snapshot-consistency", o.SnapshotConsistency is not null),
+        ("--full-schedule-frequency", o.FullScheduleFrequency is not null),
+        ("--full-schedule-days-of-week", o.FullScheduleDaysOfWeek is not null),
+        ("--differential-schedule-days-of-week", o.DifferentialScheduleDaysOfWeek is not null),
+        ("--differential-retention-days", o.DifferentialRetentionDays != 0),
+        ("--incremental-schedule-days-of-week", o.IncrementalScheduleDaysOfWeek is not null),
+        ("--incremental-retention-days", o.IncrementalRetentionDays != 0),
+        ("--log-frequency-minutes", o.LogFrequencyMinutes != 0),
+        ("--log-retention-days", o.LogRetentionDays != 0),
+        ("--is-compression", o.IsCompression),
+        ("--is-sql-compression", o.IsSqlCompression),
+        ("--enable-snapshot-backup", o.EnableSnapshotBackup),
+        ("--snapshot-instant-rp-retention-days", o.SnapshotInstantRpRetentionDays is not null),
+        ("--snapshot-instant-rp-resource-group", o.SnapshotInstantRpResourceGroup is not null),
+        ("--enable-vault-tier-copy", o.EnableVaultTierCopy),
+        ("--vault-tier-copy-after-days", o.VaultTierCopyAfterDays != 0),
+        ("--backup-mode", o.BackupMode is not null),
+        ("--pitr-retention-days", o.PitrRetentionDays != 0),
+        ("--policy-tags", o.PolicyTags is not null));
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {

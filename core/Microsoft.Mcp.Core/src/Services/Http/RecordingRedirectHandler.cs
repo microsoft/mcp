@@ -14,6 +14,13 @@ namespace Microsoft.Mcp.Core.Services.Http;
 /// that it rewrites the final outgoing wire request.
 /// </summary>
 /// <param name="proxyUri">The URI of the recording/replace proxy to redirect requests to.</param>
+/// <remarks>
+/// Recording proxy configuration takes precedence over transport-level SSRF protection.
+/// The factory deliberately omits that handler for this chain so the local test proxy remains
+/// reachable. Endpoint validation remains independent and authorizes the original upstream
+/// target before this rewrite.
+/// Use recording proxies only in a trusted test environment.
+/// </remarks>
 internal sealed class RecordingRedirectHandler(Uri proxyUri) : DelegatingHandler
 {
     private const string CosmosSerializationHeader = "x-ms-cosmos-supported-serialization-formats";

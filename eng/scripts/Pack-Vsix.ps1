@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
+. "$PSScriptRoot/helpers/VsixVersionHelpers.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
@@ -67,11 +68,21 @@ foreach ($server in $buildInfo.servers) {
         Write-Host "Copying VSIX base files from $vsixDirectory to $tempPath"
         Copy-Item -Path "$vsixDirectory/*" -Destination $tempPath -Recurse -Force -ProgressAction SilentlyContinue
 
-        Write-Host "Installing npm packages"
-        Invoke-LoggedCommand 'npm ci --omit=optional'
-
         $version = $server.vsixVersion
         $isPrerelease = $server.vsixIsPrerelease
+
+        if ($server.name -eq 'Azure.Mcp.Server' -and
+            $buildInfo.publishTarget -eq 'public' -and
+            -not $buildInfo.dynamicPrereleaseVersion -and
+            $env:SETDEVVERSION -ne 'true') {
+            Assert-VsixChangelogVersion `
+                -ChangelogPath "$tempPath/CHANGELOG.md" `
+                -VsixVersion $version `
+                -IsPrerelease $isPrerelease
+        }
+
+        Write-Host "Installing npm packages"
+        Invoke-LoggedCommand 'npm ci --omit=optional'
         
         Write-Host "Server Version: $($server.version)"
         Write-Host "VSIX Version: $version"

@@ -1,19 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models;
 using Azure.Mcp.Tools.Adme.Models.Search;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Mcp.Core.Helpers;
 
 namespace Azure.Mcp.Tools.Adme.Services;
 
 public sealed class SearchService(
-    IAzureTokenCredentialProvider credentialProvider,
+    IEndpointValidator endpointValidator,
+    IAzureService azureService,
     IHttpClientFactory httpClientFactory) : ISearchService
 {
     private const string BasePath = "/api/search/v2";
 
-    private readonly IAzureTokenCredentialProvider _credentialProvider = credentialProvider;
+    private readonly IAzureService _azureService = azureService;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     public Task<AdmeResponse<SearchQueryResponse>> QueryAsync(
@@ -21,14 +23,16 @@ public sealed class SearchService(
         string dataPartition,
         SearchQueryRequest request,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+        return AdmeServiceHelper.PostAsync(endpointValidator,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query", request, AdmeJsonContext.Default.SearchQueryRequest,
-            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, cancellationToken);
+            AdmeJsonContext.Default.SearchQueryResponse, extraHeaders: null, authAppId,
+            cancellationToken: cancellationToken);
     }
 
     public Task<AdmeResponse<SearchCursorResponse>> QueryWithCursorAsync(
@@ -37,16 +41,18 @@ public sealed class SearchService(
         SearchCursorRequest request,
         bool searchAfter,
         string? tenant,
-        CancellationToken cancellationToken)
+        string? authAppId = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
         ValidateKinds(request.Kind);
-        return AdmeServiceHelper.PostAsync(
-            _credentialProvider, _httpClientFactory, endpoint, dataPartition, tenant,
+        return AdmeServiceHelper.PostAsync(endpointValidator,
+            _azureService, _httpClientFactory, endpoint, dataPartition, tenant,
             $"{BasePath}/query_with_cursor{(searchAfter ? "?search_after=true" : string.Empty)}",
             request, AdmeJsonContext.Default.SearchCursorRequest,
-            AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, cancellationToken,
-            disableRetries: !string.IsNullOrWhiteSpace(request.Cursor));
+            AdmeJsonContext.Default.SearchCursorResponse, extraHeaders: null, authAppId,
+            disableRetries: !string.IsNullOrWhiteSpace(request.Cursor),
+            cancellationToken);
     }
 
     private static void ValidateKinds(IReadOnlyList<string> kinds)

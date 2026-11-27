@@ -15,8 +15,11 @@ public class UsagePlanCreateOptions : ISubscriptionOption
     [Option(Description = "The name of the usage plan.")]
     public required string UsagePlan { get; set; }
 
-    [Option(Description = "The plan type of the usage plan. Supported values: Basic, Standard.")]
+    [Option(Description = "The plan type of the usage plan. Supported value: Standard.")]
     public required UsagePlanKind PlanType { get; set; }
+
+    [Option(Description = "Optional resource tags as a JSON object of string values, for example '{\"env\":\"prod\"}'. The tags are applied to the usage plan after it is created or updated. Usage plans are global, so no location is required.")]
+    public string? Tags { get; set; }
 
     [Option(Description = OptionDescriptions.Subscription)]
     public string? Subscription { get; set; }

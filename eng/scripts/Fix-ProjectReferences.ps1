@@ -1,5 +1,5 @@
 # Fix Project References Script
-# This script discovers all .csproj files, maps them by filename, and corrects all project references
+# This script discovers all .csproj files, maps them by filename, and standardizes project references
 
 Write-Host "Fixing project references in Azure MCP repository..." -ForegroundColor Green
 
@@ -10,7 +10,7 @@ $allCsprojFiles = Get-ChildItem -Path "." -Filter "*.csproj" -Recurse
 
 foreach ($file in $allCsprojFiles) {
     $filename = $file.Name
-    $relativePath = $file.FullName.Replace((Get-Location).Path + "\", "")
+    $relativePath = [System.IO.Path]::GetRelativePath((Get-Location).Path, $file.FullName).Replace('/', '\')
 
     if ($projectMap.ContainsKey($filename)) {
         Write-Warning "Duplicate project file name found: $filename"
@@ -31,7 +31,13 @@ Write-Host "`nProcessing project files to fix references..." -ForegroundColor Ye
 $totalUpdated = 0
 
 foreach ($csprojFile in $allCsprojFiles) {
-    Write-Host "`nProcessing: $($csprojFile.FullName.Replace((Get-Location).Path + '\', ''))" -ForegroundColor White
+    $relativeProjectPath = [System.IO.Path]::GetRelativePath((Get-Location).Path, $csprojFile.FullName).Replace('/', '\')
+    Write-Host "`nProcessing: $relativeProjectPath" -ForegroundColor White
+
+    $ownSourcePrefix = $null
+    if ($relativeProjectPath -match '^(.+)\\tests\\') {
+        $ownSourcePrefix = $Matches[1] + '\src\'
+    }
 
     $content = Get-Content $csprojFile.FullName -Raw
     $updated = $false
@@ -42,21 +48,21 @@ foreach ($csprojFile in $allCsprojFiles) {
 
     foreach ($match in $projectRefMatches) {
         $currentPath = $match.Groups[1].Value
-        $referencedFileName = [System.IO.Path]::GetFileName($currentPath)
+        $referencedFileName = [System.IO.Path]::GetFileName($currentPath.Replace('\', '/'))
 
         Write-Host "  Found reference: $currentPath" -ForegroundColor Gray
 
         if ($projectMap.ContainsKey($referencedFileName)) {
-            # Calculate the correct relative path from current file to referenced file
-            $currentDir = [System.IO.Path]::GetDirectoryName($csprojFile.FullName)
-            $targetFullPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine((Get-Location).Path, $projectMap[$referencedFileName]))
+            $relativeTargetPath = $projectMap[$referencedFileName]
+            $referencePath = '$(RepoRoot)' + $relativeTargetPath
+            if ($ownSourcePrefix -and $relativeTargetPath.StartsWith($ownSourcePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+                $targetPath = Join-Path (Get-Location).Path $relativeTargetPath
+                $referencePath = [System.IO.Path]::GetRelativePath($csprojFile.DirectoryName, $targetPath).Replace('/', '\')
+            }
 
-            # Calculate relative path
-            $relativePath = [System.IO.Path]::GetRelativePath($currentDir, $targetFullPath)
-
-            if ($currentPath -ne $relativePath) {
-                Write-Host "    Updating to: $relativePath" -ForegroundColor Green
-                $content = $content.Replace($currentPath, $relativePath)
+            if ($currentPath -ne $referencePath) {
+                Write-Host "    Updating to: $referencePath" -ForegroundColor Green
+                $content = $content.Replace($currentPath, $referencePath)
                 $updated = $true
             } else {
                 Write-Host "    Already correct" -ForegroundColor DarkGreen

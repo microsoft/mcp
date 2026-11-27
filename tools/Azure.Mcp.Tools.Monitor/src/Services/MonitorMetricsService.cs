@@ -8,8 +8,10 @@ using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query.Metrics;
+using Azure.ResourceManager;
 using Azure.ResourceManager.Monitor;
 using Azure.ResourceManager.Monitor.Models;
+using Microsoft.Mcp.Core.Helpers;
 using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using MetricDefinition = Azure.Mcp.Tools.Monitor.Models.MetricDefinition;
 using MetricNamespace = Azure.Mcp.Tools.Monitor.Models.MetricNamespace;
@@ -372,7 +374,9 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         metricsClientOptions.Audience = GetMetricsClientAudience();
         metricsClientOptions.Transport = new HttpClientTransport(AzureService.GetClient());
 
-        var metricsClient = new MetricsClient(new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"), credential, metricsClientOptions);
+        Uri metricsEndpoint = ValidateMetricsEndpoint(AzureService,
+            new Uri($"https://{region}.{GetMetricsEndpointHostSuffix()}"));
+        var metricsClient = new MetricsClient(metricsEndpoint, credential, metricsClientOptions);
 
         var queryOptions = new MetricsQueryResourcesOptions
         {
@@ -477,6 +481,22 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         }
 
         return compactResult;
+    }
+
+    /// <summary>
+    /// Validates that the given Monitor Metrics endpoint satisfies the expected Azure service endpoint pattern.
+    /// </summary>
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpoint">The URI of the Monitor Metrics endpoint to validate.</param>
+    /// <returns>The validated URI of the Monitor Metrics endpoint.</returns>
+    internal static Uri ValidateMetricsEndpoint(IAzureService azureService, Uri endpoint)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpoint.AbsoluteUri,
+            serviceType: "monitor-metrics");
+        return endpoint;
     }
 
     private MetricsClientAudience GetMetricsClientAudience() =>

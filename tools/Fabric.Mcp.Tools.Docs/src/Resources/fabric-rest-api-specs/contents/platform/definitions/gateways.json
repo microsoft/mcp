@@ -200,17 +200,17 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 9.",
+                    "description": "The number of member gateways. A number between 1 and 11.",
                     "type": "integer",
                     "readOnly": false
                 },
                 "maxMemberGatewayCount": {
-                    "description": "The maximum number of member gateways. A number between 1 and 9.",
+                    "description": "The maximum number of member gateways. A number between 1 and 11.",
                     "type": "integer",
                     "readOnly": false
                 },
                 "minMemberGatewayCount": {
-                    "description": "The minimum number of member gateways. A number between 1 and 9.",
+                    "description": "The minimum number of member gateways. A number between 1 and 11.",
                     "type": "integer",
                     "readOnly": false
                 }
@@ -295,17 +295,17 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 9. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
+                    "description": "The number of member gateways. A number between 1 and 11. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
                     "type": "integer",
                     "readOnly": false
                 },
                 "maxMemberGatewayCount": {
-                  "description": "The maximum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
+                  "description": "The maximum number of member gateways. A number between 1 and 11. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
                   "type": "integer",
                   "readOnly": false
                 },
                 "minMemberGatewayCount": {
-                  "description": "The minimum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
+                  "description": "The minimum number of member gateways. A number between 1 and 11. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
                   "type": "integer",
                   "readOnly": false
                 }
@@ -390,17 +390,17 @@
                     "type": "integer"
                 },
                 "numberOfMemberGateways": {
-                    "description": "The number of member gateways. A number between 1 and 9. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
+                    "description": "The number of member gateways. A number between 1 and 11. Cannot be used together with maxMemberGatewayCount and minMemberGatewayCount.",
                     "type": "integer",
                     "readOnly": false
                 },
                 "maxMemberGatewayCount": {
-                  "description": "The maximum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
+                  "description": "The maximum number of member gateways. A number between 1 and 11. Cannot be used together with numberOfMemberGateways. minMemberGatewayCount must also be specified. maxMemberGatewayCount value must be greater than or equal to minMemberGatewayCount value.",
                   "type": "integer",
                   "readOnly": false
                 },
                 "minMemberGatewayCount": {
-                  "description": "The minimum number of member gateways. A number between 1 and 9. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
+                  "description": "The minimum number of member gateways. A number between 1 and 11. Cannot be used together with numberOfMemberGateways. maxMemberGatewayCount must also be specified. minMemberGatewayCount value must be less than or equal to maxMemberGatewayCount value.",
                   "type": "integer",
                   "readOnly": false
                 }

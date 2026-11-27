@@ -26,7 +26,8 @@
                     "lastCredentialUsedDateTime": "2023-05-27T16:22:20Z",
                     "myLastBoundDateTime": "2023-05-24T16:22:20Z",
                     "myLastCredentialUsedDateTime": "2023-05-25T16:22:20Z"
-                }
+                },
+                "myRole": "Owner"
             }
         }
     }

@@ -32,6 +32,8 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
         CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
+        Uri serviceEndpoint = SpeechEndpointValidator.CreateAndValidateRealtimeTranscriptionEndpoint(AzureService,
+            endpoint);
 
         if (string.IsNullOrEmpty(language) || !LocaleSupport.IsSupportedInRealtimeTranscription(language))
         {
@@ -63,7 +65,7 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
                 var accessToken = await credential.GetTokenAsync(new([GetCognitiveServicesScope()]), cancellationToken);
 
                 // Configure Speech SDK with endpoint
-                var config = SpeechConfig.FromEndpoint(new(endpoint));
+                SpeechConfig config = SpeechConfig.FromEndpoint(serviceEndpoint);
 
                 // Set the authorization token
                 config.AuthorizationToken = accessToken.Token;
@@ -109,15 +111,15 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
 
                 recognizer.Recognizing += (s, e) =>
                 {
-                    _logger.LogDebug("Recognizing intermediate result: Text={Text}", e.Result.Text);
+                    _logger.LogDebug("Recognizing intermediate result. SessionId={SessionId}, ResultId={ResultId}", e.SessionId, e.Result.ResultId);
                 };
 
                 recognizer.Recognized += (s, e) =>
                 {
                     if (e.Result.Reason == ResultReason.RecognizedSpeech)
                     {
-                        _logger.LogInformation("Recognized segment: Text={Text}", e.Result.Text);
-                        recognizedText.Append(e.Result.Text).Append(" ");
+                        _logger.LogInformation("Recognized segment. SessionId={SessionId}, ResultId={ResultId}", e.SessionId, e.Result.ResultId);
+                        recognizedText.Append(e.Result.Text).Append(' ');
 
                         // Create a segment for this recognition result
                         var segment = ConvertToSpeechRecognitionResult(e.Result, format);
@@ -131,12 +133,12 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
 
                 recognizer.Canceled += (s, e) =>
                 {
-                    _logger.LogInformation("Continuous recognition canceled: Reason={Reason}", e.Reason);
+                    _logger.LogInformation("Continuous recognition canceled. Reason={Reason}", e.Reason);
 
                     if (e.Reason == CancellationReason.Error)
                     {
-                        _logger.LogError("Continuous recognition error: ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
-                            e.ErrorCode, e.ErrorDetails);
+                        _logger.LogError("Continuous recognition error. ErrorCode={ErrorCode}, SessionId={SessionId}",
+                            e.ErrorCode, e.SessionId);
 
                         cancellationDetails = CancellationDetails.FromResult(e.Result);
                     }
@@ -162,7 +164,7 @@ public class RealtimeTranscriptionRecognizer(IAzureService azureService, ILogger
                 // Check if recognition was canceled due to invalid endpoint or other errors
                 if (!success && cancellationDetails != null)
                 {
-                    _logger.LogWarning("Recognition failed: {Reason}, {ErrorCode}, {ErrorDetails}",
+                    _logger.LogWarning("Recognition failed. Reason={Reason}, ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
                         cancellationDetails.Reason, cancellationDetails.ErrorCode, cancellationDetails.ErrorDetails);
                     // Common error codes for invalid endpoints:
                     // ConnectionFailure: Network connectivity issues or invalid endpoint

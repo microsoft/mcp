@@ -649,7 +649,7 @@ public static class RsvPolicyBuilder
         var list = new List<DateTimeOffset>();
         if (string.IsNullOrWhiteSpace(csv))
         {
-            list.Add(new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero));
+            list.Add(new DateTimeOffset(2000, 1, 1, 2, 0, 0, TimeSpan.Zero));
             return list;
         }
 
@@ -663,7 +663,7 @@ public static class RsvPolicyBuilder
 
         if (list.Count == 0)
         {
-            list.Add(new DateTimeOffset(DateTime.UtcNow.Date.AddHours(2), TimeSpan.Zero));
+            list.Add(new DateTimeOffset(2000, 1, 1, 2, 0, 0, TimeSpan.Zero));
         }
         return list;
     }
@@ -837,6 +837,8 @@ public static class RsvPolicyBuilder
 
     private static DateTimeOffset NormalizeToHourMinute(DateTimeOffset value)
     {
-        return new DateTimeOffset(value.Year, value.Month, value.Day, value.Hour, value.Minute, 0, TimeSpan.Zero);
+        // Schedule/window times are time-of-day only; anchor to the canonical 2000-01-01
+        // baseline (matching the update path) so request bodies are deterministic across days.
+        return new DateTimeOffset(2000, 1, 1, value.Hour, value.Minute, 0, TimeSpan.Zero);
     }
 }

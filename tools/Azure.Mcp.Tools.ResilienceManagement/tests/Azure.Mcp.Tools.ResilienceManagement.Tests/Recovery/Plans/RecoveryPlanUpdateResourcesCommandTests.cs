@@ -315,6 +315,28 @@ public sealed class RecoveryPlanUpdateResourcesCommandTests : CommandUnitTestsBa
     }
 
     [Fact]
+    public async Task ExecuteAsync_ReportsRejectedLongRunningOperationAsBadRequest()
+    {
+        // A failed LRO surfaces the 200 status of its operation-status poll together with the service error code.
+        Service.UpdateRecoveryPlanResourcesAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<UpdateRecoveryResourcesContent>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.OK, "provider details", "RHROUserErrorUpdateResourcesOperationFailed", null));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--resources-to-update", ResourcesToUpdate);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("rejected (RHROUserErrorUpdateResourcesOperationFailed)", response.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("provider details", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_MapsTimeoutExceptionToGatewayTimeout()
     {
         Service.UpdateRecoveryPlanResourcesAsync(

@@ -37,8 +37,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
     {
         try
         {
-            _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {Resource}, Options: {Options}",
-                options.Question, options.Resource, options);
+            _logger.LogInformation("Diagnosing resource. Question: {Question}, Resource: {Resource}",
+                options.Question, options.Resource);
 
             var result = await _appLensService.DiagnoseResourceAsync(
                 options.Question,

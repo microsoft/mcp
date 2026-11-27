@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Adme.Tests;
@@ -88,7 +90,7 @@ public sealed class AdmeServiceValidatorTests
     [InlineData("https://sample.oep.ppe.azure-int.net")]
     public void ValidateEndpoint_AcceptsTrustedEndpoint(string endpoint)
     {
-        var result = AdmeServiceValidator.ValidateEndpoint(new Uri(endpoint));
+        var result = AdmeServiceValidator.ValidateEndpoint(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), new Uri(endpoint));
 
         Assert.Equal(endpoint, result.AbsoluteUri.TrimEnd('/'));
     }

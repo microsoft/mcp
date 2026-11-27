@@ -20,7 +20,8 @@ public interface ISchemaService
         string dataPartition,
         string kind,
         string? tenant,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists schema descriptors matching the requested filters.
@@ -40,5 +41,6 @@ public interface ISchemaService
         bool latestVersion,
         int? offset,
         int? limit,
-        CancellationToken cancellationToken);
+        string? authAppId = null,
+        CancellationToken cancellationToken = default);
 }

@@ -1,14 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Security;
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
-public class SQLUsageChecker(TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IAzureService azureService)
-    : AzureUsageChecker(credential, subscriptionId, logger, azureService)
+public class SQLUsageChecker(ArmClient resourceClient, TokenCredential credential, string subscriptionId, ILogger<SQLUsageChecker> logger, IAzureService azureService)
+    : AzureUsageChecker(resourceClient, credential, subscriptionId, logger, azureService)
 {
     private const string ServerQuotaMagicString = "ServerQuota";
     private const string SqlUsagesApiVersion = "2023-08-01";
@@ -25,8 +28,10 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
     {
         try
         {
-            var requestUrl = $"{GetManagementEndpoint()}/subscriptions/{SubscriptionId}/providers/Microsoft.Sql/locations/{location}/usages?api-version={SqlUsagesApiVersion}";
-            using var rawResponse = await GetQuotaByUrlAsync(requestUrl, cancellationToken);
+            string escapedSubscriptionId = Uri.EscapeDataString(SubscriptionId);
+            string escapedLocation = Uri.EscapeDataString(location);
+            string relativePath = $"/subscriptions/{escapedSubscriptionId}/providers/Microsoft.Sql/locations/{escapedLocation}/usages?api-version={SqlUsagesApiVersion}";
+            using JsonDocument? rawResponse = await GetQuotaByUrlAsync(relativePath, cancellationToken);
 
             if (rawResponse?.RootElement.TryGetProperty("value", out var valueElement) != true)
             {
@@ -110,7 +115,7 @@ public class SQLUsageChecker(TokenCredential credential, string subscriptionId, 
 
             return result;
         }
-        catch (Exception error)
+        catch (Exception error) when (error is not SecurityException && error is not ArgumentException)
         {
             Logger.LogError(error, "Error fetching SQL quotas");
             throw new InvalidOperationException($"Failed to fetch SQL quotas. {error.Message}", error);

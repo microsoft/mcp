@@ -1,0 +1,54 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createOntologyRequest": {
+      "displayName": "Ontology_Generation2_FromDefinition",
+      "description": "A generation 2 ontology whose generation is implied by its TMDL definition parts.",
+      "definition": {
+        "parts": [
+          {
+            "path": "model.tmdl",
+            "payload": "bW9kZWwgT250b2xvZ3kKCnJlZiBuYW1lc3BhY2UgZGVmYXVsdAo=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "database.tmdl",
+            "payload": "ZGF0YWJhc2UgT250b2xvZ3kKCWNvbXBhdGliaWxpdHlMZXZlbDogMTAwMDAwMAo=",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": "namespaces/default.tmdl",
+            "payload": "bmFtZXNwYWNlIGRlZmF1bHQKCWxpbmVhZ2VUYWc6IGRlZmF1bHQK",
+            "payloadType": "InlineBase64"
+          },
+          {
+            "path": ".platform",
+            "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+            "payloadType": "InlineBase64"
+          }
+        ]
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "displayName": "Ontology_Generation2_FromDefinition",
+        "description": "A generation 2 ontology whose generation is implied by its TMDL definition parts.",
+        "type": "Ontology",
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "id": "9c4d1f28-6b3a-4a77-9d5e-1f0c7b842ea3",
+        "sensitivityLabel": {
+          "id": "b7b4f4d9-3f0d-4b3e-8f3d-4f6d3f4f3f4f"
+        }
+      }
+    },
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    }
+  }
+}

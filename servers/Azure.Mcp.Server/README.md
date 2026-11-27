@@ -102,7 +102,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
-<!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
+<!-- insert-section: vsix {{       "azureMcp.readOnly": false,}} -->
+<!-- insert-section: vsix {{    }} -->
+<!-- insert-section: vsix {{       // ⚠️ DANGEROUS: Disable SSRF protections for specific namespaces.}} -->
+<!-- insert-section: vsix {{       // Only use this if you understand the security implications.}} -->
+<!-- insert-section: vsix {{       // Forwards to --dangerously-disable-ssrf-protections-by-namespace.}} -->
+<!-- insert-section: vsix {{       "azureMcp.dangerouslyDisableSsrfProtectionsByNamespace": ["storage"]}} -->
 <!-- insert-section: vsix {{       ```}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
@@ -950,17 +955,37 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 📊 Azure Advisor
 
+Recommendation list and summary use `subscriptions`, `recommendation-type-ids`, and
+`resource-types` arrays, including one-element arrays for single selections. Prevalidation
+also uses `subscriptions` but retains one required `recommendation-type-id`. Single-target
+get operations and recommendation-update inputs are unchanged.
+
 * "List my Advisor recommendations"
+* "Show the next page of my Advisor recommendations using the returned continuation token"
+* "List Advisor recommendations for service group 'my-service-group'"
+* "Show the prioritized Advisor recommendations for service group 'my-service-group'"
+* "What should I fix first? Show my top 10 Advisor recommendations"
 * "Summarize the key themes from my Advisor recommendations"
+* "Summarize the key themes from Advisor recommendations in service group 'my-service-group'"
 * "Show the top 10 most common Advisor recommendation types"
+* "Prevalidate the selected idle resources for locks, dependencies, and recent activity without deleting or changing anything"
+* "Break down Advisor recommendations in service group 'my-service-group' by impact"
 * "Break down my Advisor recommendations by lifecycle status"
 * "Summarize active service-retirement recommendations by retirement date"
 * "Mark an Advisor recommendation as completed"
+* "Mark an Advisor recommendation as completed in service group 'my-service-group'"
 * "Dismiss an Advisor recommendation because the risk is acceptable"
+* "Postpone an Advisor recommendation in service group 'my-service-group' until \<future-date-time-with-offset>"
 * "Postpone an Advisor recommendation until December 31, 2026"
-* "Apply Advisor recommendations to IaaC files"
+* "Postpone these selected Advisor recommendation IDs together in my service group until \<future-date-time-with-offset>, with one batch approval"
 * "Before I deploy virtual machines, list the Advisor recommendation metadata that could apply to them"
 * "Show Advisor service retirements on or after March 31, 2026"
+* "Show Advisor insights for service group 'my-service-group'"
+* "Show Advisor insights for my subscription"
+* "Give me Advisor insights across all my service groups and subscriptions"
+* "How much retirement exposure has my subscription reduced or increased since its Day 1 count?"
+* "What is the status of service group 'my-service-group'?"
+* "Which mission-critical service groups need attention?"
 * "Get Advisor metadata for a recommendation type id"
 * "How do I fix an Advisor recommendation type id? Get the ARM, Bicep, CLI, PowerShell and terraform artifacts to remediate it"
 
@@ -1009,10 +1034,20 @@ For full configuration options, see the [Sovereign Clouds documentation](https:/
 
 ### 🛡️ Azure Backup
 
+Read asynchronous operation status with `azurebackup_operation_get` (Recovery Services vaults only).
+Query vault scope, or supply both container and protected item for item scope. Operation IDs are not
+job IDs: only actual job IDs returned by Azure can be used with `azurebackup_job_get`; no job is valid.
+
+* "Get asynchronous operation 'operation-id' in RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+* "Check operation 'operation-id' for protected item 'item' in container 'container' of RSV vault 'myvault', resource group 'myRG', subscription 'mySubscription'"
+
+Vault creation checks whether the requested Recovery Services vault or Backup vault already exists and rejects existing vaults. Use `azurebackup_vault_update` to modify an existing vault. Creation requires read permission on the target vault in addition to write permission. The existence check and creation are separate ARM requests, so this check is not an atomic guarantee against concurrent creation by another caller.
+
 * "Create a Recovery Services vault named 'myvault' in resource group 'myRG' in eastus with vault-type 'rsv'"
 * "Get details of backup vault 'myvault' in resource group 'myRG'"
 * "Create a backup policy for Azure VMs in vault 'myvault'"
 * "Update backup policy schedule time to 04:00 in vault 'myvault'"
+* "Update existing Enhanced Hourly VM policy 'myEnhancedPolicy' in Recovery Services vault 'myvault', resource group 'myRG', subscription 'my-subscription': set time zone to 'India Standard Time' and hourly window start to 08:00 local (converted to 02:30 UTC), preserving the interval and duration"
 * "List protectable items in my backup vault"
 * "Check backup status for my Azure resource in eastus"
 * "Get recovery points for a protected item"
@@ -1107,16 +1142,23 @@ Example prompts that generate Azure CLI commands:
 ### Azure Data Manager for Energy
 
 * "Check authentication and connectivity for my ADME endpoint and data partition"
+* "Check health for my customer-hosted ADME endpoint using its resource application ID as the token audience"
 * "Get an ADME schema by kind"
 * "List shared Well schemas from my ADME data partition"
 * "Find ADME records matching an indexed-field Lucene query across multiple or wildcard kinds"
 * "Aggregate ADME search results by kind and sort them by id"
 * "Start a point-in-time ADME search snapshot to process more than 10,000 records"
 * "Continue an ADME snapshot search from its cursor"
+* "Continue an ADME search or record listing using the previous response's nextCursor"
 * "Fetch multiple OSDU records by id from my ADME data partition"
 * "Get an OSDU record by id or version from my ADME data partition"
 * "List OSDU record ids for a kind in my ADME data partition"
 * "List all versions of an OSDU record in my ADME data partition"
+
+ADME search and record listings return `nextCursor` for continuation. Pass it unchanged as `--cursor` with the original
+target and query parameters. Record listings allow you to change `--limit` between pages.
+
+For customer-hosted ADME instances, pass the resource application ID or App ID URI with `--auth-app-id`. The server requests the corresponding `/.default` scope; when this option is omitted, it uses the standard Azure Energy resource audience.
 
 ### 🧮 Azure Data Explorer
 
@@ -1130,6 +1172,12 @@ Example prompts that generate Azure CLI commands:
 * "Show me the schema of table 'users' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me all items that contain the word 'error' in the PostgreSQL database 'mydb' in server 'myserver' as user 'myuser'"
 * "Show me the configuration of PostgreSQL server 'myserver' in resource group 'my-resource-group' as user 'myuser'"
+
+### 🔧 Azure Device Provisioning Service
+
+* "Show me Device Provisioning Service 'my-dps' in resource group 'my-resource-group' of my subscription 'my-subscription'"
+* "Get the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance 'my-dps'"
+* "Show the configuration of DPS instance 'my-dps' without returning connection strings or keys"
 
 ### 📣 Azure Event Grid
 
@@ -1193,6 +1241,8 @@ Example prompts that generate Azure CLI commands:
 * "Query all devices in IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 * "Compile an IoT Hub query for devices where reported batteryLevel is less than 20"
 * "Discover the queryable device twin fields in IoT Hub 'my-iot-hub'"
+* "Show routing endpoint health for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
+* "Show routing endpoint diagnostics for IoT Hub 'my-iot-hub' in resource group 'my-resource-group'"
 
 ### 🏭 Azure IoT Operations
 
@@ -1232,12 +1282,29 @@ Example prompts that generate Azure CLI commands:
 * "List all expansion jobs for the AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 * "Delete the expansion job 'my-expansion-job' for AMLFS filesystem 'my-filesystem' in resource group 'my-rg'"
 
+### Azure Marketplace
+
+Marketplace product listings return one page at a time. To get the next page, pass `nextCursor` unchanged as `--cursor`
+with the same subscription, tenant, and listing options. Stop when `nextCursor` is absent.
+
 ### 📊 Azure Monitor
 
 * "Query an Analytics table in my Log Analytics workspace"
 * "Search a Basic or Auxiliary table in my Log Analytics workspace over the last day"
+* "Validate this log data against the schema of data collection rule 'my-dcr' in resource group 'my-rg' before uploading it"
+* "Upload these log records to Azure Monitor using data collection endpoint 'my-endpoint', data collection rule 'my-dcr-immutable-id', and stream 'Custom-MyTable_CL'"
 * "List my Azure Monitor Health Models"
 * "Get details for my Azure Monitor Health Model 'my-health-model'"
+* "Why is my Azure Monitor Health Model 'my-health-model' degraded? Trace it to the signals that drive it"
+* "List the distributed trace accounts in my subscription"
+* "Show me the trace and span schema fields for Azure Monitor Workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
+* "Find attributes distinguishing traces with span_count > 10 from other traces in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg', using the last 30 minutes for both windows"
+* "Analyze the critical path for trace ID '<trace-id>' in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg' from '<start-time>' to '<end-time>'"
+* "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+* "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
+
+_Distributed trace commands require an Azure Monitor Workspace onboarded to Trace Store, which is in private preview._
 
 ### 🧭 Azure Monitor Instrumentation (under Azure Monitor)
 
@@ -1246,6 +1313,26 @@ Example prompts that generate Azure CLI commands:
 * "Start Azure Monitor instrumentation orchestration for my local workspace"
 * "Continue to the next orchestration step after I complete the previous action"
 * "Send brownfield analysis findings to continue migration planning"
+
+### Azure Monitor dashboards with Grafana
+
+* Find, inspect, and update saved Azure Monitor dashboards with Grafana
+* Query Azure Monitor logs, metrics, Application Insights traces, activity logs, and resource health
+* Run PromQL queries against Azure Monitor managed service for Prometheus workspaces
+* Run KQL queries against Azure Data Explorer (Kusto) clusters
+* Inspect Azure Monitor health models and their history
+
+_These tools come from the [Azure Monitor dashboards with Grafana remote MCP server](https://learn.microsoft.com/azure/managed-grafana/azure-monitor-dashboards-mcp-server), which accepts Microsoft Entra ID user accounts only. They are unavailable when Azure MCP authenticates as a service principal or managed identity._
+
+### 💾 Azure NetApp Files
+
+* "List my Azure NetApp Files accounts"
+* "Get details about my NetApp account 'mynetappaccount'"
+* "Create a new NetApp account in East US"
+* "Update tags on my NetApp account 'mynetappaccount'"
+* "Create a 4 TiB Premium capacity pool named 'my-pool' in Azure NetApp Files account 'my-account' in resource group 'my-resource-group'"
+* "Show the configuration and provisioning state of capacity pool 'my-pool' in Azure NetApp Files account 'my-account'"
+* "Resize capacity pool 'my-pool' in Azure NetApp Files account 'my-account' to 8 TiB"
 
 ### 📊 Azure Quota
 
@@ -1325,7 +1412,14 @@ Example prompts that generate Azure CLI commands:
 * "Get details about my storage account 'mystorageaccount'"
 * "Create a new storage account in East US with Data Lake support"
 * "Get details about my Storage container"
+* "Diagnose disk performance and throttling for my Azure virtual machine"
+* "Browse the top-level blobs and virtual folders in my blob container, returning at most 100 results"
+* "Show the blobs and subfolders directly under datasets/ in my blob container"
 * "Upload my file to the blob container"
+
+Blob, container, and table listings return one page of up to 100 items. To continue, pass `nextCursor` unchanged as
+`--cursor` with the same account and tenant, plus the same container, prefix, and delimiter where applicable.
+An empty page can still include `nextCursor`; continue until it is absent.
 
 ### 🔄 Azure Migrate
 
@@ -1335,10 +1429,24 @@ Example prompts that generate Azure CLI commands:
 
 ### 🛡️ Azure Resilience Management
 
-* "List all resilience goal templates in service group 'my-service-group'"
-* "Get the details of goal template 'my-template' in service group 'my-service-group'"
+Goals support the GA `2026-10-01` API with nested zonal resiliency settings, not
+goal templates or flat HA/DR payloads. Commands are service-group-scoped and do
+not take a subscription option. Assignment names use 3-24 ASCII letters, digits,
+or hyphens. Assignment PATCH only replaces or clears SLI
+associations; it cannot change the zonal requirement. See the
+[Goals command reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md#goals-ga-api-contract)
+for payloads and completion semantics. The tools use the released
+`Azure.ResourceManager.ResilienceManagement` SDK `1.0.0`.
+
 * "List all resilience goal assignments in service group 'my-service-group'"
 * "List the resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Create goal assignment 'my-assignment' in service group 'my-service-group' requiring zonal resiliency"
+* "Replace the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group' with existing Microsoft.Monitor/slis resources from that same service group, preserving its zonal requirement"
+* "Clear the service-level indicator associations of goal assignment 'my-assignment' in service group 'my-service-group', without deleting the indicators or changing its zonal requirement"
+* "Delete goal assignment 'my-assignment' from service group 'my-service-group' without deleting the underlying Azure resources"
+* "Recommend zonal capacity for non-resilient resources of goal assignment 'my-assignment' in service group 'my-service-group'"
+* "Refresh tracked resources of goal assignment 'my-assignment' in service group 'my-service-group' after membership changes"
+* "Exclude a selected resource from zonal participation in goal assignment 'my-assignment' in service group 'my-service-group'"
 * "List my resilience usage plans in resource group 'my-rg'"
 * "List the enrollments of usage plan 'my-plan' in resource group 'my-rg'"
 * "List all resilience recovery plans in service group 'my-service-group'"
@@ -1375,6 +1483,8 @@ Example prompts that generate Azure CLI commands:
 * "Start failover for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group', using source location 'eastus-az1'"
 * "Resume paused drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group' and proceed from fault injection to failover"
 * "Reprotect failed-over resources in drill run 'my-drill-run' for drill 'my-drill' in service group 'my-service-group'"
+* "Generate the report for drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
+* "Get a download link for the report of drill run 'my-drill-run' of drill 'my-drill' in service group 'my-service-group'"
 * "Create a Basic resilience usage plan 'my-plan' in resource group 'my-rg'"
 * "Enroll service group 'my-service-group' into usage plan 'my-plan' in resource group 'my-rg'"
 
@@ -1436,13 +1546,14 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
 - 🐬 **Azure Database for MySQL** - MySQL database management
 - 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
+- 🔧 **Azure Device Provisioning Service** - Device Provisioning Service resource configuration and linked IoT Hub metadata
 - 🏭 **Azure Device Registry** - Device Registry namespace management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Event Hubs** - Namespace, event hub, and consumer group management
 - 📁 **Azure File Shares** - Azure managed file share operations
 - ⚡ **Azure Functions** - Function App management and functions project files, language support, and templates source code
 - 💡 **Azure Insights** - Derive infrastructure insights from Azure Resource Graph patterns
-- 🌐 **Azure IoT Hub** - IoT Hub resource discovery and details
+- 🌐 **Azure IoT Hub** - IoT Hub resource discovery, details, routing endpoint health, and routing diagnostics
 - 🏭 **Azure IoT Operations** - IoT Operations instance discovery and details
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
@@ -1451,15 +1562,17 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations and expansion job management
 - 🏪 **Azure Marketplace** - Product discovery
 - 🔄 **Azure Migrate** - Platform Landing Zone generation and modification guidance
-- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, metrics, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 📈 **Azure Monitor** - Log queries, Basic and Auxiliary table search, custom log ingestion upload and validation, metrics, distributed tracing, health models, health monitoring, and instrumentation onboarding/migration workflow for local applications
+- 💾 **Azure NetApp Files** - Enterprise file storage account and capacity pool management
 - ⚖️ **Azure Policy** - Policies set to enforce organizational standards
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
-- 🛡️ **Azure Quick Review CLI** - Compliance scanning
+- 🛡️ **Azure Quick Review CLI** - Compliance scanning (requires the Azure Quick Review CLI (`azqr`) v3.0.0 or later installed and available on `PATH`)
 - 📊 **Azure Quota** - Resource quota and usage management
 - 💲 **Azure Retail Pricing** - Retail pricing, reservation terms, and SKU cost lookup
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
-- 🛡️ **Azure Resilience Management** - Resilience goal templates, goal assignments, goal resources, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🛡️ **Azure Resilience Management** - Resilience goal assignment lifecycle, zonal capacity recommendations, goal resource rediscovery, participation and attestation, usage plans, usage plan enrollments, recovery plans, recovery plan resources, recovery plan readiness checks, recovery jobs, recovery job resources, drills, drill resources, drill runs, drill run resources, recovery operations, and recovery plan failover validation
+- 🧭 **Azure Resiliency Agent** - General Azure resiliency guidance, application architecture assessment, resilient infrastructure-as-code generation, and review of existing Bicep, ARM JSON, and Terraform
 - 🏗️ **Azure Resource Groups** - Resource organization
 - 🚌 **Azure Service Bus** - Message queuing
 - 🧵 **Azure Service Fabric** - Managed cluster node operations
@@ -1469,7 +1582,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
 - 🤖 **Azure SRE Agent** - SRE Agent investigations, sub-agents, connectors, hooks, threads, scheduled tasks, incidents, workflows, memories, and remediation plans
-- 💾 **Azure Storage** - Blob storage
+- 💾 **Azure Storage** - Blob storage and Storage Intelligence disk performance diagnostics
 -  **Azure Storage Sync** - Azure File Sync management operations
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform** - Terraform provider documentation, Azure Verified Modules, resource export, and policy validation

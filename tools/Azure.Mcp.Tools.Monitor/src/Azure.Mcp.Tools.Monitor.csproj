@@ -24,6 +24,7 @@
   <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
+    <PackageReference Include="Azure.Monitor.Ingestion" />
     <PackageReference Include="Azure.Monitor.Query.Logs" />
     <PackageReference Include="Azure.Monitor.Query.Metrics" />
     <PackageReference Include="Azure.ResourceManager" />

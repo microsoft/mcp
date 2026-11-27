@@ -4,10 +4,13 @@
 using System.Net;
 using Azure;
 using Azure.Core;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Adme.Models.Schema;
 using Azure.Mcp.Tools.Adme.Services;
 using Azure.Mcp.Tools.Adme.Tests.TestSupport;
-using Microsoft.Mcp.Core.Services.Azure.Authentication;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Helpers;
 using NSubstitute;
 using Xunit;
 
@@ -28,15 +31,15 @@ public sealed class SchemaServiceTests
             response.Headers.Add(AdmeServiceHelper.CorrelationIdHeader, correlationId);
             return response;
         });
-        var provider = CreateCredentialProvider(TestConstants.AccessToken);
-        var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
+        var azureService = CreateAzureService(TestConstants.AccessToken);
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         var result = await service.GetSchemaAsync(
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             TestConstants.WellKind,
             TestConstants.Tenant,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal("Well", result.Result.GetProperty("title").GetString());
         Assert.Equal(correlationId, result.CorrelationId);
@@ -48,7 +51,7 @@ public sealed class SchemaServiceTests
         Assert.Equal("Bearer", handler.LastRequest.Headers.Authorization!.Scheme);
         Assert.Equal(TestConstants.AccessToken, handler.LastRequest.Headers.Authorization.Parameter);
         Assert.Equal(TestConstants.DataPartition, handler.LastRequest.Headers.GetValues("data-partition-id").Single());
-        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -57,8 +60,8 @@ public sealed class SchemaServiceTests
         var handler = JsonHandler(HttpStatusCode.OK, """
             {"schemaInfos":[{"schemaIdentity":{"id":"osdu:wks:master-data--Well:1.4.0"},"status":"PUBLISHED","scope":"SHARED","supersededBy":{"id":"osdu:wks:master-data--Well:2.0.0"}}],"offset":2,"count":1,"totalCount":3}
             """);
-        var provider = CreateCredentialProvider();
-        var service = new SchemaService(provider, new FakeHttpClientFactory(handler));
+        var azureService = CreateAzureService();
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), azureService, new FakeHttpClientFactory(handler));
 
         var result = await service.ListSchemasAsync(
             TestConstants.Endpoint,
@@ -75,7 +78,7 @@ public sealed class SchemaServiceTests
             true,
             2,
             25,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Equal(3, result.Result.TotalCount);
         var schemaInfo = Assert.Single(result.Result.SchemaInfos);
@@ -93,14 +96,14 @@ public sealed class SchemaServiceTests
         Assert.Equal("true", query["latestVersion"]);
         Assert.Equal("2", query["offset"]);
         Assert.Equal("25", query["limit"]);
-        await provider.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
+        await azureService.Received(1).GetTokenCredentialAsync(TestConstants.Tenant, Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ListSchemasAsync_OmitsOptionalParametersWhenUnset()
     {
         var handler = JsonHandler(HttpStatusCode.OK, """{"schemaInfos":[],"offset":0,"count":0,"totalCount":0}""");
-        var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
         await service.ListSchemasAsync(
             TestConstants.Endpoint,
@@ -117,7 +120,7 @@ public sealed class SchemaServiceTests
             false,
             null,
             null,
-            TestContext.Current.CancellationToken);
+            cancellationToken: TestContext.Current.CancellationToken);
 
         var query = ParseQuery(handler.LastRequest!.RequestUri!.Query);
         Assert.Single(query);
@@ -132,8 +135,8 @@ public sealed class SchemaServiceTests
     [InlineData("http://sample.oep.ppe.azure-int.net")]
     public async Task GetSchemaAsync_RejectsUntrustedEndpoint(string endpoint)
     {
-        var service = new SchemaService(
-            CreateCredentialProvider(),
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()),
+            CreateAzureService(),
             new FakeHttpClientFactory(JsonHandler(HttpStatusCode.OK, "{}")));
 
         await Assert.ThrowsAsync<System.Security.SecurityException>(() => service.GetSchemaAsync(
@@ -141,34 +144,34 @@ public sealed class SchemaServiceTests
             TestConstants.DataPartition,
             TestConstants.WellKind,
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task GetSchemaAsync_PreservesAdmeResponseBodyOnFailure()
     {
         var handler = JsonHandler(HttpStatusCode.NotFound, "sensitive backend details");
-        var service = new SchemaService(CreateCredentialProvider(), new FakeHttpClientFactory(handler));
+        var service = new SchemaService(new EndpointValidator(new SsrfProtectionPolicy(null), NullLogger<EndpointValidator>.Instance, new CommandContextAccessor()), CreateAzureService(), new FakeHttpClientFactory(handler));
 
         var exception = await Assert.ThrowsAsync<RequestFailedException>(() => service.GetSchemaAsync(
             TestConstants.Endpoint,
             TestConstants.DataPartition,
             "osdu:wks:missing:1.0.0",
             null,
-            TestContext.Current.CancellationToken));
+            cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Equal((int)HttpStatusCode.NotFound, exception.Status);
         Assert.Equal("sensitive backend details", exception.Message);
     }
 
-    private static IAzureTokenCredentialProvider CreateCredentialProvider(string token = "fake-token")
+    private static IAzureService CreateAzureService(string token = "fake-token")
     {
         var credential = Substitute.For<TokenCredential>();
         credential.GetTokenAsync(Arg.Any<TokenRequestContext>(), Arg.Any<CancellationToken>())
             .Returns(new AccessToken(token, DateTimeOffset.UtcNow.AddHours(1)));
-        var provider = Substitute.For<IAzureTokenCredentialProvider>();
-        provider.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
-        return provider;
+        var azureService = AzureServiceSubstitute.Create();
+        azureService.GetTokenCredentialAsync(Arg.Any<string?>(), Arg.Any<CancellationToken>()).Returns(credential);
+        return azureService;
     }
 
     private static StubHttpMessageHandler JsonHandler(HttpStatusCode status, string content) =>

@@ -18,7 +18,7 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
     Id = "c3e9a4f6-1d5b-6a8c-0e4f-3b7d9c1a5e62",
     Name = "explain",
     Title = "Explain Recommendation with Utilization Projection",
-    Description = "Explain a specific Azure Advisor cost/right-size recommendation for a resource and return its " +
+    Description = "Explain a specific  cost/right-size recommendation for a resource and return its " +
         "utilization time-series, which can be rendered as an inline chart. Call this whenever the user asks to " +
         "'explain recommendation N', 'explain this recommendation', 'tell me more about recommendation N', 'why is this " +
         "recommended', or 'go deeper on' a recommendation after listing recommendations with the 'list' tool. Pass the " +
@@ -36,8 +36,8 @@ namespace Azure.Mcp.Tools.Optimization.Commands.Recommendation;
         "timestamp on the x-axis and percentage on the y-axis, drawing lines for current (and target when present) CPU " +
         "and used-memory utilization, including network only when network values are present, and marking the threshold " +
         "levels from thresholds when available. Then briefly summarize the recommendation, the configuration, the maximum " +
-        "utilization, and any threshold risks. If inline chart rendering is not available, summarize the data in text " +
-        "instead. " +
+        "utilization, and any threshold risks. Refer to it as a 'cost optimization recommendation' and do not mention " +
+        "'Azure Advisor'. If inline chart rendering is not available, summarize the data in text instead. " +
         "Pass the user's subscription name or id straight to --subscription; a name is resolved to its id internally, so do " +
         "NOT call the 'subscription list' tool first.",
     OperationPlane = ToolOperationPlane.Control,

@@ -1,0 +1,28 @@
+{
+  "parameters": {
+    "capacityId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "createActorAutoDetectionRuleRequest": {
+      "actorsSubjectToRule": {
+        "type": "AllWorkspaces"
+      },
+      "capacityUnitsConsumptionThresholdPercentage": 50,
+      "blockDuration": {
+        "type": "Indefinite"
+      }
+    }
+  },
+  "responses": {
+    "201": {
+      "body": {
+        "id": "70cd1f22-e555-4fcf-813f-3877fef409fb",
+        "actorsSubjectToRule": {
+          "type": "AllWorkspaces"
+        },
+        "capacityUnitsConsumptionThresholdPercentage": 50,
+        "blockDuration": {
+          "type": "Indefinite"
+        }
+      }
+    }
+  }
+}

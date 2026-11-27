@@ -35,6 +35,9 @@ public sealed class NamespaceUpdateOptions : ISubscriptionOption
     [Option(Description = "Enable or disable zone redundancy for the namespace.")]
     public bool? ZoneRedundant { get; set; }
 
+    [Option(Description = "Disable local authentication and require Microsoft Entra ID (more secure). Defaults to true for new namespaces; omitted values preserve existing namespaces.")]
+    public bool? DisableLocalAuth { get; set; }
+
     [Option(Description = "Tags for the namespace in JSON format (e.g., '{\"key1\":\"value1\",\"key2\":\"value2\"}').")]
     public string? Tags { get; set; }
 

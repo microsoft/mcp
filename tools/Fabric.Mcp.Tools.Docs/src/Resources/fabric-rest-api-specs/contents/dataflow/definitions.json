@@ -504,6 +504,359 @@
         }
       ],
       "x-ms-discriminator-value": "Duration"
+    },
+    "DataflowUpgradeReadinessList": {
+      "description": "A paginated list of Gen1 dataflow upgrade readiness results.",
+      "type": "object",
+      "required": [ "value" ],
+      "properties": {
+        "value": {
+          "description": "The Gen1 dataflow upgrade readiness results.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowUpgradeReadiness"
+          },
+          "readOnly": true
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DataflowUpgradeReadiness": {
+      "description": "The upgrade readiness assessment for a Gen1 dataflow.",
+      "type": "object",
+      "required": [ "id", "displayName", "status" ],
+      "properties": {
+        "id": {
+          "description": "The identifier of the assessed Gen1 dataflow.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The display name of the Gen1 dataflow.",
+          "type": "string",
+          "readOnly": true
+        },
+        "status": {
+          "description": "The overall readiness verdict for the dataflow. The value is the highest severity among the reasons in this order: `UpgradeUnavailable`, `NeedsAttention`, and `ReadyToMigrate`. `Unknown` is not an aggregation outcome and means the readiness assessment could not be completed.",
+          "$ref": "#/definitions/DataflowUpgradeReadinessStatus",
+          "readOnly": true
+        },
+        "reasons": {
+          "description": "The reasons behind the readiness verdict. This property is omitted when the status is `ReadyToMigrate` and is always present when the status is `Unknown`.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowUpgradeReadinessReason"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowUpgradeReadinessReason": {
+      "description": "A reason contributing to a Gen1 dataflow upgrade readiness verdict.",
+      "type": "object",
+      "required": [ "status", "code", "message" ],
+      "properties": {
+        "status": {
+          "description": "The readiness severity contributed by this reason.",
+          "$ref": "#/definitions/DataflowUpgradeReadinessStatus",
+          "readOnly": true
+        },
+        "code": {
+          "description": "The stable code identifying the readiness reason.",
+          "$ref": "#/definitions/DataflowUpgradeReasonCode",
+          "readOnly": true
+        },
+        "message": {
+          "description": "The human-readable message accompanying the reason code.",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowUpgradeReadinessStatus": {
+      "description": "The Gen1 dataflow upgrade readiness status. Additional DataflowUpgradeReadinessStatus types may be added over time.",
+      "type": "string",
+      "enum": [ "Unknown", "ReadyToMigrate", "NeedsAttention", "UpgradeUnavailable" ],
+      "x-ms-enum": {
+        "name": "DataflowUpgradeReadinessStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Unknown",
+            "description": "The readiness assessment could not be completed and should be reported for investigation."
+          },
+          {
+            "value": "ReadyToMigrate",
+            "description": "The upgrade is expected to succeed without changes before or after the upgrade."
+          },
+          {
+            "value": "NeedsAttention",
+            "description": "The upgrade is expected to succeed, but follow-up changes may be needed or the upgrade may adjust the dataflow automatically."
+          },
+          {
+            "value": "UpgradeUnavailable",
+            "description": "The upgrade is expected to fail until the reported reasons are resolved."
+          }
+        ]
+      }
+    },
+    "DataflowUpgradeReasonCode": {
+      "description": "The reason for a Gen1 dataflow upgrade readiness result. Additional DataflowUpgradeReasonCode types may be added over time.",
+      "type": "string",
+      "enum": [ "MightBeAccessedByDirectQuery", "HasByolAsStorage", "HasIncrementalRefresh", "HasLinkedEntities", "IsReferencedByLinkedEntities", "ServiceThrottled", "HasUnsupportedNameCharacters", "DisplayNameAlreadyInUse", "ExceedsGen2QueryLimit", "HasUnresolvedConnections", "AssessmentUnavailable" ],
+      "x-ms-enum": {
+        "name": "DataflowUpgradeReasonCode",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "MightBeAccessedByDirectQuery",
+            "description": "The dataflow might be accessed through DirectQuery."
+          },
+          {
+            "value": "HasByolAsStorage",
+            "description": "The dataflow uses bring-your-own-lake storage."
+          },
+          {
+            "value": "HasIncrementalRefresh",
+            "description": "The dataflow uses incremental refresh."
+          },
+          {
+            "value": "HasLinkedEntities",
+            "description": "The dataflow has linked entities."
+          },
+          {
+            "value": "IsReferencedByLinkedEntities",
+            "description": "The dataflow is referenced by linked entities in other dataflows."
+          },
+          {
+            "value": "ServiceThrottled",
+            "description": "The readiness assessment was throttled and may succeed when retried later."
+          },
+          {
+            "value": "HasUnsupportedNameCharacters",
+            "description": "The display name contains characters that are unsupported by Dataflow Gen2 and are sanitized during the upgrade."
+          },
+          {
+            "value": "DisplayNameAlreadyInUse",
+            "description": "The sanitized display name is already in use and is prefixed during the upgrade."
+          },
+          {
+            "value": "ExceedsGen2QueryLimit",
+            "description": "The dataflow has more load-enabled queries than Dataflow Gen2 supports."
+          },
+          {
+            "value": "HasUnresolvedConnections",
+            "description": "One or more data source connections could not be resolved and must be recreated or rebound before the upgrade."
+          },
+          {
+            "value": "AssessmentUnavailable",
+            "description": "The readiness assessment could not run and should be reported for investigation."
+          }
+        ]
+      }
+    },
+    "UpgradeGen1DataflowsRequest": {
+      "description": "The request payload for upgrading Gen1 dataflows.",
+      "type": "object",
+      "required": [ "dataflows" ],
+      "properties": {
+        "dataflows": {
+          "description": "The Gen1 dataflows to upgrade in the specified workspace.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 50,
+          "items": {
+            "$ref": "#/definitions/Gen1DataflowUpgradeTarget"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "Gen1DataflowUpgradeTarget": {
+      "description": "A Gen1 dataflow targeted for an in-place upgrade.",
+      "type": "object",
+      "required": [ "id" ],
+      "properties": {
+        "id": {
+          "description": "The identifier of the Gen1 dataflow to upgrade. The dataflow must belong to the specified workspace.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
+        }
+      }
+    },
+    "DataflowUpgradeResult": {
+      "description": "The result of a Gen1 dataflow upgrade batch.",
+      "type": "object",
+      "required": [ "summary", "migrations" ],
+      "properties": {
+        "summary": {
+          "description": "The roll-up counts for the upgrade batch.",
+          "$ref": "#/definitions/DataflowUpgradeSummary",
+          "readOnly": true
+        },
+        "migrations": {
+          "description": "The migration result for each requested dataflow.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowMigration"
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowUpgradeSummary": {
+      "description": "The roll-up counts for a Gen1 dataflow upgrade batch.",
+      "type": "object",
+      "required": [ "totalCount", "succeededCount", "failedCount" ],
+      "properties": {
+        "totalCount": {
+          "description": "The total number of dataflows in the request.",
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "succeededCount": {
+          "description": "The number of dataflows that were upgraded successfully.",
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        },
+        "failedCount": {
+          "description": "The number of dataflows that failed to upgrade.",
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowMigration": {
+      "description": "The migration result for a Gen1 dataflow.",
+      "type": "object",
+      "required": [ "dataflowId", "dataflowName", "targetDataflowName", "workspaceId", "workspaceName", "assessmentStatus", "migrationStatus" ],
+      "properties": {
+        "dataflowId": {
+          "description": "The identifier of the dataflow, which is preserved by a successful in-place upgrade.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "dataflowName": {
+          "description": "The source Gen1 dataflow display name.",
+          "type": "string",
+          "readOnly": true
+        },
+        "targetDataflowName": {
+          "description": "The resulting Dataflow Gen2 display name, which may differ from the source display name.",
+          "type": "string",
+          "readOnly": true
+        },
+        "workspaceId": {
+          "description": "The identifier of the workspace containing the dataflow.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": true
+        },
+        "workspaceName": {
+          "description": "The display name of the workspace containing the dataflow.",
+          "type": "string",
+          "readOnly": true
+        },
+        "assessmentStatus": {
+          "description": "The readiness verdict evaluated for the dataflow during the upgrade. This property does not report `UpgradeUnavailable`; a readiness result that predicts failure is reported as `NeedsAttention` because the migration status and migration error describe the actual outcome.",
+          "$ref": "#/definitions/DataflowUpgradeReadinessStatus",
+          "readOnly": true
+        },
+        "requiredActions": {
+          "description": "The changes required before the dataflow can be upgraded. This property is omitted when no changes are required.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowUpgradeRequiredAction"
+          },
+          "readOnly": true
+        },
+        "migrationStatus": {
+          "description": "The migration outcome for the dataflow.",
+          "$ref": "#/definitions/DataflowMigrationStatus",
+          "readOnly": true
+        },
+        "migrationEndDateTime": {
+          "description": "The time when the dataflow migration reached a terminal state. This property is omitted when the time is not available. When present, the value is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+          "type": "string",
+          "format": "date-time",
+          "readOnly": true
+        },
+        "migrationError": {
+          "description": "The failure detail for the dataflow migration. This property is present only when the migration status is `Failed`, and `isRetriable` is always included. The `requestId` contains the upgrade operation ID. The error code is one of `InsufficientPrivileges`, `DataflowNotFound`, `DataflowBusy`, `DataflowRequiresChanges`, `CapacityOrLicenseNotSupported`, or `UpgradeFailed`.",
+          "allOf": [
+            {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            },
+            {
+              "type": "object",
+              "required": [ "isRetriable" ],
+              "properties": {
+                "isRetriable": {
+                  "description": "Indicates whether the dataflow migration can be retried.",
+                  "type": "boolean",
+                  "readOnly": true
+                }
+              }
+            }
+          ],
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowUpgradeRequiredAction": {
+      "description": "A change required before a Gen1 dataflow can be upgraded.",
+      "type": "object",
+      "required": [ "status", "code", "message" ],
+      "properties": {
+        "status": {
+          "description": "The readiness severity contributed by this required action.",
+          "$ref": "#/definitions/DataflowUpgradeReadinessStatus",
+          "readOnly": true
+        },
+        "code": {
+          "description": "The stable reason code identifying the required change.",
+          "$ref": "#/definitions/DataflowUpgradeReasonCode",
+          "readOnly": true
+        },
+        "message": {
+          "description": "The human-readable description of the required change.",
+          "type": "string",
+          "readOnly": true
+        }
+      }
+    },
+    "DataflowMigrationStatus": {
+      "description": "The outcome of a Gen1 dataflow migration. Additional DataflowMigrationStatus types may be added over time.",
+      "type": "string",
+      "enum": [ "Unknown", "Succeeded", "Failed" ],
+      "x-ms-enum": {
+        "name": "DataflowMigrationStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Unknown",
+            "description": "The migration outcome was not populated and indicates a service defect if returned."
+          },
+          {
+            "value": "Succeeded",
+            "description": "The dataflow was upgraded successfully."
+          },
+          {
+            "value": "Failed",
+            "description": "The dataflow failed to upgrade."
+          }
+        ]
+      }
     }
   }
 }

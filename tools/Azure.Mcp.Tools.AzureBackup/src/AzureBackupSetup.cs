@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Container;
 using Azure.Mcp.Tools.AzureBackup.Commands.DisasterRecovery;
 using Azure.Mcp.Tools.AzureBackup.Commands.Governance;
 using Azure.Mcp.Tools.AzureBackup.Commands.Job;
+using Azure.Mcp.Tools.AzureBackup.Commands.Operation;
 using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectableItem;
 using Azure.Mcp.Tools.AzureBackup.Commands.ProtectedItem;
@@ -32,6 +33,7 @@ public sealed class AzureBackupSetup : IAreaSetup
         services.AddSingleton<IRsvBackupOperations, RsvBackupOperations>();
         services.AddSingleton<IDppBackupOperations, DppBackupOperations>();
         services.AddSingleton<IAzureBackupService, AzureBackupService>();
+        services.AddSingleton<OperationGetCommand>();
 
         services.AddSingleton<VaultGetCommand>();
         services.AddSingleton<VaultCreateCommand>();
@@ -84,12 +86,10 @@ public sealed class AzureBackupSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var azureBackup = new CommandGroup(Name,
-            """
-            Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV)
-            and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations,
-            policy management, job monitoring, recovery point browsing, governance, and disaster recovery.
-            Use --vault-type to specify vault type or let the system auto-detect.
-            """,
+            "Azure Backup operations - Unified commands to manage backup across Recovery Services vaults (RSV) " +
+            "and Backup vaults (DPP/Data Protection). Supports vault management, protected item operations, " +
+            "policy management, job monitoring, recovery point browsing, governance, and disaster recovery. " +
+            "Use --vault-type to specify vault type or let the system auto-detect.",
             Title);
 
         var vault = new CommandGroup("vault", "Backup vault operations - Get vault details or list all vaults, create, and update vaults.");
@@ -139,6 +139,10 @@ public sealed class AzureBackupSetup : IAreaSetup
         var job = new CommandGroup("job", "Backup job operations - Get job details or list all jobs in a vault.");
         azureBackup.AddSubGroup(job);
         job.AddCommand<JobGetCommand>(serviceProvider);
+
+        var operation = new CommandGroup("operation", "Read asynchronous operation status for Recovery Services vaults (RSV only), independently of backup job status.");
+        azureBackup.AddSubGroup(operation);
+        operation.AddCommand<OperationGetCommand>(serviceProvider);
 
         var recoveryPoint = new CommandGroup("recoverypoint", "Recovery point operations - Get recovery point details or list all for a protected item.");
         azureBackup.AddSubGroup(recoveryPoint);

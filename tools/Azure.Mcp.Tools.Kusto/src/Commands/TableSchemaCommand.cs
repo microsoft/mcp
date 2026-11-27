@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
+using Azure.Mcp.Tools.Kusto.Validation;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models.Command;
@@ -28,6 +29,20 @@ public sealed class TableSchemaCommand(
     ISubscriptionResolver subscriptionResolver)
     : BaseClusterCommand<TableSchemaOptions, TableSchemaCommand.TableSchemaCommandResult>(subscriptionResolver)
 {
+    public override void ValidateOptions(TableSchemaOptions options, ValidationResult validationResult)
+    {
+        base.ValidateOptions(options, validationResult);
+
+        try
+        {
+            KustoIdentifierValidator.ValidateIdentifier(options.Table, "tableName");
+        }
+        catch (CommandValidationException ex)
+        {
+            validationResult.AddError(ex.Message, "Invalid Kusto table name.");
+        }
+    }
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, TableSchemaOptions options, CancellationToken cancellationToken)
     {
         try

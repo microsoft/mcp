@@ -137,6 +137,30 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
     }
 
     [Fact]
+    public async Task ExecuteAsync_SurfacesTruncation_WhenListingIsIncomplete()
+    {
+        // A deserialization failure that truncates the listing must not be reported as an empty
+        // success; the command surfaces the descriptive error from the service.
+        Service.ListProtectedItemsAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException(
+                "Listing protected items in vault 'v' is incomplete: 0 item(s) were returned before a backup " +
+                "instance repeatedly failed to deserialize (commonly caused by an empty or malformed resourceGroupId " +
+                "on the instance), so the remaining instances could not be enumerated."));
+
+        // Act
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg");
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.OK, response.Status);
+        Assert.Contains("incomplete", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("resourceGroupId", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_HandlesNotFound()
     {
         // Arrange
@@ -200,5 +224,42 @@ public class ProtectedItemGetCommandTests : SubscriptionCommandUnitTestsBase<Pro
         Assert.Contains(options, o => o.Name == "--vault-type");
         Assert.Contains(options, o => o.Name == "--protected-item");
         Assert.Contains(options, o => o.Name == "--container");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsVaultAndResourceGroupResourceIds()
+    {
+        const string subscription = "f0c630e0-2995-4853-b056-0b3c09cb673f";
+        Service.ListProtectedItemsAsync("myVault", "myRg", subscription, "rsv", Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--resource-group", $"/subscriptions/{subscription}/resourceGroups/myRg",
+            "--vault", $"/subscriptions/{subscription}/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault");
+
+        var result = ValidateAndDeserializeResponse(response, AzureBackupJsonContext.Default.ProtectedItemGetCommandResult);
+        Assert.Empty(result.ProtectedItems);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_VaultResourceIdWithoutResourceGroup_ReportsMissingResourceGroup()
+    {
+        var response = await ExecuteCommandAsync(
+            "--vault", "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/myRg/providers/Microsoft.RecoveryServices/vaults/myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--resource-group", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsBadRequest_ForMalformedResourceGroupResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub123", "--resource-group", "/subscriptions/x/resourceGroups/myRg", "--vault", "myVault");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.InvalidResourceGroupMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

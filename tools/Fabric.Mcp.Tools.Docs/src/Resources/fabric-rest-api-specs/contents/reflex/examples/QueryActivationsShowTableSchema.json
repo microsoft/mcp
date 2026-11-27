@@ -1,0 +1,34 @@
+{
+  "title": "Query activations - show table schema example",
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "reflexId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "queryActivationsRequest": {
+      "query": ".show table ruleactivations_341301deecbd499ca5e60fcdc17ca3e2 cslschema"
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "tables": [
+          {
+            "tableName": "PrimaryResult",
+            "columns": [
+              {
+                "columnName": "TableName",
+                "columnType": "String"
+              },
+              {
+                "columnName": "Schema",
+                "columnType": "String"
+              }
+            ],
+            "rows": [
+              ["ruleactivations_341301deecbd499ca5e60fcdc17ca3e2", "['___time']:datetime,['System.IngestionTime']:datetime,['___id']:string,['___type']:string,['___source']:string,['Signal.Name']:string,['System.RuleId']:string,['System.RuleVersion']:string,['System.RuleName']:string,['System.Rule.LastModifiedBy']:string,['System.Rule.LastModifiedTime']:string,['System.ObjectId']:string,['System.ObjectName']:string,['System.ActionType']:string,['System.Action.Teams.Recipients']:string,['System.Action.Teams.Headline']:string,['System.Action.Teams.Message']:string,['temperature']:real"]
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

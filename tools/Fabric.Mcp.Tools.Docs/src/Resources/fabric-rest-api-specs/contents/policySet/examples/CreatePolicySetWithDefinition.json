@@ -1,0 +1,48 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createPolicySetRequest": {
+            "displayName": "PolicySet 1",
+            "description": "A PolicySet description.",
+            "definition": {
+                "parts": [
+                    {
+                        "path": "policySet.json",
+                        "payload": "eyJwcm9wZXJ0aWVzIjp7InNjb3BlIjp7InR5cGUiOiJDYXBhY2l0eSJ9fSwicG9saWN5UnVsZXMiOlt7ImRpc3BsYXlOYW1lIjoiSXRlbSBDcmVhdGlvbiBQb2xpY3kiLCJkZXNjcmlwdGlvbiI6IkFsbG93IHNwZWNpZmljIGl0ZW0gdHlwZXMiLCJwb2xpY3kiOiJJdGVtQ3JlYXRpb24iLCJjb25kaXRpb25zIjpbeyJ0eXBlIjoiRHluYW1pYyIsInRhcmdldFByb3BlcnR5IjoiaXRlbS50eXBlIiwicHJlZGljYXRlIjp7Im9wZXJhdG9yIjoiQW55T2YiLCJ2YWx1ZXMiOlsiUmVmbGV4UHJvamVjdCIsIkt1c3RvRXZlbnRIb3VzZSJdfX1dLCJ0aGVuIjpbeyJlZmZlY3QiOiJBbGxvdyJ9XX1dfQ==",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": ".platform",
+                        "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                        "payloadType": "InlineBase64"
+                    }
+                ],
+                "format": "Beta"
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "PolicySet 1",
+                "description": "A PolicySet description.",
+                "type": "PolicySet",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715",
+                "properties": {
+                    "scope": {
+                        "type": "Capacity"
+                    },
+                    "status": "Inactive"
+                }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

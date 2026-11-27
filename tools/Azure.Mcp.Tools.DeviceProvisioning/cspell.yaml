@@ -1,0 +1,9 @@
+# Spell-check overrides for this toolset/server.
+# Inherits the global config at the repo root.
+version: "0.2"
+import:
+  - ../../.vscode/cspell.json
+words:
+  - idscope
+  - iothubs
+  - provisioningserviceowner

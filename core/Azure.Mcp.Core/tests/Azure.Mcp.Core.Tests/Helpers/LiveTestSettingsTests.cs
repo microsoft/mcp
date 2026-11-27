@@ -10,6 +10,39 @@ namespace Azure.Mcp.Core.Tests.Helpers;
 
 public class LiveTestSettingsTests
 {
+    [Fact]
+    public void TryFindTestSettingsFile_SearchesProjectParents()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), $"McpSettings-{Guid.NewGuid():N}");
+        try
+        {
+            string projectDirectory = Path.Combine(directory, "tests", "project");
+            Directory.CreateDirectory(projectDirectory);
+            string settingsPath = Path.Combine(directory, "tests", LiveTestSettings.TestSettingsFileName);
+            File.WriteAllText(settingsPath, "{}");
+
+            Assert.True(LiveTestSettings.TryFindTestSettingsFile(out var path, projectDirectory));
+            Assert.Equal(settingsPath, path);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TestHost_PreservesSourcePathWhenOutputIsShared()
+    {
+        var sourcePath = System.Reflection.Assembly.GetEntryAssembly()?
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyMetadataAttribute), inherit: false)
+            .Cast<System.Reflection.AssemblyMetadataAttribute>()
+            .Single(attribute => attribute.Key == "SourcePath").Value;
+
+        Assert.NotNull(sourcePath);
+        Assert.True(File.Exists(Path.Combine(sourcePath, "Azure.Mcp.Core.Tests.csproj")));
+        Assert.NotEqual(Path.GetFullPath(sourcePath), Path.GetFullPath(AppContext.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar));
+    }
+
     [Theory]
     [InlineData("Live", TestMode.Live)]
     [InlineData("Record", TestMode.Record)]

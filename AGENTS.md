@@ -34,7 +34,7 @@
 ## Don't
 - Use `subscriptionId` parameter name
 - Add unnecessary "-name" suffixes (use `--account` vs `--account-name`)
-- Use the old one-generic `RegisterOptions`/`BindOptions` pattern for new commands (see `/docs/option-conversion.md`)
+- Use the old one-generic `RegisterOptions`/`BindOptions` pattern for new commands
 - Use `OptionDefinitions` static classes for new commands (use `[Option]` attributes instead)
 - Use options class inheritance hierarchies (use flat POCOs with interface constraints)
 - Skip live tests, live test infrastructure, or test recordings for Azure service commands
@@ -78,7 +78,7 @@ dotnet build
 ./eng/scripts/Test-Code.ps1
 
 # AOT compatibility check (for new toolsets)
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 ```
 
 ## Safety and Permissions
@@ -117,16 +117,14 @@ Microsoft MCP (Model Context Protocol) servers provide AI agents with structured
 - `tools/Azure.Mcp.Tools.{Service}/` - Individual service toolsets (Storage, SQL, etc.)
 - `eng/scripts/` - Build, test, and deployment PowerShell scripts
 - `.github/skills/add-azure-mcp-tools/SKILL.md` - Implementation guide for new commands
-- `docs/option-conversion.md` - Guide for converting to two-generic option pattern
 - `CONTRIBUTING.md` - Contribution guidelines and workflows
 
 ### Good examples to follow
 - Command implementation: `tools/Azure.Mcp.Tools.Storage/src/Commands/Account/AccountGetCommand.cs`
 - Service pattern: `tools/Azure.Mcp.Tools.Storage/src/Services/StorageService.cs`
-- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/StorageAccountGetCommandTests.cs`
+- Unit tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/Account/AccountGetCommandTests.cs`
 - Integration tests: `tools/Azure.Mcp.Tools.Storage/tests/Azure.Mcp.Tools.Storage.Tests/StorageCommandTests.cs`
 - Live test infrastructure: `tools/Azure.Mcp.Tools.Storage/tests/test-resources.bicep`
-- Option conversion guide: `docs/option-conversion.md`
 
 ### Legacy patterns to avoid
 - Old one-generic `RegisterOptions`/`BindOptions` pattern (use two-generic with `[Option]` attributes)
@@ -167,7 +165,6 @@ dotnet build
 ## API Docs and References
 - API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
 - Implementation guide: `/.github/skills/add-azure-mcp-tools/SKILL.md` - Step-by-step command creation
-- Option conversion: `/docs/option-conversion.md` - Converting to two-generic option pattern
 - Test prompts: `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Recorded tests: `/docs/recorded-tests.md` - Guide for converting live tests to recorded (playback) tests
 - Contributing guide: `/CONTRIBUTING.md` - Development workflow and standards
@@ -179,7 +176,6 @@ dotnet build
 - Reference existing commands in similar services as templates
 - Check `/.github/skills/add-azure-mcp-tools/SKILL.md` for implementation patterns
 - Use GitHub Copilot Chat with `"create [service] [resource] [operation] command using /skills/add-azure-mcp-tools as a reference"`
-- Check `/docs/option-conversion.md` for the two-generic option pattern
 
 ## PR Checklist
 - Format and type check: `dotnet format && dotnet build` - all green
@@ -188,7 +184,7 @@ dotnet build
 - Live tests: Include live tests for all commands that interact with Azure resources
 - Recorded tests: All live tests **must** be recorded for playback (see `/docs/recorded-tests.md`)
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
-- Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
+- Tool validation (optional for Fabric MCP tools): Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. See `/docs/changelog-entries.md` for instructions. Always use the `-ChangelogPath` parameter (e.g., `/servers/Azure.Mcp.Server/CHANGELOG.md` or `/servers/Fabric.Mcp.Server/CHANGELOG.md`).
 - One tool per PR: Submit single toolsets for faster review cycles
@@ -255,7 +251,7 @@ dotnet build
 ./eng/scripts/Build-Local.ps1 -VerifyNpx
 
 # AOT-compatible build (tests native compilation)
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 
 # Build with debugging symbols
 ./eng/scripts/Build-Local.ps1
@@ -298,7 +294,7 @@ dotnet format --include="tools/Azure.Mcp.Tools.Storage/**/*.cs"
 # AOT compatibility analysis
 ./eng/scripts/Analyze-AOT-Compact.ps1
 
-# Tool description quality validation
+# Tool description quality validation (optional for Fabric MCP tools)
 pushd 'eng/tools/ToolDescriptionEvaluator/src'
 dotnet run -- --validate --tool-description "Your command description" --prompt "user query" --test-single-tool 'your-tool-name'
 popd
@@ -406,8 +402,6 @@ public sealed class AccountGetCommand(
     internal record AccountGetResult(List<StorageAccountInfo> Accounts);
 }
 ```
-
-> See `/docs/option-conversion.md` for the full conversion guide from one-generic to two-generic pattern.
 
 ### Parameter Naming Standards
 - **Use `subscription`** (never `subscriptionId`) - supports both IDs and names
@@ -537,7 +531,7 @@ await WaitForLroCompletionAsync(lroOperation, cancellationToken);
 ### Development Process
 1. **Create issue**: "Add command: azmcp [service] [resource] [operation]"
 2. **Use Copilot for generation**: Execute in Copilot Chat: `"create [service] [resource] [operation]" command using "/skills add-azure-mcp-tools" as a reference`
-3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md` and **two-generic pattern** in `/docs/option-conversion.md`
+3. **Follow implementation guidelines** in `/.github/skills/add-azure-mcp-tools/SKILL.md`
 4. **Create live test infrastructure** (if Azure service): Bicep template and post-deployment script
 5. **Submit one tool per pull request** for faster review cycles
 
@@ -576,7 +570,7 @@ dotnet run -- --validate \
 dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.md
 popd
 
-# Target: Top 3 ranking and confidence score ≥ 0.4
+# Target: Top 3 ranking and confidence score ≥ 0.4 (optional for Fabric MCP tools)
 ```
 
 ## Local Development and Testing
@@ -640,7 +634,7 @@ All new toolsets must be AOT-compatible or excluded from native builds:
 
 ```powershell
 # Test AOT compatibility
-./eng/scripts/Build-Local.ps1 -BuildNative
+./eng/scripts/Build-Local.ps1 -IncludeNative
 
 # If AOT fails (common for new Azure services), exclude toolset:
 # 1. Move setup call in Program.cs under #if !BUILD_NATIVE
@@ -767,7 +761,7 @@ When working in a linked git worktree (multiple worktrees sharing one repository
 - **Run all tests**: `./eng/scripts/Test-Code.ps1`
 - **Format code**: `dotnet format`
 - **Check spelling**: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- **Validate tool descriptions**: Use ToolDescriptionEvaluator
+- **Validate tool descriptions**: Use ToolDescriptionEvaluator (optional for Fabric MCP tools)
 - **Follow contribution guidelines**: See `CONTRIBUTING.md`
 - **One tool per PR**: Submit single toolsets for faster review
 

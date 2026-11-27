@@ -462,9 +462,9 @@
     "Show secrets names in the key vault <key_vault_account_name>"
   ],
   "aks_cluster_get": [
-    "Get the configuration of AKS cluster <cluster-name>",
+    "Get the configuration of AKS cluster <cluster-name> in resource group <resource-group>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
-    "Show me the network configuration for AKS cluster <cluster-name>",
+    "Show me the network configuration for AKS cluster <cluster-name> in resource group <resource-group>",
     "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
     "List all AKS clusters in my subscription",
     "Show me my Azure Kubernetes Service clusters",
@@ -555,6 +555,13 @@
   "monitor_healthmodels_list": [
     "List the Azure Monitor health models in my subscription",
     "What health models are in resource group <resource_group>?"
+  ],
+  "monitor_healthmodels_inspect": [
+    "Why is health model <health_model_name> degraded? Trace it down to the signals that caused it",
+    "Which entities of health model <health_model_name> are not healthy?",
+    "Show the dependencies of health model <health_model_name>",
+    "List the entities of health model <health_model_name> and their health history",
+    "What are the thresholds of the signals on entity <entity_name> in health model <health_model_name>?"
   ],
   "monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",

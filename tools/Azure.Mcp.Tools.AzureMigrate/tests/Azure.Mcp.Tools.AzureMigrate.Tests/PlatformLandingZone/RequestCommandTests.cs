@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tests.Commands;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AzureMigrate.Commands;
 using Azure.Mcp.Tools.AzureMigrate.Commands.PlatformLandingZone;
 using Azure.Mcp.Tools.AzureMigrate.Helpers;
@@ -20,7 +21,7 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
 {
     public RequestCommandTests()
     {
-        Services.AddSingleton(Substitute.For<IAzureService>());
+        Services.AddSingleton(AzureServiceTestHelpers.CreateAzureService());
         Services.AddSingleton<AzureMigrateProjectHelper>();
     }
 
@@ -240,6 +241,42 @@ public class RequestCommandTests : SubscriptionCommandUnitTestsBase<RequestComma
 
         Assert.Contains("Platform Landing zone generated successfully", result.Message);
         Assert.Contains(downloadUrl, result.Message);
+    }
+
+    [Theory]
+    [InlineData("check")]
+    [InlineData("generate")]
+    [InlineData("download")]
+    public async Task ExecuteAsync_WithTenant_PassesTenantInContext(string action)
+    {
+        const string tenant = "Contoso Ltd";
+        Service.GetMissingParameters(Arg.Any<PlatformLandingZoneContext>()).Returns([]);
+
+        var response = await ExecuteCommandAsync(
+            "--action", action,
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--migrate-project-name", "project1",
+            "--tenant", tenant);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        switch (action)
+        {
+            case "check":
+                await Service.Received(1).CheckExistingAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<CancellationToken>());
+                break;
+            case "generate":
+                await Service.Received(1).GenerateAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<CancellationToken>());
+                break;
+            case "download":
+                await Service.Received(1).DownloadAsync(
+                    Arg.Is<PlatformLandingZoneContext>(ctx => ctx.Tenant == tenant), Arg.Any<string>(), Arg.Any<CancellationToken>());
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(action), action, null);
+        }
     }
 
     [Fact]

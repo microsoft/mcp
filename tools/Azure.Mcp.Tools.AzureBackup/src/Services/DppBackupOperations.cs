@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
@@ -47,6 +48,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetDataProtectionBackupVaults();
 
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, or choose a different name for a new vault.");
+        }
+
         var storageSettings = new List<DataProtectionBackupStorageSetting>
         {
             new()
@@ -81,7 +90,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState?.ToString());
+            result.Value.Data.Properties?.ProvisioningState?.ToString(),
+            StorageRedundancy: result.Value.Data.Properties?.StorageSettings?.FirstOrDefault()?.StorageSettingType?.ToString());
     }
 
     public async Task<BackupVaultInfo> GetVaultAsync(
@@ -307,13 +317,12 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         string? protectionStatus = null;
         try
         {
-            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(operation.Value.Id);
-            var bi = await instanceResource.GetAsync(cancellationToken);
-            protectionStatus = bi.Value.Data.Properties?.ProtectionStatus?.Status?.ToString();
+            var bi = await DppBackupInstanceReader.GetAsync(armClient, operation.Value.Id, cancellationToken);
+            protectionStatus = bi.Properties?.ProtectionStatus?.Status?.ToString();
         }
-        catch (RequestFailedException)
+        catch (Exception ex) when (ex is RequestFailedException or FormatException or ArgumentException or InvalidOperationException or JsonException)
         {
-            // Transient re-read failure; protection itself succeeded.
+            // Transient or unreadable re-read; protection itself succeeded.
         }
 
         return new ProtectResult(
@@ -343,9 +352,8 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         try
         {
             var instanceId = DataProtectionBackupInstanceResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName, protectedItemName);
-            var instanceResource = armClient.GetDataProtectionBackupInstanceResource(instanceId);
-            var instance = await instanceResource.GetAsync(cancellationToken);
-            return MapToProtectedItemInfo(instance.Value.Data);
+            var instance = await DppBackupInstanceReader.GetAsync(armClient, instanceId, cancellationToken);
+            return MapToProtectedItemInfo(instance);
         }
         catch (RequestFailedException ex) when (ex.Status == 404)
         {
@@ -392,59 +400,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = DataProtectionBackupVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var vaultResource = armClient.GetDataProtectionBackupVaultResource(vaultId);
-        var collection = vaultResource.GetDataProtectionBackupInstances();
 
-        var items = new List<ProtectedItemInfo>();
-
-        // BUG-B fix: DPP backup instances sometimes deserialize to an "unknown" polymorphic
-        // subtype whose base-properties converter throws (ArgumentNullException /
-        // ArgumentException / FormatException / InvalidOperationException) inside
-        // MoveNextAsync. Previously the whole listing failed with an MCP-classified
-        // exception. Now we skip past the bad item and continue - matching the pattern
-        // already used by ListPoliciesAsync above - so a single unsupported instance
-        // does not blank out the entire list. Cap consecutive failures so a page-level
-        // deserialization loop can not spin forever.
-        var enumerator = collection.GetAllAsync(cancellationToken).GetAsyncEnumerator(cancellationToken);
-        const int maxConsecutiveFailures = 3;
-        var consecutiveFailures = 0;
-        try
-        {
-            while (true)
-            {
-                try
-                {
-                    if (!await enumerator.MoveNextAsync())
-                    {
-                        break;
-                    }
-
-                    items.Add(MapToProtectedItemInfo(enumerator.Current.Data));
-                    consecutiveFailures = 0;
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception ex) when (
-                    ex is FormatException
-                    or ArgumentNullException
-                    or ArgumentException
-                    or InvalidOperationException)
-                {
-                    if (++consecutiveFailures >= maxConsecutiveFailures)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-        finally
-        {
-            await enumerator.DisposeAsync();
-        }
-
-        return items;
+        // Read pages directly so one malformed backup instance cannot fail SDK page deserialization and
+        // hide every other instance in the vault.
+        return await DppBackupInstanceReader.ListAsync(
+            armClient,
+            vaultId,
+            static data => MapToProtectedItemInfo(data),
+            cancellationToken);
     }
 
     public async Task<BackupPolicyInfo> GetPolicyAsync(
@@ -605,13 +568,14 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         }
 
         var undeleteOperation = await matchedInstance.UndeleteAsync(WaitUntil.Started, cancellationToken);
-        var jobId = ExtractJobIdFromOperation(undeleteOperation.GetRawResponse());
-        var monitorMessage = string.IsNullOrWhiteSpace(jobId)
-            ? $"Restore operation started, but no backup job ID was returned. Operation ID: '{undeleteOperation.Id}'."
-            : $"Use 'azurebackup job get --job {jobId}' to monitor progress.";
+        var operationId = ExtractOperationIdFromResponse(undeleteOperation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. {monitorMessage}");
+        return new OperationResult("Accepted", JobId: null,
+            $"Restore of soft-deleted backup instance for datasource '{datasourceId}' has been started in vault '{vaultName}'. " +
+            (string.IsNullOrWhiteSpace(operationId)
+                ? "Use 'azurebackup protecteditem get' to verify."
+                : $"Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify."),
+            OperationId: operationId);
     }
 
     public async Task<BackupJobInfo> GetJobAsync(
@@ -744,7 +708,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
         // The DPP recovery-point deserializer may throw on unknown polymorphic
         // discriminators introduced by newer service versions. Skip the offending
         // item instead of blanking out the entire recovery-point list. Matches the
-        // pattern used by ListPoliciesAsync and ListProtectedItemsAsync.
+        // pattern used by ListPoliciesAsync.
         var enumerator = collection.GetAllAsync(cancellationToken: cancellationToken).GetAsyncEnumerator(cancellationToken);
         const int maxConsecutiveFailures = 3;
         var consecutiveFailures = 0;
@@ -1581,7 +1545,7 @@ public sealed class DppBackupOperations(IAzureService azureService) : BaseAzureS
             rpType);
     }
 
-    private static string? ExtractJobIdFromOperation(Response response)
+    private static string? ExtractOperationIdFromResponse(Response response)
     {
         if (response.Headers.TryGetValue("Azure-AsyncOperation", out var asyncOpUrl) && !string.IsNullOrEmpty(asyncOpUrl))
         {

@@ -1,7 +1,6 @@
 {
   "parameters": {
     "workspaceId": "a97f3e88-9f0a-4183-b1d9-31e6eb00e778",
-    "beta": true,
     "updateSQLPoolsConfigurationRequest": {
       "customSQLPoolsEnabled": true,
       "customSQLPools": [

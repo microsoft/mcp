@@ -28,7 +28,7 @@ foreach ($key in $staticDeploymentOutputs.Keys) {
 }
 
 $PSBoundParameters['DeploymentOutputs'] = $DeploymentOutputs
-New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot | Out-Null
+$testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
 $storageAccountName = "$($BaseName)mon"
 $containerName = 'foo'
@@ -38,6 +38,54 @@ $files = Get-ChildItem -Path "$PSScriptRoot/samples" -Filter '*.md'
 foreach ($file in $files) {
     Set-AzStorageBlobContent -File $file.FullName -Container $containerName -Blob $file.Name -Context $context -Force -ProgressAction SilentlyContinue | Out-Null
 }
+
+# ---------------------------------------------------------------------------
+# Seed health states for the health model inspect recorded tests
+# (Azure.Mcp.Tools.Monitor.Tests.HealthModels.HealthModelInspectRecordedTests).
+#
+# Uses the official Entities_IngestHealthReport ARM action (a manual "push" signal).
+# - Model B's root, worst-of'd with its Resource Health: Degraded, then Unhealthy, gives two
+#   transitions and a non-Healthy final state for the history test. The 35s gap keeps them distinct.
+# - Model C's leaves: frontend Degraded and backend Healthy, so the root's WorstOf rollup is
+#   Degraded and a Causes walk follows the frontend only.
+# expires-in-minutes is set high so the reported states persist through recording.
+# These writes are test-setup only; the inspect tool stays read-only.
+# ---------------------------------------------------------------------------
+$subscriptionId = $testSettings.SubscriptionId
+$healthModelB   = "$($BaseName)-hm-b"
+$healthModelC   = "$($BaseName)-hm-c"
+$manualSignal   = 'mcp-fixture-manual'
+$apiVersion     = '2026-11-01'
+$expiresMinutes = 1440
+
+function Invoke-HealthReport {
+    param([string] $HealthModel, [string] $EntityName, [string] $HealthState)
+    $path = "/subscriptions/$subscriptionId/resourceGroups/$ResourceGroupName/providers/Microsoft.CloudHealth/healthmodels/$HealthModel/entities/$EntityName/ingestHealthReport?api-version=$apiVersion"
+    $payload = @{ signalName = $manualSignal; healthState = $HealthState; expiresInMinutes = $expiresMinutes } | ConvertTo-Json -Compress
+    Write-Host "IngestHealthReport: $EntityName -> $HealthState" -ForegroundColor Yellow
+
+    # Right after deployment, role assignments and entities can still be propagating.
+    for ($attempt = 1; $attempt -le 12; $attempt++) {
+        $response = Invoke-AzRestMethod -Method POST -Path $path -Payload $payload
+        if ($response.StatusCode -lt 300) {
+            return
+        }
+        $isTransient = $response.StatusCode -in 403, 404, 429 -or $response.StatusCode -ge 500
+        if (!$isTransient -or $attempt -eq 12) {
+            throw "IngestHealthReport failed for $EntityName ($HealthState): HTTP $($response.StatusCode) $($response.Content)"
+        }
+        Write-Host "IngestHealthReport is not ready yet (HTTP $($response.StatusCode)); retrying." -ForegroundColor DarkYellow
+        Start-Sleep -Seconds ([Math]::Min(30, $attempt * 5))
+    }
+}
+
+Invoke-HealthReport -HealthModel $healthModelB -EntityName $healthModelB -HealthState 'Degraded'
+Invoke-HealthReport -HealthModel $healthModelC -EntityName "$healthModelC-leaf-frontend" -HealthState 'Degraded'
+Invoke-HealthReport -HealthModel $healthModelC -EntityName "$healthModelC-leaf-backend" -HealthState 'Healthy'
+Start-Sleep -Seconds 35
+Invoke-HealthReport -HealthModel $healthModelB -EntityName $healthModelB -HealthState 'Unhealthy'
+# Let the reported states settle into the entity rollup + history before recording.
+Start-Sleep -Seconds 45
 
 function Get-PlainTextAccessToken {
     param([Parameter(Mandatory)] [string] $ResourceUrl)
@@ -119,11 +167,26 @@ $fixtureStartTime = $fixtureTimestamp.ToString('o')
 $fixtureEndTime = $fixtureTimestamp.AddMinutes(30).ToString('o')
 $basicFixtureId = 'mcp-log-search-basic-1'
 $auxiliaryFixtureId = 'mcp-log-search-auxiliary-1'
-$basicTableName = $DeploymentOutputs['logSearchBasicTableName']
-$auxiliaryTableName = $DeploymentOutputs['logSearchAuxiliaryTableName']
-$ingestionEndpoint = $DeploymentOutputs['logSearchIngestionEndpoint']
-$dcrImmutableId = $DeploymentOutputs['logSearchDcrImmutableId']
-$workspaceCustomerId = $DeploymentOutputs['logSearchWorkspaceCustomerId']
+# Deployment output keys are normalized to uppercase and the self-contained
+# post-script deserializes them into a case-sensitive OrderedHashtable.
+$basicTableName = $DeploymentOutputs['LOGSEARCHBASICTABLENAME']
+$auxiliaryTableName = $DeploymentOutputs['LOGSEARCHAUXILIARYTABLENAME']
+$ingestionEndpoint = $DeploymentOutputs['LOGSEARCHINGESTIONENDPOINT']
+$dcrImmutableId = $DeploymentOutputs['LOGSEARCHDCRIMMUTABLEID']
+$workspaceCustomerId = $DeploymentOutputs['LOGSEARCHWORKSPACECUSTOMERID']
+
+# The test settings file written by New-TestSettings is consumed by
+# RecordedCommandTestsBase.RegisterOrRetrieveDeploymentOutputVariable, which does a
+# case-sensitive lookup using the original (mixed-case) bicep output names. Re-add
+# those alongside the uppercase keys so both the post-script (above) and the test
+# project (below) can find them.
+$DeploymentOutputs['logSearchBasicTableName'] = $basicTableName
+$DeploymentOutputs['logSearchAuxiliaryTableName'] = $auxiliaryTableName
+$DeploymentOutputs['logSearchAnalyticsTableName'] = $DeploymentOutputs['LOGSEARCHANALYTICSTABLENAME']
+$DeploymentOutputs['logSearchAuxiliaryLastPlanModifiedDate'] = $DeploymentOutputs['LOGSEARCHAUXILIARYLASTPLANMODIFIEDDATE']
+$DeploymentOutputs['logSearchDcrName'] = $DeploymentOutputs['LOGSEARCHDCRNAME']
+$DeploymentOutputs['logSearchDcrImmutableId'] = $dcrImmutableId
+$DeploymentOutputs['logSearchIngestionEndpoint'] = $ingestionEndpoint
 
 $ingestionToken = Get-PlainTextAccessToken -ResourceUrl 'https://monitor.azure.com'
 $basicRecords = @(

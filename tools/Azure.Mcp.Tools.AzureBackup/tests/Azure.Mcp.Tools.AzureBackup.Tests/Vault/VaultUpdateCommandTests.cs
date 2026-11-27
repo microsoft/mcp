@@ -222,6 +222,45 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
     }
 
     [Theory]
+    [InlineData("ReadAccessGeoZoneRedundant")]
+    [InlineData("GRS")]
+    [InlineData("invalid")]
+    public async Task ExecuteAsync_RejectsInvalidRedundancy(string redundancy)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--redundancy", redundancy);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--redundancy must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AzureInvalidParameterWithoutName_ReturnsSuppliedOptionsAndLimits()
+    {
+        Service.UpdateVaultAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400,
+                "Parameter NO_PARAM in request is invalid. Please provide correct value for parameter NO_PARAM",
+                "UserErrorInvalidRequestParameter", null));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--redundancy", "LocallyRedundant");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the vault update (UserErrorInvalidRequestParameter)", response.Message);
+        Assert.Contains("Options supplied: --redundancy.", response.Message);
+        Assert.DoesNotContain("NO_PARAM", response.Message);
+    }
+
+    [Theory]
     [InlineData("UserAssigned")]
     [InlineData("SystemAssigned,UserAssigned")]
     public async Task ExecuteAsync_AcceptsUserAssignedIdentity(string identityType)
@@ -324,5 +363,19 @@ public class VaultUpdateCommandTests : SubscriptionCommandUnitTestsBase<VaultUpd
         Assert.Contains(options, o => o.Name == "--immutability-state");
         Assert.Contains(options, o => o.Name == "--identity-type");
         Assert.Contains(options, o => o.Name == "--tags");
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsSubscriptionNameWithVaultResourceId()
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "Other Subscription",
+            "--vault", "/subscriptions/f0c630e0-2995-4853-b056-0b3c09cb673f/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v",
+            "--resource-group", "rg",
+            "--identity-type", "SystemAssigned");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(BackupVaultReferenceParser.SubscriptionNameWithResourceIdMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
     }
 }

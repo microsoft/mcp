@@ -74,13 +74,13 @@ public sealed class FileShareCreateOptions : ISubscriptionOption
     /// <summary>
     /// Gets or sets the NFS root squash setting (e.g., "NoRootSquash", "RootSquash", "AllSquash").
     /// </summary>
-    [Option(Description = FileSharesOptionDescriptions.NfsRootSquash)]
+    [Option(Description = FileSharesOptionDescriptions.NfsRootSquash + ". Defaults to RootSquash on creation; NoRootSquash retains client root privileges (insecure). Omitted values preserve existing shares.")]
     public string? NfsRootSquash { get; set; }
 
     /// <summary>
     /// Gets or sets the NFS encryption in transit setting (e.g., "Enabled", "Disabled").
     /// </summary>
-    [Option(Description = FileSharesOptionDescriptions.NfsEncryptionInTransit)]
+    [Option(Description = FileSharesOptionDescriptions.NfsEncryptionInTransit + ". Defaults to Enabled on creation; explicitly select Disabled to allow unencrypted traffic (insecure). Omitted values preserve existing shares.")]
     public string? NfsEncryptionInTransit { get; set; }
 
     /// <summary>

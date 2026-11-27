@@ -10,7 +10,9 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.SreAgent.Commands;
 using Azure.Mcp.Tools.SreAgent.Models;
 using Azure.Mcp.Tools.SreAgent.Options.Threads;
+using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Helpers;
 namespace Azure.Mcp.Tools.SreAgent.Services;
 
 /// <summary>
@@ -116,13 +118,13 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
         ArgumentException.ThrowIfNullOrEmpty(endpoint);
         ArgumentException.ThrowIfNullOrEmpty(path);
 
-        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri) ||
-            (endpointUri.Scheme != Uri.UriSchemeHttps))
+        if (!Uri.TryCreate(endpoint, UriKind.Absolute, out var endpointUri))
         {
-            throw new ArgumentException($"SRE Agent endpoint must be an absolute HTTPS URL. Got: '{endpoint}'.", nameof(endpoint));
+            throw new ArgumentException($"SRE Agent endpoint must be an absolute URL. Got: '{endpoint}'.", nameof(endpoint));
         }
 
-        ValidateDataPlaneEndpoint(endpointUri);
+        // EndpointValidator enforces HTTPS and the trusted SRE Agent domain for the configured cloud.
+        ValidateDataPlaneEndpoint(AzureService, endpointUri);
 
         var credential = await GetCredential(tenant, cancellationToken);
         var token = await credential.GetTokenAsync(new TokenRequestContext(s_dataPlaneScopes), cancellationToken);
@@ -153,19 +155,17 @@ public sealed class SreAgentService(IAzureService azureService, ILogger<SreAgent
     }
 
     /// <summary>
-    /// Validates that the SRE Agent data-plane endpoint host belongs to the trusted
-    /// <c>*.azuresre.ai</c> domain to prevent SSRF.
+    /// Validates that the SRE Agent data-plane endpoint host belongs to the trusted SRE Agent
+    /// domain for the configured cloud to prevent SSRF.
     /// </summary>
-    private static void ValidateDataPlaneEndpoint(Uri endpointUri)
+    /// <param name="azureService">The Azure service using this host's immutable endpoint policy.</param>
+    /// <param name="endpointUri">The SRE Agent data-plane endpoint to validate.</param>
+    internal static void ValidateDataPlaneEndpoint(IAzureService azureService, Uri endpointUri)
     {
-        var host = endpointUri.Host;
-        if (string.IsNullOrEmpty(host) ||
-            !host.EndsWith(".azuresre.ai", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"SRE Agent endpoint host must end with '.azuresre.ai'. Got: '{host}'.",
-                nameof(endpointUri));
-        }
+        ArgumentNullException.ThrowIfNull(endpointUri);
+        azureService.ValidateAzureServiceEndpoint(
+            endpoint: endpointUri.AbsoluteUri,
+            serviceType: "sreagent");
     }
 
     /// <summary>

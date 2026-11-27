@@ -1,0 +1,21 @@
+{
+  "parameters": {
+    "capacityId": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+    "blockedActorId": "11223344-5566-7788-99aa-bbccddeeff00"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "11223344-5566-7788-99aa-bbccddeeff00",
+        "actorDetails": {
+          "actorType": "Workspace",
+          "workspaceId": "a1f2c3d4-e5f6-7890-abcd-1234567890ef"
+        },
+        "expirationPolicy": {
+          "policyType": "ExpireAfterDate",
+          "expireAfterDateTime": "2026-07-15T18:00:00Z"
+        }
+      }
+    }
+  }
+}

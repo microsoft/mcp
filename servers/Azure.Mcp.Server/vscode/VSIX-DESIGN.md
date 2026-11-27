@@ -87,6 +87,23 @@ You're now ready to use Azure MCP features in VS Code!
      - By default, all files in the extension folder (including `server/<os>` binaries) are included in the VSIX unless excluded by `.vscodeignore`.
   2. Runs `vsce package` to create the VSIX.
   3. Produces output in `.work/packages_vsix/Azure.Mcp.Server`
+
+#### c. VSIX Versioning
+
+The VSIX version is not the server's NuGet or npm version. `Resolve-PublicVsixVersion` in `/eng/scripts/helpers/VsixVersionHelpers.ps1` is the single implementation. `New-BuildInfo.ps1` records its result in `build_info.json` (`vsixVersion`, `vsixIsPrerelease`) for `Pack-Vsix.ps1`, and `Compile-Changelog.ps1` uses it to name the release in `vscode/CHANGELOG.md`, so the two cannot diverge.
+
+| Server version | VSIX version | Channel |
+| --- | --- | --- |
+| Any server `X.0.0-beta.Y` | `X.0.Y` | pre-release |
+| Azure MCP stable (for example `3.0.0`) | `X.0.(N+1)`, where `X.0.N` is the highest version published on the Marketplace | release |
+| Fabric MCP stable (for example `1.5.0`) | the `.csproj` version, unchanged | release |
+
+- **The minor version is always `0` for Azure MCP.** The Marketplace lookup deliberately matches only `X.0.N` and ignores versions with a non-zero minor. If Azure MCP ever ships minor releases (`X.1.0`), this scheme must be revisited together with the `X.0.N` match in `Get-LatestMarketplaceVersion`, the beta mapping, and the packaging check below.
+- **The patch counter is shared by both channels.** Pre-release builds are mapped from the beta number and stable builds continue after the highest patch ever published for that major, so every published version is unique and increasing.
+- **Fabric uses its `.csproj` version because it ships minor-increment GA releases** (`1.2.0`, `1.3.0`, ...). `Major.0.X` would produce `1.0.2`, below the `1.3.0` already published, and would put the extension out of sync with Fabric's npm, NuGet and MCR versions (see [#2879](https://github.com/microsoft/mcp/pull/2879)). The two policies cannot be unified without changing Fabric's release strategy.
+- **Stable resolution reads the Marketplace and never guesses.** It requests the full version history (about 100 KB) and fails if the Marketplace is unreachable or the major series has no history. The only exception is `1.0.0` for an extension that has no published versions at all. Pass `-VsCodeVersion` to `Compile-Changelog.ps1` to work offline.
+- **Public Azure MCP packaging checks the changelog.** `Pack-Vsix.ps1` fails if the latest `vscode/CHANGELOG.md` heading does not match the version and channel in `build_info.json`, which catches Marketplace history advancing after the changelog was prepared.
+
 ---
 
 ### 3. Extension Activation & Server Launch

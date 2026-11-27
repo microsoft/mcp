@@ -910,4 +910,159 @@ public class PolicyCreateValidatorTests
             i.Flag == "--schedule-frequency" &&
             i.Message.Contains("Unrecognized DPP schedule frequency"));
     }
+
+    // ----- Azure VM instant restore and retention limits -----
+
+    [Theory]
+    [InlineData(null, "Daily", "6", "1-5 days")]
+    [InlineData("Standard", "Daily", "30", "1-5 days")]
+    [InlineData("Standard", "Weekly", "2", "exactly 5 days")]
+    [InlineData("Enhanced", "Daily", "31", "1-30 days")]
+    [InlineData(null, "Hourly", "31", "1-30 days")]
+    public void Validate_VmInstantRpOutsideSubtypeLimits_Fails(string? subType, string frequency, string instantDays, string expected)
+    {
+        var options = VmOptions(subType, frequency);
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Issues, i => i.Flag == "--instant-rp-retention-days" && i.Message.Contains(expected));
+    }
+
+    [Theory]
+    [InlineData(null, "Daily", "5")]
+    [InlineData("Standard", "Weekly", "5")]
+    [InlineData("Enhanced", "Daily", "30")]
+    [InlineData("V2", "Hourly", "30")]
+    public void Validate_VmInstantRpWithinSubtypeLimits_Passes(string? subType, string frequency, string instantDays)
+    {
+        var options = VmOptions(subType, frequency);
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid, string.Join(" ", result.Issues.Select(i => i.Message)));
+    }
+
+    [Theory]
+    [InlineData(4, 24, "18", "maximum of 17 days")]
+    [InlineData(6, 24, "23", "maximum of 22 days")]
+    public void Validate_VmHourlyInstantRpAboveSnapshotCap_Fails(int interval, int duration, string instantDays, string expected)
+    {
+        var options = VmOptions(null, "Hourly");
+        options.HourlyIntervalHours = interval;
+        options.HourlyWindowDurationHours = duration;
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.Contains(result.Issues, i => i.Flag == "--instant-rp-retention-days" && i.Message.Contains(expected));
+    }
+
+    [Theory]
+    [InlineData(4, 24, "17")]
+    [InlineData(6, 24, "22")]
+    [InlineData(12, 24, "30")]
+    public void Validate_VmHourlyInstantRpWithinSnapshotCap_Passes(int interval, int duration, string instantDays)
+    {
+        var options = VmOptions(null, "Hourly");
+        options.HourlyIntervalHours = interval;
+        options.HourlyWindowDurationHours = duration;
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.True(result.IsValid, string.Join(" ", result.Issues.Select(i => i.Message)));
+    }
+
+    [Fact]
+    public void Validate_VmInstantRpAboveDailyRetention_Fails()
+    {
+        var options = VmOptions("Enhanced", "Daily");
+        options.InstantRpRetentionDays = "20";
+        options.DailyRetentionDays = "14";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.Contains(result.Issues, i => i.Flag == "--instant-rp-retention-days" && i.Message.Contains("exceeds the daily retention of 14 days"));
+    }
+
+    [Theory]
+    [InlineData("abc")]
+    [InlineData("0")]
+    public void Validate_VmInstantRpNotPositiveNumber_Fails(string instantDays)
+    {
+        var options = VmOptions(null, "Daily");
+        options.InstantRpRetentionDays = instantDays;
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.Contains(result.Issues, i => i.Flag == "--instant-rp-retention-days" && i.Message.Contains("positive whole number"));
+    }
+
+    [Theory]
+    [InlineData("daily", "--daily-retention-days", "7-9999 days")]
+    [InlineData("weekly", "--weekly-retention-weeks", "maximum of 5163 weeks")]
+    [InlineData("monthly", "--monthly-retention-months", "maximum of 1188 months")]
+    [InlineData("yearly", "--yearly-retention-years", "maximum of 99 years")]
+    public void Validate_VmRetentionOutsideLimits_Fails(string scenario, string flag, string expected)
+    {
+        var options = VmOptions(null, "Daily");
+        switch (scenario)
+        {
+            case "daily":
+                options.DailyRetentionDays = "6";
+                break;
+            case "weekly":
+                options.WeeklyRetentionWeeks = 5164;
+                options.WeeklyRetentionDaysOfWeek = "Sunday";
+                break;
+            case "monthly":
+                options.MonthlyRetentionMonths = 1189;
+                options.MonthlyRetentionDaysOfMonth = "1";
+                break;
+            default:
+                options.YearlyRetentionYears = 100;
+                options.YearlyRetentionMonths = "January";
+                options.YearlyRetentionDaysOfMonth = "1";
+                break;
+        }
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.Contains(result.Issues, i => i.Flag == flag && i.Message.Contains(expected));
+    }
+
+    [Fact]
+    public void Validate_NonVmWorkload_DoesNotApplyVmDailyRetentionMinimum()
+    {
+        var options = BaseOptions("AzureFileShare");
+        options.DailyRetentionDays = "1";
+
+        var result = PolicyCreateValidator.Validate(options);
+
+        Assert.DoesNotContain(result.Issues, i => i.Flag == "--daily-retention-days");
+    }
+
+    private static PolicyCreateOptions VmOptions(string? subType, string frequency)
+    {
+        var options = BaseOptions("VM");
+        options.PolicySubType = subType;
+        options.ScheduleFrequency = frequency;
+        switch (frequency)
+        {
+            case "Weekly":
+                options.ScheduleDaysOfWeek = "Sunday";
+                options.WeeklyRetentionWeeks = 4;
+                options.WeeklyRetentionDaysOfWeek = "Sunday";
+                break;
+            case "Hourly":
+                options.HourlyIntervalHours = 4;
+                options.HourlyWindowStartTime = "08:00";
+                options.HourlyWindowDurationHours = 12;
+                break;
+        }
+        return options;
+    }
 }

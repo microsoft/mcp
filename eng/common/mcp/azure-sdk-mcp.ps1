@@ -4,21 +4,23 @@
 #Requires -PSEdition Core
 
 param(
-    [string]$FileName = 'Azure.Sdk.Tools.Cli',
-    [string]$Package = 'azsdk',
     [string]$Version, # Default to latest
     [string]$InstallDirectory = '',
     [string]$Repository = 'Azure/azure-sdk-tools',
     [string]$RunDirectory = (Resolve-Path (Join-Path $PSScriptRoot .. .. ..)),
     [switch]$Run,
-    [switch]$UpdateVsCodeConfig,
+    [Alias('UpdateVsCodeConfig')]
+    [switch]$UpdateMcpConfig,
     [switch]$UpdatePathInProfile
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '..' 'scripts' 'Helpers' 'AzSdkTool-Helpers.ps1')
 
 $toolInstallDirectory = $InstallDirectory ? $InstallDirectory : (Get-CommonInstallDirectory)
+
+$packageName = 'azsdk'
+$packageFileName = 'Azure.Sdk.Tools.Cli'
 
 $mcpMode = $Run
 
@@ -68,13 +70,14 @@ function log([object]$message, [switch]$warn, [switch]$err) {
     Write-Host ($messageObject | ConvertTo-Json -Depth 100 -Compress)
 }
 
-if ($UpdateVsCodeConfig) {
-    $vscodeConfigPath = Join-Path $PSScriptRoot ".." ".." ".." ".vscode" "mcp.json"
-    if (Test-Path $vscodeConfigPath) {
-        $vscodeConfig = Get-Content -Raw $vscodeConfigPath | ConvertFrom-Json -AsHashtable
+if ($UpdateMcpConfig) {
+    # Repo-root .mcp.json is read by both Copilot CLI and VS Code
+    $mcpConfigPath = Join-Path $PSScriptRoot ".." ".." ".." ".mcp.json"
+    if (Test-Path $mcpConfigPath) {
+        $mcpConfig = Get-Content -Raw $mcpConfigPath | ConvertFrom-Json -AsHashtable
     }
     else {
-        $vscodeConfig = @{}
+        $mcpConfig = @{}
     }
     $serverKey = "azure-sdk-mcp"
     $serverConfig = @{
@@ -84,17 +87,17 @@ if ($UpdateVsCodeConfig) {
     $orderedServers = [ordered]@{
         $serverKey = $serverConfig
     }
-    if (-not $vscodeConfig.ContainsKey('servers')) {
-        $vscodeConfig['servers'] = @{}
+    if (-not $mcpConfig.ContainsKey('mcpServers')) {
+        $mcpConfig['mcpServers'] = @{}
     }
-    foreach ($key in $vscodeConfig.servers.Keys) {
+    foreach ($key in $mcpConfig.mcpServers.Keys) {
         if ($key -ne $serverKey) {
-            $orderedServers[$key] = $vscodeConfig.servers[$key]
+            $orderedServers[$key] = $mcpConfig.mcpServers[$key]
         }
     }
-    $vscodeConfig.servers = $orderedServers
-    log "Updating vscode mcp config at $vscodeConfigPath"
-    $vscodeConfig | ConvertTo-Json -Depth 10 | Set-Content -Path $vscodeConfigPath -Force
+    $mcpConfig.mcpServers = $orderedServers
+    log "Updating mcp config at $mcpConfigPath"
+    $mcpConfig | ConvertTo-Json -Depth 10 | Set-Content -Path $mcpConfigPath -Force
 }
 
 # Install to a temp directory first so we don't dump out all the other
@@ -103,14 +106,64 @@ $tmp = $env:TEMP ? $env:TEMP : [System.IO.Path]::GetTempPath()
 $guid = [System.Guid]::NewGuid()
 $tempInstallDirectory = Join-Path $tmp "azsdk-install-$($guid)"
 
+# If already installed, use first class version mechanism
+$azsdkCmd = Get-Command -ErrorAction Ignore $packageName
+# Also check the default install directory (~/bin) in case it's not on PATH
+if (!$azsdkCmd -and !$InstallDirectory) {
+    $existingExe = Join-Path $toolInstallDirectory ($IsWindows ? "$packageName.exe" : $packageName)
+    if (Test-Path -PathType Leaf $existingExe) {
+        $azsdkCmd = Get-Command -ErrorAction Ignore $existingExe
+    }
+}
+if ($azsdkCmd -and !$InstallDirectory) {
+    try {
+        $ErrorActionPreference = "Stop"
+        $upgrade = & $azsdkCmd.Path upgrade --check --output json | out-string
+        if (!$LASTEXITCODE) {
+            $ErrorActionPreference = 'Ignore'
+            $localVersion = $upgrade | ConvertFrom-Json -AsHashtable
+            $ErrorActionPreference = 'Stop'
+            if ($localVersion -and $localVersion.old_version -and $localVersion.old_version -eq ($Version ? $Version : $localVersion.new_version)) {
+                log "Version up to date at $($localVersion.old_version)"
+                if ($Run) {
+                    $proc = Start-Process -PassThru -WorkingDirectory $RunDirectory -FilePath $azsdkCmd.Path -ArgumentList 'mcp' -NoNewWindow -Wait
+                    exit $proc.ExitCode
+                }
+                exit 0
+            }
+            if ($localVersion) {
+                log "Version not up to date at " + $localVersion.old_version
+            } else {
+                log "Failed to parse version:"
+                log $upgrade
+            }
+        } elseif ($Run) {
+            # Upgrade check failed (e.g. network error, rate limit, timeout),
+            # but the binary already exists — fall back to running it as-is
+            # rather than attempting a fresh install that will likely also fail.
+            log -warn "Upgrade check failed, falling back to existing installation at '$($azsdkCmd.Path)'"
+            $proc = Start-Process -PassThru -WorkingDirectory $RunDirectory -FilePath $azsdkCmd.Path -ArgumentList 'mcp' -NoNewWindow -Wait
+            exit $proc.ExitCode
+        }
+    }
+    catch {
+        if ($Run) {
+            log -warn "Upgrade check error: $($_.Exception.Message). Falling back to existing installation."
+            $proc = Start-Process -PassThru -WorkingDirectory $RunDirectory -FilePath $azsdkCmd.Path -ArgumentList 'mcp' -NoNewWindow -Wait
+            exit $proc.ExitCode
+        }
+        throw
+    }
+}
+
 if ($mcpMode) {
     try {
         # Swallow all output and re-log so we can wrap any
         # output from the inner function as json-rpc
         $tempExe = Install-Standalone-Tool `
             -Version $Version `
-            -FileName $FileName `
-            -Package $Package `
+            -FileName $packageFileName `
+            -Package $packageName `
             -Directory $tempInstallDirectory `
             -Repository $Repository `
             *>&1
@@ -120,14 +173,22 @@ if ($mcpMode) {
     }
     catch {
         log -err $_
+        # If install failed but an existing binary is available, fall back to it
+        # instead of exiting (which causes the MCP client to respawn in a loop).
+        $existingExe = Join-Path $toolInstallDirectory ($IsWindows ? "$packageName.exe" : $packageName)
+        if ($Run -and (Test-Path -PathType Leaf $existingExe)) {
+            log -warn "Installation failed, falling back to existing installation at '$existingExe'"
+            $proc = Start-Process -PassThru -WorkingDirectory $RunDirectory -FilePath $existingExe -ArgumentList 'mcp' -NoNewWindow -Wait
+            exit $proc.ExitCode
+        }
         exit 1
     }
 }
 else {
     $tempExe = Install-Standalone-Tool `
         -Version $Version `
-        -FileName $FileName `
-        -Package $Package `
+        -FileName $packageFileName `
+        -Package $packageName `
         -Directory $tempInstallDirectory `
         -Repository $Repository `
 
@@ -164,7 +225,7 @@ if (Test-Path $tempInstallDirectory) {
 }
 
 if ($updateSucceeded) {
-    log "Executable $package is installed at $exeDestination"
+    log "Executable $packageName is installed at $exeDestination"
 }
 if (!$UpdatePathInProfile) {
     log -warn "To add the tool to PATH for new shell sessions, re-run with -UpdatePathInProfile to modify the shell profile file."
@@ -175,5 +236,6 @@ else {
 }
 
 if ($Run) {
-    Start-Process -WorkingDirectory $RunDirectory -FilePath $exeDestination -ArgumentList 'start' -NoNewWindow -Wait
+    $proc = Start-Process -PassThru -WorkingDirectory $RunDirectory -FilePath $exeDestination -ArgumentList 'mcp' -NoNewWindow -Wait
+    exit $proc.ExitCode
 }

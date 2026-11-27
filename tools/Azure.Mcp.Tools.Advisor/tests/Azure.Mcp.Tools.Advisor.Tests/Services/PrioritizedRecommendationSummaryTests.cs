@@ -1,0 +1,613 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using System.Text.Json;
+using Azure.Mcp.Tools.Advisor.Commands;
+using Azure.Mcp.Tools.Advisor.Models;
+using Azure.Mcp.Tools.Advisor.Services;
+using Xunit;
+
+namespace Azure.Mcp.Tools.Advisor.Tests.Services;
+
+public class PrioritizedRecommendationSummaryTests
+{
+    private static readonly RecommendationFilters s_prioritized = new(Prioritized: true);
+
+    private static string BuildSubscriptionQuery(RecommendationFilters? filters = null) =>
+        RecommendationSummaryService.BuildSummaryQuery(
+            "subscription-id",
+            null,
+            RecommendationSummaryService.GroupByRecommendationType,
+            filters ?? s_prioritized);
+
+    [Theory]
+    [InlineData(RecommendationStatus.New)]
+    [InlineData(RecommendationStatus.Postponed)]
+    [InlineData(RecommendationStatus.Dismissed)]
+    [InlineData(RecommendationStatus.Completed)]
+    public void Build_IdleResourcesSortByMetadataPriorityBeforeLifecycleSavings(RecommendationStatus status)
+    {
+        var filters = new RecommendationFilters(
+            Category: "Cost", SubCategory: "IdleResources", Status: status, Prioritized: true);
+        foreach (var scope in new[]
+        {
+            RecommendationQueryScope.ForSubscription("subscription-id", null),
+            RecommendationQueryScope.ForServiceGroup("service-group"),
+        })
+        {
+            var query = PrioritizedRecommendationSummaryQuery.Build(scope, filters);
+
+            Assert.Contains(
+                "| order by metadataPriorityScore desc nulls last, rankingSavings desc nulls last,",
+                query);
+            Assert.Contains(
+                "rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)",
+                query);
+            Assert.Contains($"tostring(properties.recommendationStatus) =~ '{status}'", query);
+            Assert.DoesNotContain("| take ", query);
+        }
+    }
+
+    [Fact]
+    public void Build_IdleResourcesReportReusesResourceAggregationAndKeepsLifecycleRowsBeforeRounding()
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost", SubCategory: "IdleResources", Prioritized: true));
+
+        Assert.Contains("by recommendationTypeId, resourceKey", query);
+        Assert.Contains("by recommendationTypeId, recommendationStatus", query);
+        Assert.Contains(RecommendationSummaryService.CostReportAggregation, query);
+        Assert.Contains(RecommendationSummaryService.RestoreCostReportValues, query);
+        Assert.Contains("costSummaryRows = make_list(costSummaryRow)", query);
+        Assert.True(query.IndexOf("costSummaryRow =", StringComparison.Ordinal) <
+            query.IndexOf("round(annualSavings", StringComparison.Ordinal));
+        Assert.EndsWith("signalValues = metadataSignalValues, costSummaryRows", query);
+        Assert.DoesNotContain("arg_max(", query);
+        Assert.Contains("pricingBasis = iff(category =~ 'Cost', 'Retail', '')", query);
+    }
+
+    [Theory]
+    [InlineData("Compute", true)]
+    [InlineData("Containers", true)]
+    [InlineData("Databases", true)]
+    [InlineData("Networking", true)]
+    [InlineData("Storage", true)]
+    [InlineData("Web", true)]
+    [InlineData("Analytics", true)]
+    [InlineData("AI + Machine Learning", true)]
+    [InlineData("Compute", false)]
+    [InlineData("Containers", false)]
+    [InlineData("Databases", false)]
+    [InlineData("Networking", false)]
+    [InlineData("Storage", false)]
+    [InlineData("Web", false)]
+    [InlineData("Analytics", false)]
+    [InlineData("AI + Machine Learning", false)]
+    public void Build_ProductFamilyFiltersResourcesBeforeSavingsAndAggregation(string family, bool includeCost)
+    {
+        var filters = new RecommendationFilters(
+            Category: includeCost ? "Cost" : "HighAvailability",
+            SubCategory: includeCost ? "IdleResources" : null,
+            ProductFamily: family,
+            Prioritized: true);
+        foreach (var scope in new[]
+        {
+            RecommendationQueryScope.ForSubscriptions(["sub-a", "sub-b"], null),
+            RecommendationQueryScope.ForServiceGroup("group-a"),
+        })
+        {
+            var query = PrioritizedRecommendationSummaryQuery.Build(scope, filters);
+            var familyFilter = $"| where (tolower(tostring(metadataServiceFamily)) =~ '{family.ToLowerInvariant()}'";
+            var filterIndex = query.IndexOf(familyFilter, StringComparison.Ordinal);
+
+            Assert.True(filterIndex > query.IndexOf("metadataServiceFamily=", StringComparison.Ordinal));
+            Assert.True(filterIndex < query.IndexOf("extend resourceKey =", StringComparison.Ordinal));
+            Assert.True(filterIndex < query.IndexOf("summarize criticalityScore =", StringComparison.Ordinal));
+            Assert.Contains($"{familyFilter})", query);
+            Assert.DoesNotContain("isempty(tostring(metadataServiceFamily))", query);
+            Assert.DoesNotContain("startswith 'microsoft.", query);
+            Assert.DoesNotContain("contains '/providers/", query);
+            Assert.Single(System.Text.RegularExpressions.Regex.Matches(query, @"\| join "));
+            Assert.Contains("metadataPriorityScore = take_any(metadataPriorityScore)", query);
+            Assert.Contains("metadataSignalValues = take_any(metadataSignalValues)", query);
+            Assert.DoesNotContain("| take ", query);
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData(RecommendationStatus.New)]
+    [InlineData(RecommendationStatus.Postponed)]
+    [InlineData(RecommendationStatus.Dismissed)]
+    [InlineData(RecommendationStatus.Completed)]
+    public void Build_IdleResourcesExcludesCompletedPotentialBeforeResourceAndTypeAggregation(
+        RecommendationStatus? status)
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost", SubCategory: "IdleResources", Status: status, Prioritized: true));
+        var openPotential = query.IndexOf(
+            "| extend annualSavings = iff(isOpen, annualSavings, real(null)) | extend potential = annualSavings",
+            StringComparison.Ordinal);
+
+        Assert.True(openPotential > query.IndexOf("annualSavings = iff(isfinite(dailySavings)", StringComparison.Ordinal));
+        Assert.True(openPotential < query.IndexOf("annualSavings = max(annualSavings)", StringComparison.Ordinal));
+        Assert.True(openPotential < query.IndexOf("annualSavings = sum(annualSavings)", StringComparison.Ordinal));
+        Assert.Contains("yearlyPotentialSavings = round(annualSavings, 2)", query);
+        Assert.Contains("realizedSavings = max(realizedSavings)", query);
+        Assert.Contains("realizedSavings = sum(realizedSavings)", query);
+        Assert.Contains(
+            "rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)",
+            query);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("RightSize")]
+    public void Build_OtherWorkflowsDoNotChangeTheExistingAnnualSavingsPopulation(string? subCategory)
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost", SubCategory: subCategory, Prioritized: true));
+
+        Assert.DoesNotContain("annualSavings = iff(isOpen", query);
+        Assert.DoesNotContain("potential = annualSavings", query);
+        Assert.Contains("annualSavings = max(annualSavings)", query);
+        Assert.Contains("annualSavings = sum(annualSavings)", query);
+    }
+
+    [Fact]
+    public void Build_AppliesStagesInDocumentedOrder()
+    {
+        var query = BuildSubscriptionQuery();
+
+        string[] stageMarkers =
+        [
+            "subscriptionId =~ 'subscription-id'",
+            RecommendationQueryBuilder.ActiveRecommendationClause,
+            "bag_has_key(extendedProperties, 'term')",
+            "extend resourceKey =",
+            "by recommendationTypeId, resourceKey",
+            "summarize resourceCount = count()",
+            "join kind=inner",
+            "| order by ",
+            "| project key =",
+        ];
+        var positions = stageMarkers.Select(marker => query.IndexOf(marker, StringComparison.Ordinal)).ToList();
+
+        Assert.All(positions, position => Assert.True(position >= 0));
+        Assert.Equal(positions.OrderBy(position => position), positions);
+    }
+
+    [Fact]
+    public void Build_SubscriptionScope_ExcludesServiceGroupRecommendations()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Contains(RecommendationQueryBuilder.CurrentRecommendationNameClause, query);
+        Assert.Contains(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
+    }
+
+    [Fact]
+    public void Build_ServiceGroupScope_UsesExactServiceGroupWithoutSubscription()
+    {
+        var query = RecommendationSummaryService.BuildServiceGroupSummaryQuery(
+            "service-group-test",
+            RecommendationSummaryService.GroupByRecommendationType,
+            s_prioritized);
+
+        Assert.DoesNotContain("subscriptionId =~", query);
+        Assert.DoesNotContain(RecommendationQueryBuilder.ServiceGroupExclusionClause, query);
+        Assert.Contains(
+            $"isnotempty(properties.serviceGroupId) and tostring(properties.serviceGroupId) =~ '{RecommendationQueryBuilder.ServiceGroupResourceIdPrefix}service-group-test'",
+            query);
+    }
+
+    [Fact]
+    public void Build_KeepsTrackedRecordsAndAppliesNoConfigurationExclusions()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.DoesNotContain("tracked", query, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("suppression", query, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("microsoft.advisor/configurations", query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Build_KeepsOnlyThreeYearSevenDayReservedInstanceScenario()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Equal(26, PrioritizedRecommendationSummaryQuery.ReservedInstanceRecommendationTypeIds.Distinct().Count());
+        Assert.All(
+            PrioritizedRecommendationSummaryQuery.ReservedInstanceRecommendationTypeIds,
+            id => Assert.Contains($"'{id}'", query));
+        Assert.Contains(
+            "or (tostring(extendedProperties.term) == 'P3Y' and tostring(extendedProperties.lookbackPeriod) == '7')",
+            query);
+        Assert.Contains("or isnull(extendedProperties)", query);
+        Assert.Contains(
+            "(not(bag_has_key(extendedProperties, 'term')) and not(bag_has_key(extendedProperties, 'lookbackPeriod')))",
+            query);
+    }
+
+    [Fact]
+    public void Build_ConvertsDailySavingsToAnnualWithLegacyFallbackAndNeverZero()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Contains(
+            "annualSavings = iff(isfinite(dailySavings), dailySavings * 12 * 30.4, iff(isfinite(legacyAnnualSavings), legacyAnnualSavings, real(null)))",
+            query);
+        Assert.Contains("annualSavings = iff(annualSavingsCount > 0, annualSavings, real(null))", query);
+        Assert.Contains("criticalityScore = iff(criticalityScoreCount > 0, criticalityScore, real(null))", query);
+        Assert.Contains("summedCriticality = iff(criticalityScoreCount > 0, summedCriticality, real(null))", query);
+        Assert.DoesNotContain("coalesce(", query);
+    }
+
+    [Fact]
+    public void Build_RoundsReturnedSavingsOnlyAfterOrdering()
+    {
+        var query = BuildSubscriptionQuery();
+
+        var order = query.IndexOf("| order by ", StringComparison.Ordinal);
+        var rounding = query.IndexOf("round(annualSavings, 2)", StringComparison.Ordinal);
+        Assert.True(order > 0 && rounding > order);
+        Assert.Equal(4, System.Text.RegularExpressions.Regex.Matches(query, @"round\(").Count);
+    }
+
+    [Fact]
+    public void Build_CollapsesPerResourceWithMaxValues()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Contains(
+            "summarize criticalityScore = max(criticalityScore), criticalityScoreCount = countif(isnotnull(criticalityScore)), " +
+            "annualSavings = max(annualSavings), annualSavingsCount = countif(isnotnull(annualSavings)), " +
+            "cost = max(cost), costCount = countif(isnotnull(cost)), " +
+            "realizedSavings = max(realizedSavings), realizedSavingsCount = countif(isnotnull(realizedSavings)), " +
+            "statuses = make_set(recommendationStatus) " +
+            "by recommendationTypeId, resourceKey",
+            query);
+        Assert.Contains("resourceKey = iff(isempty(resourceKey), tolower(name), resourceKey)", query);
+        Assert.Contains("resourceCount = count()", query);
+        Assert.DoesNotContain("mv-expand", query);
+        Assert.DoesNotContain("resourceSavings", query);
+        Assert.DoesNotContain("by recommendationTypeId, currency", query);
+        Assert.Contains("statuses = make_set(statuses)", query);
+        Assert.DoesNotContain("any(recommendationStatus)", query);
+    }
+
+    [Fact]
+    public void Build_OrdersByDocumentedKeysInOneOrderBy()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Contains(
+            "| order by metadataPriorityScore desc nulls last, rankingSavings desc nulls last, summedCriticality desc nulls last, " +
+            "retirementSortKey asc nulls last, resourceCountSortKey asc, labelSortKey asc, recommendationTypeId asc",
+            query);
+        Assert.Contains("resourceCountSortKey = iff(category =~ 'Cost', resourceCount, -resourceCount)", query);
+        Assert.Single(System.Text.RegularExpressions.Regex.Matches(query, @"\| order by "));
+    }
+
+    [Fact]
+    public void Build_CompletedCostStatusRanksByRealizedSavings()
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost",
+            SubCategory: "IdleResources",
+            Status: RecommendationStatus.Completed,
+            Prioritized: true));
+
+        Assert.Contains("tostring(properties.recommendationStatus) =~ 'Completed'", query);
+        Assert.Contains(
+            "rankingSavings = iff(category =~ 'Cost' and recommendationStatus =~ 'Completed', realizedSavings, annualSavings)",
+            query);
+        Assert.Contains("realizedSavings = round(realizedSavings, 2)", query);
+    }
+
+    [Fact]
+    public void Build_TakesTypePropertiesOnlyFromMetadata()
+    {
+        var query = BuildSubscriptionQuery();
+
+        Assert.Contains(
+            "extend category = metadataCategory, impact = metadataImpact, subCategory = metadataSubCategory, " +
+            "retirementDate = format_datetime(startofday(todatetime(metadataRetirementDate)), 'yyyy-MM-dd')",
+            query);
+        Assert.Contains("metadataPriorityScore=todouble(properties.priorityScore)", query);
+        Assert.Contains("metadataSignalValues=properties.signalValues", query);
+        Assert.DoesNotContain("tostring(properties.category)", query);
+        Assert.DoesNotContain("properties.extendedProperties.retirementDate", query);
+    }
+
+    [Fact]
+    public void Build_ProjectsUsdRetailSavingsWithoutCurrencyGroupsOrInternalSortFields()
+    {
+        var query = BuildSubscriptionQuery();
+        var projection = query[query.LastIndexOf("| project ", StringComparison.Ordinal)..];
+
+        Assert.Equal(
+            "| project key = recommendationTypeId, label, count_ = resourceCount, " +
+            "category, impact, subCategory, retirementDate, annualSavings = round(annualSavings, 2), " +
+            "yearlyPotentialSavings = round(annualSavings, 2), cost = round(cost, 2), " +
+            "realizedSavings = round(realizedSavings, 2), currency = 'USD', " +
+            "pricingBasis = iff(category =~ 'Cost', 'Retail', ''), " +
+            "recommendationStatus, signalValues = metadataSignalValues",
+            projection);
+        Assert.DoesNotContain("providerCurrency", query);
+        Assert.DoesNotContain("billingCurrency", query);
+        Assert.DoesNotContain("savingsByCurrency", query);
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_ReturnsScalarRetailSavingsWithoutCurrencyBreakdown()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "key": "type-b", "label": "B", "count_": 2, "category": "Cost",
+                "currency": "USD", "pricingBasis": "Retail", "recommendationStatus": "New",
+                "annualSavings": 1100, "yearlyPotentialSavings": 1100, "cost": 30, "realizedSavings": null
+              },
+              {
+                "key": "type-a", "label": "A", "count_": 1, "category": "Cost",
+                "currency": "USD", "annualSavings": 1
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
+
+        Assert.Equal(["type-b", "type-a"], summary.Groups.Select(static group => group.Key));
+        Assert.Equal(3, summary.TotalRecommendations);
+        var signals = summary.Groups[0].PrioritizationSignals!;
+        Assert.Equal(1100, signals.AnnualSavings);
+        Assert.Equal(1100, signals.YearlyPotentialSavings);
+        Assert.Equal(30, signals.Cost);
+        Assert.Null(signals.RealizedSavings);
+        Assert.Equal("USD", signals.AnnualSavingsCurrency);
+        Assert.Equal("USD", signals.Currency);
+        Assert.Equal("Retail", signals.PricingBasis);
+        Assert.Equal("New", signals.Status);
+        var json = JsonSerializer.Serialize(summary, AdvisorJsonContext.Default.RecommendationSummary);
+        Assert.DoesNotContain("savingsByCurrency", json);
+        Assert.DoesNotContain("metadataPriorityScore", json);
+        Assert.DoesNotContain("summedCriticality", json);
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_PreservesQueryPriorityAndUsdSavingsOrder()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              { "key": "type-c", "label": "C", "count_": 1, "annualSavings": 1, "currency": "USD" },
+              { "key": "type-b", "label": "B", "count_": 2, "annualSavings": 100, "currency": "USD" },
+              { "key": "type-a", "label": "A", "count_": 1, "annualSavings": 2, "currency": "USD" }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
+
+        Assert.Equal(["type-c", "type-b", "type-a"], summary.Groups.Select(static group => group.Key));
+        Assert.Equal(4, summary.TotalRecommendations);
+        Assert.All(summary.Groups, group => Assert.Equal("USD", group.PrioritizationSignals!.AnnualSavingsCurrency));
+    }
+
+    [Fact]
+    public void Build_AppliesMetadataFiltersAfterJoinAndInstanceFiltersBefore()
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            Category: "Cost",
+            Impact: "High",
+            Search: "it's|x",
+            RecommendationTypeIds: ["1d70919c-1a4a-4f79-8300-bb576c291e9d"],
+            Prioritized: true));
+
+        var join = query.IndexOf("join kind=inner", StringComparison.Ordinal);
+        Assert.True(query.IndexOf("where category =~ 'Cost'", StringComparison.Ordinal) > join);
+        Assert.True(query.IndexOf("where impact =~ 'High'", StringComparison.Ordinal) > join);
+        Assert.True(query.IndexOf(@"contains 'it\'s|x'", StringComparison.Ordinal) is > 0 and var search && search < join);
+        Assert.True(query.IndexOf("=~ '1d70919c-1a4a-4f79-8300-bb576c291e9d'", StringComparison.Ordinal) < join);
+        Assert.DoesNotContain("it's|x", query);
+    }
+
+    [Fact]
+    public void Build_RetirementDateFilter_InfersRetirementSubCategory()
+    {
+        var query = BuildSubscriptionQuery(new RecommendationFilters(
+            RetirementDateOperator: "le",
+            RetirementDate: new DateOnly(2026, 12, 31),
+            Prioritized: true));
+
+        Assert.Contains("subCategory =~ 'ServiceUpgradeAndRetirement'", query);
+        Assert.Contains("todatetime(retirementDate) <= datetime(2026-12-31)", query);
+    }
+
+    [Theory]
+    [InlineData("category")]
+    [InlineData("status")]
+    [InlineData("retirement-date")]
+    public void Build_NonTypeGrouping_Throws(string groupBy)
+    {
+        Assert.Throws<ArgumentException>(() =>
+            RecommendationSummaryService.BuildSummaryQuery("subscription-id", null, groupBy, s_prioritized));
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_KeepsArgOrderTotalsAndFirstDuplicate()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              { "key": "type-b", "label": "B", "count_": 1, "category": "HighAvailability" },
+              { "key": "type-a", "label": "A", "count_": 5, "category": "Security" },
+              { "key": "TYPE-B", "label": "B duplicate", "count_": 9 },
+              { "key": "type-c", "label": "C", "count_": 2 }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
+
+        Assert.Equal("recommendation-type", summary.GroupBy);
+        Assert.Equal(["type-b", "type-a", "type-c"], summary.Groups.Select(group => group.Key));
+        Assert.Equal(8, summary.TotalRecommendations);
+        Assert.Equal("B", summary.Groups[0].Label);
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_BuildsSignalsAndOmitsAbsentValues()
+    {
+        using var document = JsonDocument.Parse(
+            """
+            [
+              {
+                "key": "type-a", "label": "A", "count_": 3,
+                "category": "Cost", "impact": "Medium", "subCategory": "", "retirementDate": "",
+                "annualSavings": 2189.5, "signalValues": null
+              },
+              {
+                "key": "type-b", "label": "B", "count_": 2,
+                "category": "HighAvailability", "impact": "High", "subCategory": "Unknown",
+                "retirementDate": "2025-02-28", "annualSavings": null,
+                "signalValues": { "recommendationImpact": "high", "recommendationSubcategory": "retirementPastDue", "criticalService": "qcs" }
+              }
+            ]
+            """);
+
+        var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
+        var cost = summary.Groups[0].PrioritizationSignals!;
+        var retirement = summary.Groups[1].PrioritizationSignals!;
+
+        Assert.Equal("Cost", cost.Category);
+        Assert.Null(cost.SubCategory);
+        Assert.Null(cost.RetirementDate);
+        Assert.Equal(2189.5, cost.AnnualSavings);
+        Assert.Equal("USD", cost.AnnualSavingsCurrency);
+        Assert.Null(cost.RetirementWindow);
+
+        Assert.Equal("High", retirement.Impact);
+        Assert.Null(retirement.SubCategory);
+        Assert.Equal("2025-02-28", retirement.RetirementDate);
+        Assert.Null(retirement.AnnualSavings);
+        Assert.Null(retirement.AnnualSavingsCurrency);
+        Assert.Equal("retirementPastDue", retirement.RetirementWindow);
+        Assert.Equal("qcs", retirement.CriticalService);
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_ZeroSavingsIsKept()
+    {
+        using var document = JsonDocument.Parse(
+            """[{ "key": "type-a", "label": "A", "count_": 1, "annualSavings": 0 }]""");
+
+        var summary = RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement);
+
+        Assert.Equal(0, summary.Groups[0].PrioritizationSignals!.AnnualSavings);
+        Assert.Equal("USD", summary.Groups[0].PrioritizationSignals!.AnnualSavingsCurrency);
+    }
+
+    [Fact]
+    public void ParsePrioritizedSummary_InvalidCountThrows()
+    {
+        using var document = JsonDocument.Parse("""[{ "key": "type-a", "label": "A", "count_": -1 }]""");
+
+        Assert.Throws<JsonException>(() =>
+            RecommendationSummaryService.ParsePrioritizedSummary(document.RootElement));
+    }
+
+    [Theory]
+    [InlineData("recommendationSubcategory", "retirementPastDue", "retirementWindow")]
+    [InlineData("recommendationSubcategory", "retirementInDays25", "retirementWindow")]
+    [InlineData("recommendationSubcategory", "retirementWithin30Days", "retirementWindow")]
+    [InlineData("recommendationSubcategory", "RetirementWithin180Days", "retirementWindow")]
+    [InlineData("recommendationSubcategory", "retirementInDays7", "retirementWindow")]
+    [InlineData("resourceTypeCriticality", "Networking", "resourceTypeCriticality")]
+    [InlineData("resourceTypeCriticality", "OperationalData", "resourceTypeCriticality")]
+    [InlineData("criticalService", "qcs", "criticalService")]
+    [InlineData("criticalService", "QCS", "criticalService")]
+    [InlineData("effort", "Low", "effort")]
+    [InlineData("effort", "High", "effort")]
+    [InlineData("actionability", "OneClickOrFullyExecutable", "actionability")]
+    [InlineData("costImplication", "noCostImpact", "costImplication")]
+    [InlineData("costImplication", "lowCost", "costImplication")]
+    [InlineData("costImplication", "otherCost", "costImplication")]
+    [InlineData("ResourceTypeCriticality", "Compute", "resourceTypeCriticality")]
+    public void Filter_EmitsMeaningfulValuesVerbatim(string key, string value, string property)
+    {
+        var signals = Filter(new Dictionary<string, string> { [key] = value });
+
+        Assert.Equal(value, ReadProperty(signals, property));
+    }
+
+    [Theory]
+    [InlineData("recommendationImpact", "high")]
+    [InlineData("recommendationSubcategory", "other")]
+    [InlineData("recommendationSubcategory", "zonalResiliency")]
+    [InlineData("recommendationSubcategory", "retirementUnknown")]
+    [InlineData("recommendationSubcategory", "retirementInDays")]
+    [InlineData("recommendationSubcategory", "retirementInDays7x")]
+    [InlineData("recommendationSubcategory", "retirementWithin365Days")]
+    [InlineData("recommendationSubcategory", "retirementPastDueSoon")]
+    [InlineData("recommendationSubcategory", "dataProtectionAndRecovery")]
+    [InlineData("resourceTypeCriticality", "Other")]
+    [InlineData("criticalService", "nonQcs")]
+    [InlineData("effort", "Unknown")]
+    [InlineData("actionability", "Guidance")]
+    [InlineData("costImplication", "costUnavailable")]
+    [InlineData("costImplication", "notAvailable")]
+    [InlineData("effort", "none")]
+    [InlineData("effort", " ")]
+    public void Filter_OmitsValuesWithoutCustomerMeaning(string key, string value)
+    {
+        var signals = Filter(new Dictionary<string, string> { [key] = value });
+
+        Assert.Equal(new RecommendationPrioritizationSignals(), signals);
+    }
+
+    [Fact]
+    public void Filter_IgnoresUnlistedSignals()
+    {
+        using var document = JsonDocument.Parse(
+            """{ "newSignal": "valueA", "category": "Injected", "impact": "Injected", "numeric": 3 }""");
+
+        Assert.Equal(new RecommendationPrioritizationSignals(), PrioritizationSignalFilter.Filter(document.RootElement));
+    }
+
+    [Fact]
+    public void Filter_FirstMeaningfulValueWinsForCaseVariantKeys()
+    {
+        using var document = JsonDocument.Parse("""{ "effort": "Unknown", "Effort": "Low", "EFFORT": "High" }""");
+
+        Assert.Equal("Low", PrioritizationSignalFilter.Filter(document.RootElement).Effort);
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("\"text\"")]
+    public void Filter_NonObjectReturnsNoSignals(string json)
+    {
+        using var document = JsonDocument.Parse(json);
+
+        Assert.Equal(new RecommendationPrioritizationSignals(), PrioritizationSignalFilter.Filter(document.RootElement));
+    }
+
+    private static RecommendationPrioritizationSignals Filter(Dictionary<string, string> values)
+    {
+        using var document = JsonDocument.Parse(JsonSerializer.Serialize(values));
+        return PrioritizationSignalFilter.Filter(document.RootElement);
+    }
+
+    private static string? ReadProperty(RecommendationPrioritizationSignals signals, string property) => property switch
+    {
+        "retirementWindow" => signals.RetirementWindow,
+        "resourceTypeCriticality" => signals.ResourceTypeCriticality,
+        "criticalService" => signals.CriticalService,
+        "effort" => signals.Effort,
+        "actionability" => signals.Actionability,
+        "costImplication" => signals.CostImplication,
+        _ => throw new ArgumentOutOfRangeException(nameof(property)),
+    };
+}

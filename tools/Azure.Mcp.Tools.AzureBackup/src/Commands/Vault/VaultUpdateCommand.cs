@@ -50,6 +50,14 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
                 "At least one update option must be provided: --redundancy, --soft-delete, --soft-delete-retention-days, --immutability-state, --identity-type, --user-assigned-identity, --public-network-access, or --tags.");
         }
 
+        if (!string.IsNullOrEmpty(options.Redundancy) &&
+            !options.Redundancy.Equals("GeoRedundant", StringComparison.OrdinalIgnoreCase) &&
+            !options.Redundancy.Equals("LocallyRedundant", StringComparison.OrdinalIgnoreCase) &&
+            !options.Redundancy.Equals("ZoneRedundant", StringComparison.OrdinalIgnoreCase))
+        {
+            validationResult.Errors.Add("--redundancy must be 'GeoRedundant', 'LocallyRedundant', or 'ZoneRedundant'.");
+        }
+
         if (!string.IsNullOrEmpty(options.SoftDeleteRetentionDays))
         {
             if (!int.TryParse(options.SoftDeleteRetentionDays, out var retentionDays) || retentionDays < 14 || retentionDays > 180)
@@ -114,7 +122,16 @@ public sealed class VaultUpdateCommand(ILogger<VaultUpdateCommand> logger, IAzur
         {
             _logger.LogError(ex, "Error updating vault. Vault: {Vault}, ResourceGroup: {ResourceGroup}",
                 options.Vault, options.ResourceGroup);
-            HandleException(context, ex);
+            HandleAzureBackupException(context, ex, "vault update", AzureBackupErrorGuidance.Supplied(
+                ("--redundancy", options.Redundancy is not null),
+                ("--soft-delete", options.SoftDelete is not null),
+                ("--soft-delete-retention-days", options.SoftDeleteRetentionDays is not null),
+                ("--immutability-state", options.ImmutabilityState is not null),
+                ("--identity-type", options.IdentityType is not null),
+                ("--user-assigned-identity", options.UserAssignedIdentity is not null),
+                ("--public-network-access", options.PublicNetworkAccess is not null),
+                ("--tags", options.Tags is not null)),
+                AzureBackupErrorGuidance.VaultLimitsHint);
         }
 
         return context.Response;

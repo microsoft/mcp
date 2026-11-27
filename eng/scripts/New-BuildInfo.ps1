@@ -15,6 +15,7 @@ param(
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 . "$PSScriptRoot/helpers/BuildHelpers.ps1"
+. "$PSScriptRoot/helpers/VsixVersionHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
 $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
@@ -98,64 +99,6 @@ $coreDirectories = Get-ChildItem "$RepoRoot/core" -Directory
 # Public releases always use the version from the repo without a dynamic prerelease suffix, except for test pipelines
 # which always use a dynamic prerelease suffix to allow for multiple releases from the same commit
 $dynamicPrereleaseVersion = $PublishTarget -ne 'public' -or $TestPipeline
-
-# Function to get the latest VSIX version from VS Code Marketplace
-function Get-LatestMarketplaceVersion {
-    param(
-        [string]$PublisherId,
-        [string]$ExtensionId,
-        [int]$MajorVersion
-    )
-
-    try {
-        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1"
-        $body = @{
-            filters = @(
-                @{
-                    criteria = @(
-                        # filterType 7 = ExtensionName: Filter by the unique identifier (publisher.extensionName)
-                        @{ filterType = 7; value = "$PublisherId.$ExtensionId" }
-                    )
-                }
-            )
-            # flags 914 = IncludeVersions | IncludeFiles | IncludeAssetUri | IncludeStatistics
-            # This requests version information needed to determine the latest published version
-            flags   = 914
-        } | ConvertTo-Json -Depth 10
-
-        $response = Invoke-RestMethod -Uri $marketplaceUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction SilentlyContinue
-
-        if ($response.results -and $response.results[0].extensions) {
-            $extension = $response.results[0].extensions[0]
-            if ($extension.versions -and $extension.versions.Count -gt 0) {
-                # Get all versions and filter for the target major.0.X pattern
-                $allVersions = $extension.versions | ForEach-Object { $_.version }
-                $matchingVersions = $allVersions | Where-Object {
-                    $_ -match "^$MajorVersion\.0\.(\d+)$"
-                } | ForEach-Object {
-                    [PSCustomObject]@{
-                        Version = $_
-                        Patch   = [int]$Matches[1]
-                    }
-                }
-
-                if ($matchingVersions) {
-                    $maxPatch = ($matchingVersions | Measure-Object -Property Patch -Maximum).Maximum
-                    return [PSCustomObject]@{
-                        LatestVersion = "$MajorVersion.0.$maxPatch"
-                        MaxPatch      = $maxPatch
-                        NextPatch     = $maxPatch + 1
-                    }
-                }
-            }
-        }
-    }
-    catch {
-        Write-Verbose "Could not fetch marketplace versions: $_"
-    }
-
-    return $null
-}
 
 function CheckVariable($name) {
     $value = [Environment]::GetEnvironmentVariable($name)
@@ -454,78 +397,26 @@ function Get-ServerDetails {
             Write-Host "SETDEVVERSION is true, using BuildId as patch number for VSIX: $($version.ToString()) -> $vsixVersion" -ForegroundColor Yellow
         }
         elseif ($PublishTarget -eq 'public') {
-            # Check if this is X.0.0-beta.Y series
-            $isBetaSeries = $version.Minor -eq 0 -and $version.Patch -eq 0 -and $version.PrereleaseLabel -eq 'beta'
+            $packageJsonPath = "$RepoRoot/servers/$serverName/vscode/package.json"
+            try {
+                $resolvedVsixVersion = Resolve-PublicVsixVersion `
+                    -ServerName $serverName `
+                    -ServerVersion $version.ToString() `
+                    -PackageJsonPath $packageJsonPath
+                $vsixVersion = $resolvedVsixVersion.Version
+                $vsixIsPrerelease = $resolvedVsixVersion.IsPrerelease
 
-            if ($isBetaSeries) {
-                # Map X.0.0-beta.Y -> VSIX X.0.Y (prerelease)
-                $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
-                $vsixIsPrerelease = $true
-            }
-            elseif ($serverName -eq 'Fabric.Mcp.Server') {
-                # Fabric MCP Server follows a GA-only, minor-increment versioning strategy and
-                # drives its own explicit version numbers. Use the .csproj version verbatim so the
-                # VSIX stays in sync with the other release targets (npm, NuGet, etc.) instead of the
-                # Major.0.X marketplace-derived patch scheme used by other servers.
-                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
-                $vsixIsPrerelease = $false
-                Write-Host "Fabric MCP Server: using .csproj version for VSIX: $vsixVersion" -ForegroundColor Green
-            }
-            else {
-                # For all non-beta versions, calculate next patch version from marketplace
-                $vscodePath = "$RepoRoot/servers/$serverName/vscode"
-                $packageJsonPath = "$vscodePath/package.json"
-
-                if (Test-Path $packageJsonPath) {
-                    $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
-                    $publisherId = $packageJson.publisher
-                    $extensionName = $packageJson.name
-
-                    if ($publisherId -and $extensionName) {
-                        Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
-
-                        $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
-
-                        if ($marketplaceInfo) {
-                            # Use next patch version from marketplace
-                            $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
-                            $vsixIsPrerelease = $false
-                            Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
-                        }
-                        else {
-                            # No matching versions found on the marketplace for the Major.0.X series.
-                            # Special case: if the .csproj version is exactly 1.0.0 (stable, no prerelease label),
-                            # this is the very first GA publish — use the csproj version directly since there is
-                            # no prior marketplace version to increment from.
-                            # This exception is intentionally limited to 1.0.0; any other version with no
-                            # marketplace history (e.g. 1.0.1, 2.0.0) is an error because it implies a potential gap
-                            # in the published version history that must be investigated.
-                            if ([string]::IsNullOrEmpty($version.PrereleaseLabel) -and
-                                $version.Major -eq 1 -and $version.Minor -eq 0 -and $version.Patch -eq 0) {
-                                $vsixVersion = "$($version.Major).$($version.Minor).$($version.Patch)"
-                                $vsixIsPrerelease = $false
-                                Write-Host "No marketplace versions found for $($version.Major).0.X. Using .csproj version for first GA VSIX (1.0.0): $vsixVersion" -ForegroundColor Green
-                            }
-                            else {
-                                LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                                LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                                LogError "The 1.0.0 first-GA exception does not apply here. Ensure the extension has been published at least once before running a subsequent GA build."
-                                $script:exitCode = 1
-                                continue
-                            }
-                        }
-                    }
-                    else {
-                        LogError "Publisher or extension name not found in $packageJsonPath for $serverName"
-                        $script:exitCode = 1
-                        continue
-                    }
+                if ($resolvedVsixVersion.Source -eq 'Marketplace') {
+                    Write-Host "Marketplace latest: $($resolvedVsixVersion.MarketplaceLatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
                 }
                 else {
-                    LogError "package.json not found at $packageJsonPath for $serverName"
-                    $script:exitCode = 1
-                    continue
+                    Write-Host "Resolved public VSIX version: $($version.ToString()) -> $vsixVersion ($($resolvedVsixVersion.Source))" -ForegroundColor Green
                 }
+            }
+            catch {
+                LogError $_.Exception.Message
+                $script:exitCode = 1
+                continue
             }
         }
         else {

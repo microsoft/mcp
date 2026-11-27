@@ -1,0 +1,33 @@
+{
+  "parameters": {
+    "workspaceId": "afced311-0e76-4b74-9d59-6cdcbab44653",
+    "pageSize": 30
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "value": [
+          {
+            "id": "6b1f3d2e-8a4c-4b6e-9f1a-2c3d4e5f6a7b",
+            "displayName": "Sales Ingestion (Gen1)",
+            "status": "ReadyToMigrate"
+          },
+          {
+            "id": "7c2a4e3f-9b5d-4c7f-a02b-3d4e5f6a7b8c",
+            "displayName": "Marketing Blend (Gen1)",
+            "status": "NeedsAttention",
+            "reasons": [
+              {
+                "status": "NeedsAttention",
+                "code": "ExceedsGen2QueryLimit",
+                "message": "The dataflow has more load-enabled queries than Dataflows Gen2 supports (50)."
+              }
+            ]
+          }
+        ],
+        "continuationToken": "LDEsMTAwMDAwLDA%3D",
+        "continuationUri": "https://api.fabric.microsoft.com/v1/workspaces/afced311-0e76-4b74-9d59-6cdcbab44653/dataflows/gen1UpgradeReadinessResults?continuationToken=LDEsMTAwMDAwLDA%3D"
+      }
+    }
+  }
+}

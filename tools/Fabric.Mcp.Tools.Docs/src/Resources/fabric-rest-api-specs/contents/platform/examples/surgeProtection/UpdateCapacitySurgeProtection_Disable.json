@@ -1,0 +1,15 @@
+{
+    "parameters": {
+        "capacityId": "96f3f0ff-4fe2-4712-b61b-05a456ba9357",
+        "updateCapacitySurgeProtectionRequest": {
+            "state": "Disabled"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "state": "Disabled"
+            }
+        }
+    }
+}

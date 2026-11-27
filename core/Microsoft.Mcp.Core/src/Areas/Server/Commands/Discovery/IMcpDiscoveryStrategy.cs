@@ -26,6 +26,10 @@ public interface IMcpDiscoveryStrategy : IAsyncDisposable
     /// <summary>
     /// Gets an MCP client for the specified server.
     /// </summary>
+    /// <remarks>
+    /// Concurrent calls for the same server share initialization. Cancellation stops only the caller's wait;
+    /// shared initialization is canceled when the strategy is disposed. Failed initialization can be retried.
+    /// </remarks>
     /// <param name="name">The name of the server to get a client for.</param>
     /// <param name="clientOptions">Optional client configuration options. If null, default options are used.</param>
     /// <param name="cancellationToken">A cancellation token.</param>

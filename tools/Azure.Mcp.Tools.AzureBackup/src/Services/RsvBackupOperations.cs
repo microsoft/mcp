@@ -22,7 +22,7 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     public async Task<VaultCreateResult> CreateVaultAsync(
         string vaultName, string resourceGroup, string subscription, string location,
         string? sku, string? storageType, string? tenant,
-        CancellationToken cancellationToken)
+        bool enablePublicNetworkAccess = false, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(vaultName), vaultName),
@@ -30,10 +30,21 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(subscription), subscription),
             (nameof(location), location));
 
+        // Validate before any ARM call so an invalid value never leaves a half-configured vault behind.
+        var requestedRedundancy = ParseStorageRedundancy(storageType, nameof(storageType));
+
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var collection = rgResource.GetRecoveryServicesVaults();
+
+        // This MCP tool is create-only, although the underlying ARM operation is an upsert.
+        // Do not treat authorization or transport failures as proof that the vault is absent.
+        if ((await collection.ExistsAsync(vaultName, cancellationToken)).Value)
+        {
+            throw new RequestFailedException(409,
+                "The vault already exists. Use 'azurebackup_vault_update' ('azurebackup vault update') to modify it, or choose a different name for a new vault.");
+        }
 
         var vaultSku = new RecoveryServicesSku(RecoveryServicesSkuName.Standard);
         var vaultData = new RecoveryServicesVaultData(new AzureLocation(location))
@@ -41,20 +52,69 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             Sku = vaultSku,
             Properties = new RecoveryServicesVaultProperties
             {
-                PublicNetworkAccess = VaultPublicNetworkAccess.Enabled
+                PublicNetworkAccess = enablePublicNetworkAccess ? VaultPublicNetworkAccess.Enabled : VaultPublicNetworkAccess.Disabled,
+                // Storage redundancy is a vault property; the legacy backupstorageconfig API is rejected
+                // with BMSUserErrorRedundancySettingsUseVaultApi. The service requires both redundancy
+                // settings together, and a new vault starts with Cross-Region Restore disabled.
+                RedundancySettings = requestedRedundancy is { } redundancy
+                    ? new VaultPropertiesRedundancySettings
+                    {
+                        StandardTierStorageRedundancy = redundancy,
+                        CrossRegionRestore = CrossRegionRestore.Disabled
+                    }
+                    : null
             }
         };
 
         var result = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, vaultData, cancellationToken);
         await WaitForLroCompletionAsync(result, cancellationToken);
 
+        var storageRedundancy = result.Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy?.ToString();
+        if (requestedRedundancy is { } requested)
+        {
+            // Read back the vault and, if the create did not apply the requested value, set it with a vault PATCH.
+            try
+            {
+                storageRedundancy = await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, CrossRegionRestore.Disabled, cancellationToken);
+            }
+            catch (Exception ex) when (ex is RequestFailedException or InvalidOperationException)
+            {
+                var tenantArgument = string.IsNullOrEmpty(tenant) ? string.Empty : $" --tenant \"{tenant}\"";
+                var message =
+                    $"Vault '{vaultName}' was created, but setting storage redundancy to '{requested}' failed. " +
+                    $"The vault may still use the default GeoRedundant storage. Before configuring backup, retry with " +
+                    $"'azurebackup vault update --subscription \"{subscription}\"{tenantArgument} --resource-group \"{resourceGroup}\" " +
+                    $"--vault \"{vaultName}\" --vault-type rsv --redundancy {requested}'. " +
+                    $"Details: {ex.Message}";
+                if (ex is RequestFailedException requestFailed)
+                {
+                    throw new RequestFailedException(requestFailed.Status, message, requestFailed.ErrorCode, requestFailed);
+                }
+                throw new InvalidOperationException(message, ex);
+            }
+        }
+
         return new VaultCreateResult(
             result.Value.Id?.ToString(),
             result.Value.Data.Name,
             VaultType,
             result.Value.Data.Location.Name,
-            result.Value.Data.Properties?.ProvisioningState);
+            result.Value.Data.Properties?.ProvisioningState,
+            result.Value.Data.Properties?.PublicNetworkAccess?.ToString(),
+            storageRedundancy);
     }
+
+    private static StandardTierStorageRedundancy? ParseStorageRedundancy(string? value, string parameterName) =>
+        value?.ToLowerInvariant() switch
+        {
+            null or "" => (StandardTierStorageRedundancy?)null,
+            "georedundant" => StandardTierStorageRedundancy.GeoRedundant,
+            "locallyredundant" => StandardTierStorageRedundancy.LocallyRedundant,
+            "zoneredundant" => StandardTierStorageRedundancy.ZoneRedundant,
+            _ => throw new ArgumentException(
+                $"Invalid storage redundancy: '{value}'. Valid values: GeoRedundant, LocallyRedundant, ZoneRedundant.",
+                parameterName)
+        };
 
     public async Task<BackupVaultInfo> GetVaultAsync(
         string vaultName, string resourceGroup, string subscription,
@@ -185,10 +245,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var result = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
 
             var jobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            jobId ??= ExtractOperationIdFromResponse(result.GetRawResponse());
+            var operationId = ExtractOperationIdFromResponse(result.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId,
+                armClient, subscription, resourceGroup, vaultName, protectedItemName, jobId, operationId,
                 "Workload protection", cancellationToken);
         }
 
@@ -232,10 +292,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             var fsResult = await fsProtectedItemResource.UpdateAsync(WaitUntil.Started, fsProtectedItemData, cancellationToken);
 
             var fsJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-            fsJobId ??= ExtractOperationIdFromResponse(fsResult.GetRawResponse());
+            var fsOperationId = ExtractOperationIdFromResponse(fsResult.GetRawResponse());
 
             return await BuildRsvProtectResultAsync(
-                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId,
+                armClient, subscription, resourceGroup, vaultName, fsProtectedItemName, fsJobId, fsOperationId,
                 "File share protection", cancellationToken);
         }
 
@@ -266,10 +326,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var vmResult = await vmProtectedItemResource.UpdateAsync(WaitUntil.Started, vmProtectedItemData, cancellationToken);
 
         var vmJobId = await FindLatestJobIdAsync(armClient, subscription, resourceGroup, vaultName, "ConfigureBackup", cancellationToken);
-        vmJobId ??= ExtractOperationIdFromResponse(vmResult.GetRawResponse()); // Fallback to operation ID
+        var vmOperationId = ExtractOperationIdFromResponse(vmResult.GetRawResponse());
 
         return await BuildRsvProtectResultAsync(
-            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId,
+            armClient, subscription, resourceGroup, vaultName, vmProtectedItemName, vmJobId, vmOperationId,
             "VM protection", cancellationToken);
     }
 
@@ -501,13 +561,57 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var itemResource = armClient.GetBackupProtectedItemResource(itemId);
         var collection = itemResource.GetBackupRecoveryPoints();
 
-        var points = new List<RecoveryPointInfo>();
-        await foreach (var rp in collection.GetAllAsync(cancellationToken: cancellationToken))
+        // The SDK may fail to deserialize one malformed recovery point. Keep the valid remainder.
+        return await EnumerateTolerantAsync(
+            collection.GetAllAsync(cancellationToken: cancellationToken),
+            static recoveryPoint => MapToRecoveryPointInfo(recoveryPoint.Data),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Enumerates an async sequence while tolerating a bounded number of consecutive SDK format failures.
+    /// </summary>
+    internal static async Task<List<TResult>> EnumerateTolerantAsync<TSource, TResult>(
+        IAsyncEnumerable<TSource> source,
+        Func<TSource, TResult> selector,
+        CancellationToken cancellationToken,
+        int maxConsecutiveFailures = 3)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(selector);
+
+        var results = new List<TResult>();
+        var enumerator = source.GetAsyncEnumerator(cancellationToken);
+        var consecutiveFailures = 0;
+        try
         {
-            points.Add(MapToRecoveryPointInfo(rp.Data));
+            while (true)
+            {
+                try
+                {
+                    if (!await enumerator.MoveNextAsync())
+                    {
+                        break;
+                    }
+
+                    results.Add(selector(enumerator.Current));
+                    consecutiveFailures = 0;
+                }
+                catch (FormatException)
+                {
+                    if (++consecutiveFailures >= maxConsecutiveFailures)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        finally
+        {
+            await enumerator.DisposeAsync();
         }
 
-        return points;
+        return results;
     }
 
     /// <summary>
@@ -548,11 +652,22 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             (nameof(vaultName), vaultName),
             (nameof(resourceGroup), resourceGroup),
             (nameof(subscription), subscription));
+        var requestedRedundancy = ParseStorageRedundancy(redundancy, nameof(redundancy));
 
         var armClient = await CreateArmClientAsync(tenant, cancellationToken: cancellationToken);
         var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
         var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
         var vault = await vaultResource.GetAsync(cancellationToken);
+
+        // Resolve Cross-Region Restore and reject an incompatible redundancy before any write,
+        // so a rejected request leaves identity, network access, and tags unchanged.
+        CrossRegionRestore? crossRegionRestore = null;
+        if (requestedRedundancy is { } requestedBeforePatch
+            && vault.Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy != requestedBeforePatch)
+        {
+            crossRegionRestore = await ResolveCrossRegionRestoreAsync(armClient, vault.Value.Data, vaultName, resourceGroup, subscription, cancellationToken);
+            EnsureRedundancyAllowed(vaultName, requestedBeforePatch, crossRegionRestore);
+        }
 
         var patchData = new RecoveryServicesVaultPatch(vault.Value.Data.Location);
 
@@ -591,11 +706,10 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
 
-        // RSV storage redundancy is managed via the BackupResourceStorageConfig API,
-        // not the vault patch endpoint.
-        if (!string.IsNullOrEmpty(redundancy))
+        // RSV storage redundancy is set through the vault API and verified by read-back.
+        if (requestedRedundancy is { } requested)
         {
-            await ConfigureStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, redundancy, cancellationToken);
+            await ApplyStorageRedundancyAsync(armClient, vaultName, resourceGroup, subscription, requested, crossRegionRestore, cancellationToken);
         }
 
         // Delegate soft delete and immutability to their dedicated methods for RSV vaults,
@@ -637,22 +751,90 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         return new OperationResult("Succeeded", null, $"Vault '{vaultName}' updated successfully.");
     }
 
-    private static async Task ConfigureStorageRedundancyAsync(
+    /// <summary>
+    /// Sets the Recovery Services vault storage redundancy through the vault API
+    /// (<c>properties.redundancySettings.standardTierStorageRedundancy</c>) and verifies the stored value by
+    /// read-back. The legacy BackupResourceStorageConfig API is rejected for this setting with
+    /// <c>BMSUserErrorRedundancySettingsUseVaultApi</c>. Returns the verified redundancy.
+    /// </summary>
+    /// <param name="knownCrossRegionRestore">
+    /// Cross-Region Restore state to send when the vault GET does not report one; Azure rejects
+    /// <c>redundancySettings</c> without it. Callers resolve it with <see cref="ResolveCrossRegionRestoreAsync"/>
+    /// or pass the known state of a new vault.
+    /// </param>
+    private static async Task<string> ApplyStorageRedundancyAsync(
         ArmClient armClient, string vaultName, string resourceGroup,
-        string subscription, string redundancy, CancellationToken cancellationToken)
+        string subscription, StandardTierStorageRedundancy requested,
+        CrossRegionRestore? knownCrossRegionRestore, CancellationToken cancellationToken)
     {
-        var configResourceId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
-        var configResource = armClient.GetBackupResourceConfigResource(configResourceId);
-        var currentConfig = await configResource.GetAsync(cancellationToken);
+        var vaultId = RecoveryServicesVaultResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var vaultResource = armClient.GetRecoveryServicesVaultResource(vaultId);
+        var current = (await vaultResource.GetAsync(cancellationToken)).Value.Data;
+        var currentSettings = current.Properties?.RedundancySettings;
+        if (currentSettings?.StandardTierStorageRedundancy == requested)
+        {
+            return requested.ToString();
+        }
 
-        var data = currentConfig.Value.Data;
-        data.Properties.StorageModelType = new BackupStorageType(redundancy);
+        var crossRegionRestore = currentSettings?.CrossRegionRestore ?? knownCrossRegionRestore;
+        EnsureRedundancyAllowed(vaultName, requested, crossRegionRestore);
 
-        var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
-        var rgResource = armClient.GetResourceGroupResource(rgId);
-        var collection = rgResource.GetBackupResourceConfigs();
-        var operation = await collection.CreateOrUpdateAsync(WaitUntil.Started, vaultName, data, cancellationToken);
+        // Send the existing Cross-Region Restore state so the PATCH changes only storage redundancy.
+        var patchData = new RecoveryServicesVaultPatch(current.Location)
+        {
+            Properties = new RecoveryServicesVaultProperties
+            {
+                RedundancySettings = new VaultPropertiesRedundancySettings
+                {
+                    StandardTierStorageRedundancy = requested,
+                    CrossRegionRestore = crossRegionRestore
+                }
+            }
+        };
+
+        var operation = await vaultResource.UpdateAsync(WaitUntil.Started, patchData, cancellationToken);
         await WaitForLroCompletionAsync(operation, cancellationToken);
+
+        var applied = (await vaultResource.GetAsync(cancellationToken)).Value.Data.Properties?.RedundancySettings?.StandardTierStorageRedundancy;
+        if (applied != requested)
+        {
+            throw new InvalidOperationException(
+                $"Azure accepted the storage redundancy change for vault '{vaultName}', but the vault reports '{applied?.ToString() ?? "unknown"}' instead of '{requested}'. " +
+                "Storage redundancy can change only before any item is protected in the vault. Verify with 'azurebackup vault get'.");
+        }
+
+        return requested.ToString();
+    }
+
+    /// <summary>
+    /// Returns the vault's Cross-Region Restore state. The vault GET does not always populate it, so the
+    /// backup configuration GET (<c>crossRegionRestoreFlag</c>) is used as the fallback, as in
+    /// <see cref="ConfigureCrossRegionRestoreAsync"/>. Only that read is used; redundancy is never written there.
+    /// </summary>
+    private static async Task<CrossRegionRestore> ResolveCrossRegionRestoreAsync(
+        ArmClient armClient, RecoveryServicesVaultData vault, string vaultName, string resourceGroup,
+        string subscription, CancellationToken cancellationToken)
+    {
+        if (vault.Properties?.RedundancySettings?.CrossRegionRestore is { } reported)
+        {
+            return reported;
+        }
+
+        var configId = BackupResourceConfigResource.CreateResourceIdentifier(subscription, resourceGroup, vaultName);
+        var config = await armClient.GetBackupResourceConfigResource(configId).GetAsync(cancellationToken);
+        return config.Value.Data.Properties?.EnableCrossRegionRestore == true
+            ? CrossRegionRestore.Enabled
+            : CrossRegionRestore.Disabled;
+    }
+
+    private static void EnsureRedundancyAllowed(string vaultName, StandardTierStorageRedundancy requested, CrossRegionRestore? crossRegionRestore)
+    {
+        if (crossRegionRestore == CrossRegionRestore.Enabled && requested != StandardTierStorageRedundancy.GeoRedundant)
+        {
+            throw new ArgumentException(
+                $"Vault '{vaultName}' has Cross-Region Restore enabled, which requires GeoRedundant storage, so it cannot switch to {requested}. " +
+                "Keep --redundancy GeoRedundant, or use a vault without Cross-Region Restore.");
+        }
     }
 
     public async Task<OperationResult> CreatePolicyAsync(
@@ -728,6 +910,11 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         string? tenant, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
+        var validation = Policy.PolicyUpdateValidator.Validate(request);
+        if (!validation.IsValid)
+        {
+            throw new ArgumentException(string.Join(" ", validation.Issues.Select(i => $"[{i.Flag}] {i.Message}")));
+        }
 
         var policyName = request.Policy;
         ValidateRequiredParameters(
@@ -740,181 +927,100 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
         var rgId = ResourceGroupResource.CreateResourceIdentifier(subscription, resourceGroup);
         var rgResource = armClient.GetResourceGroupResource(rgId);
         var policyCollection = rgResource.GetBackupProtectionPolicies(vaultName);
-
         var existingPolicy = await policyCollection.GetAsync(policyName, cancellationToken);
         var policyData = existingPolicy.Value.Data;
         var policyProperties = policyData.Properties as BackupGenericProtectionPolicy
             ?? throw new ArgumentException($"Policy '{policyName}' has an unsupported properties type.", nameof(policyName));
 
-        DateTimeOffset? newScheduleTime = null;
-        if (!string.IsNullOrWhiteSpace(request.ScheduleTime))
-        {
-            if (!DateTimeOffset.TryParse(request.ScheduleTime, out var st))
-            {
-                throw new ArgumentException($"Invalid schedule time '{request.ScheduleTime}'. Provide a valid time in UTC HH:mm format (e.g., '04:00').");
-            }
-            newScheduleTime = st;
-        }
-
-        int? newRetentionDays = null;
-        if (!string.IsNullOrWhiteSpace(request.DailyRetentionDays))
-        {
-            if (!int.TryParse(request.DailyRetentionDays, out var dd) || dd <= 0)
-            {
-                throw new ArgumentException($"Invalid daily retention days '{request.DailyRetentionDays}'. Provide a positive integer.");
-            }
-            newRetentionDays = dd;
-        }
-
+        Policy.IaasVmPolicyUpdater.ValidateWorkload(policyProperties, request);
         if (!request.HasAnyInput())
         {
             return new OperationResult("Succeeded", null, $"No changes specified for policy '{policyName}'. Policy remains unchanged.");
         }
 
-        // Extended IaasVM merger (new): applies TimeZone / schedule reshape / weekly-monthly-yearly retention.
-        if (policyProperties is IaasVmProtectionPolicy vmPolicy && request.HasIaasVmExtendedFlags())
+        if (policyProperties is IaasVmProtectionPolicy vmPolicy)
         {
             MergeIaasVmExtended(vmPolicy, request);
+            Policy.IaasVmPolicyUpdater.MergeTags(policyData.Tags, request.PolicyTags);
         }
-
-        // Legacy back-compat: single daily schedule time and/or daily retention days across policy kinds.
-        if (newScheduleTime is not null || newRetentionDays is not null)
+        else
         {
+            DateTimeOffset? newScheduleTime = request.ScheduleTime is null
+                ? null : Policy.PolicyUpdateValidator.ParseTime(request.ScheduleTime);
+            int? newRetentionDays = request.DailyRetentionDays is null
+                ? null : Policy.PolicyUpdateValidator.ParsePositive(request.DailyRetentionDays);
             UpdatePolicyScheduleAndRetention(policyProperties, newScheduleTime, newRetentionDays);
         }
 
-        var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
-        await WaitForLroCompletionAsync(operation, cancellationToken);
-
+        try
+        {
+            // Reuse the fetched resource and properties, including Resource Guard and unknown SDK fields.
+            var operation = await policyCollection.CreateOrUpdateAsync(WaitUntil.Started, policyName, policyData, cancellationToken);
+            await WaitForLroCompletionAsync(operation, cancellationToken);
+        }
+        catch (NullReferenceException)
+        {
+            throw CreatePolicyMaterializationError(policyName!, vaultName);
+        }
         return new OperationResult("Succeeded", null, $"Policy '{policyName}' updated in vault '{vaultName}'.");
     }
 
     /// <summary>
-    /// Applies the caller-supplied IaasVM extended flags on top of the existing policy in place.
-    /// Semantics: TimeZone is overlaid when supplied. Schedule (SimpleSchedulePolicy) is replaced when
-    /// any of frequency / times / days-of-week is supplied. Retention tiers (Weekly / Monthly / Yearly)
-    /// are individually replaced whenever the corresponding count is greater than zero — other tiers
-    /// on the existing policy are preserved untouched. Daily retention continues to be driven by the
-    /// legacy <see cref="Policy.PolicyUpdateRequest.DailyRetentionDays"/> path.
+    /// Builds the error surfaced when the Azure SDK cannot materialize the updated policy response.
+    /// The update may have applied, so callers are directed to verify the current policy state.
+    /// </summary>
+    internal static RequestFailedException CreatePolicyMaterializationError(string policyName, string vaultName) =>
+        new(
+            (int)HttpStatusCode.InternalServerError,
+            $"The update for policy '{policyName}' in vault '{vaultName}' was submitted, but the Azure SDK could not " +
+            "deserialize the updated policy from the service response (a known SDK limitation for some IaaS VM policy shapes). " +
+            "The change may have been applied - verify the current policy with 'azurebackup policy get'.");
+
+    /// <summary>
+    /// Applies all VM updates through the subtype-preserving updater, including legacy flags.
     /// </summary>
     internal static void MergeIaasVmExtended(IaasVmProtectionPolicy vmPolicy, Policy.PolicyUpdateRequest req)
+        => Policy.IaasVmPolicyUpdater.Apply(vmPolicy, req);
+
+    /// <summary>
+    /// Merges explicitly supplied LTR tiers without replacing existing SDK instances or omitted times.
+    /// </summary>
+    internal static void MergeIaasVmRetention(LongTermRetentionPolicy retention, Policy.PolicyUpdateRequest req,
+        IList<DateTimeOffset> scheduleTimes, bool scheduleChanged = false)
     {
-        if (!string.IsNullOrWhiteSpace(req.TimeZone))
-        {
-            vmPolicy.TimeZone = req.TimeZone;
-        }
-
-        // Prefer the caller-supplied schedule times; otherwise use the existing policy's schedule times
-        // so retention tiers align with the current run times. Fall back to the parser default only when
-        // neither is available.
-        var existingSchedule = vmPolicy.SchedulePolicy as SimpleSchedulePolicy;
-        IList<DateTimeOffset> scheduleTimes;
-        if (!string.IsNullOrWhiteSpace(req.ScheduleTimes))
-        {
-            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(req.ScheduleTimes);
-        }
-        else if (existingSchedule is not null && existingSchedule.ScheduleRunTimes.Count > 0)
-        {
-            scheduleTimes = new List<DateTimeOffset>(existingSchedule.ScheduleRunTimes);
-        }
-        else
-        {
-            scheduleTimes = Policy.RsvPolicyBuilder.ParseScheduleTimes(null);
-        }
-
-        bool scheduleReplaced = !string.IsNullOrWhiteSpace(req.ScheduleFrequency)
-            || !string.IsNullOrWhiteSpace(req.ScheduleTimes)
-            || !string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek);
-
-        if (scheduleReplaced)
-        {
-            // Determine frequency: explicit --schedule-frequency wins; otherwise infer Weekly when
-            // days-of-week are supplied, and fall back to the existing schedule's frequency.
-            ScheduleRunType freq;
-            if (!string.IsNullOrWhiteSpace(req.ScheduleFrequency))
-            {
-                freq = string.Equals(req.ScheduleFrequency!.Trim(), "Weekly", StringComparison.OrdinalIgnoreCase)
-                    ? ScheduleRunType.Weekly
-                    : ScheduleRunType.Daily;
-            }
-            else if (!string.IsNullOrWhiteSpace(req.ScheduleDaysOfWeek))
-            {
-                freq = ScheduleRunType.Weekly;
-            }
-            else
-            {
-                freq = existingSchedule?.ScheduleRunFrequency ?? ScheduleRunType.Daily;
-            }
-
-            var isWeekly = freq == ScheduleRunType.Weekly;
-            var schedule = new SimpleSchedulePolicy
-            {
-                ScheduleRunFrequency = freq,
-            };
-            if (isWeekly)
-            {
-                var days = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.ScheduleDaysOfWeek);
-                if (days.Count == 0 && existingSchedule is not null && existingSchedule.ScheduleRunDays.Count > 0)
-                {
-                    foreach (var d in existingSchedule.ScheduleRunDays)
-                    {
-                        days.Add(d);
-                    }
-                }
-                if (days.Count == 0)
-                {
-                    days.Add(BackupDayOfWeek.Sunday);
-                }
-                foreach (var d in days)
-                {
-                    schedule.ScheduleRunDays.Add(d);
-                }
-            }
-            foreach (var t in scheduleTimes)
-            {
-                schedule.ScheduleRunTimes.Add(t);
-            }
-            vmPolicy.SchedulePolicy = schedule;
-        }
-
-        var retention = vmPolicy.RetentionPolicy as LongTermRetentionPolicy;
-        if (retention is null)
-        {
-            retention = new LongTermRetentionPolicy();
-            vmPolicy.RetentionPolicy = retention;
-        }
-
         if (req.WeeklyRetentionWeeks > 0)
         {
-            var weekly = new WeeklyRetentionSchedule
+            bool replaceTimes = scheduleChanged || retention.WeeklySchedule is null;
+            var weekly = retention.WeeklySchedule ?? new WeeklyRetentionSchedule();
+            weekly.RetentionDuration ??= new RetentionDuration();
+            weekly.RetentionDuration.Count = req.WeeklyRetentionWeeks;
+            weekly.RetentionDuration.DurationType = RetentionDurationType.Weeks;
+            weekly.DaysOfTheWeek.Clear();
+            foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek))
             {
-                RetentionDuration = new RetentionDuration { Count = req.WeeklyRetentionWeeks, DurationType = RetentionDurationType.Weeks },
-            };
-            var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.WeeklyRetentionDaysOfWeek);
-            if (dow.Count == 0)
-            {
-                dow.Add(BackupDayOfWeek.Sunday);
+                weekly.DaysOfTheWeek.Add(day);
             }
-            foreach (var d in dow)
+            if (replaceTimes)
             {
-                weekly.DaysOfTheWeek.Add(d);
-            }
-            foreach (var t in scheduleTimes)
-            {
-                weekly.RetentionTimes.Add(t);
+                weekly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { weekly.RetentionTimes.Add(time); }
             }
             retention.WeeklySchedule = weekly;
         }
 
         if (req.MonthlyRetentionMonths > 0)
         {
-            var monthly = new MonthlyRetentionSchedule
-            {
-                RetentionDuration = new RetentionDuration { Count = req.MonthlyRetentionMonths, DurationType = RetentionDurationType.Months },
-            };
-            if (!string.IsNullOrWhiteSpace(req.MonthlyRetentionDaysOfMonth))
+            bool replaceTimes = scheduleChanged || retention.MonthlySchedule is null;
+            var monthly = retention.MonthlySchedule ?? new MonthlyRetentionSchedule();
+            monthly.RetentionDuration ??= new RetentionDuration();
+            monthly.RetentionDuration.Count = req.MonthlyRetentionMonths;
+            monthly.RetentionDuration.DurationType = RetentionDurationType.Months;
+            monthly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.MonthlyRetentionDaysOfMonth is not null)
             {
                 monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                monthly.RetentionScheduleWeekly = null;
                 foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.MonthlyRetentionDaysOfMonth))
                 {
                     monthly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
@@ -923,51 +1029,44 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             else
             {
                 monthly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
-                monthly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
-                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek);
-                if (dow.Count == 0)
+                monthly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                monthly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.MonthlyRetentionDaysOfWeek))
                 {
-                    dow.Add(BackupDayOfWeek.Sunday);
+                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
                 }
-                foreach (var d in dow)
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth))
                 {
-                    monthly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
-                }
-                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.MonthlyRetentionWeekOfMonth);
-                if (weeks.Count == 0)
-                {
-                    weeks.Add(BackupWeekOfMonth.First);
-                }
-                foreach (var w in weeks)
-                {
-                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                    monthly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
                 }
             }
-            foreach (var t in scheduleTimes)
+            if (replaceTimes)
             {
-                monthly.RetentionTimes.Add(t);
+                monthly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { monthly.RetentionTimes.Add(time); }
             }
             retention.MonthlySchedule = monthly;
         }
 
         if (req.YearlyRetentionYears > 0)
         {
-            var yearly = new YearlyRetentionSchedule
+            bool replaceTimes = scheduleChanged || retention.YearlySchedule is null;
+            var yearly = retention.YearlySchedule ?? new YearlyRetentionSchedule();
+            yearly.RetentionDuration ??= new RetentionDuration();
+            yearly.RetentionDuration.Count = req.YearlyRetentionYears;
+            yearly.RetentionDuration.DurationType = RetentionDurationType.Years;
+            yearly.MonthsOfYear.Clear();
+            foreach (var month in Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths))
             {
-                RetentionDuration = new RetentionDuration { Count = req.YearlyRetentionYears, DurationType = RetentionDurationType.Years },
-            };
-            var months = Policy.RsvPolicyBuilder.ParseMonthsOfYear(req.YearlyRetentionMonths);
-            if (months.Count == 0)
-            {
-                months.Add(BackupMonthOfYear.January);
+                yearly.MonthsOfYear.Add(month);
             }
-            foreach (var m in months)
-            {
-                yearly.MonthsOfYear.Add(m);
-            }
-            if (!string.IsNullOrWhiteSpace(req.YearlyRetentionDaysOfMonth))
+            yearly.RetentionScheduleDailyDaysOfTheMonth.Clear();
+            if (req.YearlyRetentionDaysOfMonth is not null)
             {
                 yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Daily;
+                yearly.RetentionScheduleWeekly = null;
                 foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfMonth(req.YearlyRetentionDaysOfMonth))
                 {
                     yearly.RetentionScheduleDailyDaysOfTheMonth.Add(day);
@@ -976,34 +1075,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             else
             {
                 yearly.RetentionScheduleFormatType = RetentionScheduleFormat.Weekly;
-                yearly.RetentionScheduleWeekly = new WeeklyRetentionFormat();
-                var dow = Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek);
-                if (dow.Count == 0)
+                yearly.RetentionScheduleWeekly ??= new WeeklyRetentionFormat();
+                yearly.RetentionScheduleWeekly.DaysOfTheWeek.Clear();
+                yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Clear();
+                foreach (var day in Policy.RsvPolicyBuilder.ParseDaysOfWeek(req.YearlyRetentionDaysOfWeek))
                 {
-                    dow.Add(BackupDayOfWeek.Sunday);
+                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(day);
                 }
-                foreach (var d in dow)
+                foreach (var week in Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth))
                 {
-                    yearly.RetentionScheduleWeekly.DaysOfTheWeek.Add(d);
-                }
-                var weeks = Policy.RsvPolicyBuilder.ParseWeeksOfMonth(req.YearlyRetentionWeekOfMonth);
-                if (weeks.Count == 0)
-                {
-                    weeks.Add(BackupWeekOfMonth.First);
-                }
-                foreach (var w in weeks)
-                {
-                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(w);
+                    yearly.RetentionScheduleWeekly.WeeksOfTheMonth.Add(week);
                 }
             }
-            foreach (var t in scheduleTimes)
+            if (replaceTimes)
             {
-                yearly.RetentionTimes.Add(t);
+                yearly.RetentionTimes.Clear();
+                foreach (var time in scheduleTimes)
+                { yearly.RetentionTimes.Add(time); }
             }
             retention.YearlySchedule = yearly;
         }
     }
-
     private static void UpdatePolicyScheduleAndRetention(BackupGenericProtectionPolicy policyProperties, DateTimeOffset? newScheduleTime, int? newRetentionDays)
     {
         bool scheduleApplied = newScheduleTime is null;
@@ -1036,36 +1128,6 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                             retentionApplied = true;
                         }
                     }
-                }
-                break;
-
-            case IaasVmProtectionPolicy vmPolicy:
-                if (newScheduleTime is not null && vmPolicy.SchedulePolicy is SimpleSchedulePolicy vmSchedule)
-                {
-                    var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                    vmSchedule.ScheduleRunTimes.Clear();
-                    vmSchedule.ScheduleRunTimes.Add(scheduleRunTime);
-                    scheduleApplied = true;
-                }
-
-                if (vmPolicy.RetentionPolicy is LongTermRetentionPolicy vmRetention && vmRetention.DailySchedule is not null)
-                {
-                    if (newRetentionDays is not null)
-                    {
-                        vmRetention.DailySchedule.RetentionDuration = new RetentionDuration { Count = newRetentionDays.Value, DurationType = RetentionDurationType.Days };
-                        retentionApplied = true;
-                    }
-
-                    if (newScheduleTime is not null)
-                    {
-                        var scheduleRunTime = NormalizeScheduleTime(newScheduleTime.Value);
-                        vmRetention.DailySchedule.RetentionTimes.Clear();
-                        vmRetention.DailySchedule.RetentionTimes.Add(scheduleRunTime);
-                    }
-                }
-                else if (newRetentionDays is not null)
-                {
-                    // Retention policy type not supported for update
                 }
                 break;
 
@@ -2229,12 +2291,13 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
 
         var protectedItemResource = armClient.GetBackupProtectedItemResource(protectedItemId);
         var operation = await protectedItemResource.UpdateAsync(WaitUntil.Started, protectedItemData, cancellationToken);
-        var jobId = ExtractOperationIdFromResponse(operation.GetRawResponse());
+        var operationId = ExtractOperationIdFromResponse(operation.GetRawResponse());
 
-        return new OperationResult("Accepted", jobId,
-            jobId != null
-                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup job get --job {jobId}' to monitor progress."
-                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'.");
+        return new OperationResult("Accepted", JobId: null,
+            string.IsNullOrEmpty(operationId)
+                ? $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Use 'azurebackup protecteditem get' to verify."
+                : $"Restore of soft-deleted protected item for datasource '{datasourceId}' has been started in vault '{vaultName}'. Operation id '{operationId}' tracks the request (it is not a backup job id); use 'azurebackup protecteditem get' to verify.",
+            OperationId: operationId);
     }
 
     /// <summary>
@@ -2270,16 +2333,27 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
     /// </summary>
     private static async Task<ProtectResult> BuildRsvProtectResultAsync(
         ArmClient armClient, string subscription, string resourceGroup, string vaultName,
-        string protectedItemName, string? jobId, string operationDescription,
+        string protectedItemName, string? jobId, string? operationId, string operationDescription,
         CancellationToken cancellationToken)
     {
+        // Only a genuine ConfigureBackup job id (found via FindLatestJobIdAsync) can be polled
+        // or queried with 'azurebackup job get'. The async operation id from the PUT response is
+        // NOT a job id, so when no job is available we surface it separately as OperationId and
+        // avoid polling a non-existent job (which previously wasted the full 12-minute budget and
+        // returned a "jobId" that 'azurebackup job get' could not resolve).
         if (string.IsNullOrEmpty(jobId))
         {
+            var acceptedMessage = string.IsNullOrEmpty(operationId)
+                ? $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify."
+                : $"{operationDescription} initiated. Operation id '{operationId}' tracks the request " +
+                  "(it is not a backup job id); use 'azurebackup protecteditem get' to verify.";
+
             return new ProtectResult(
                 "Accepted",
                 protectedItemName,
-                null,
-                $"{operationDescription} initiated. Use 'azurebackup protecteditem get' to verify.");
+                JobId: null,
+                acceptedMessage,
+                OperationId: operationId);
         }
 
         var finalJob = await WaitForJobAsync(
@@ -2292,7 +2366,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
                 protectedItemName,
                 jobId,
                 $"{operationDescription} is still running after the polling budget elapsed. " +
-                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.");
+                $"Use 'azurebackup job get --job {jobId}' to continue monitoring.",
+                OperationId: operationId);
         }
 
         var status = finalJob.Status ?? "Unknown";
@@ -2310,7 +2385,8 @@ public sealed partial class RsvBackupOperations(IAzureService azureService) : Ba
             jobId,
             message,
             ProtectionStatus: null,
-            ErrorMessage: isFailure ? errorMessage ?? status : null);
+            ErrorMessage: isFailure ? errorMessage ?? status : null,
+            OperationId: operationId);
     }
 
     /// <summary>

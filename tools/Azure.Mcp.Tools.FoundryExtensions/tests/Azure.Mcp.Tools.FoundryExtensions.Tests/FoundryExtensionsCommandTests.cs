@@ -60,18 +60,18 @@ public class FoundryExtensionsCommandTests(ITestOutputHelper output, TestProxyFi
 
     // Disable automatic additions so we can control sanitizer ORDER manually.
     // ResourceGroupName must be sanitized BEFORE ResourceBaseName, otherwise
-    // "vigera-mcpdb643c27" becomes "vigera-Sanitized" instead of "Sanitized".
+    // "test-mcp643c27" becomes "test-Sanitized" instead of "Sanitized".
     public override bool EnableDefaultSanitizerAdditions => false;
 
     public override List<GeneralRegexSanitizer> GeneralRegexSanitizers =>
     [
-        // ResourceGroupName FIRST (e.g. "vigera-mcpdb643c27" → "Sanitized")
+        // ResourceGroupName FIRST (e.g. "test-mcp643c27" → "Sanitized")
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
         {
             Regex = System.Text.RegularExpressions.Regex.Escape(Settings.ResourceGroupName),
             Value = "Sanitized",
         }),
-        // Then ResourceBaseName (e.g. "mcpdb643c27" → "Sanitized")
+        // Then ResourceBaseName (e.g. "mcp643c27" → "Sanitized")
         new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
         {
             Regex = Settings.ResourceBaseName,

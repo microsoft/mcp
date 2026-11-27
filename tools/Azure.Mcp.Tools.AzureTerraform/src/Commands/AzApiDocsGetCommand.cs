@@ -16,7 +16,12 @@ namespace Azure.Mcp.Tools.AzureTerraform.Commands;
     Name = "get",
     Title = "Get AzAPI Provider Documentation",
     Description = """
-        Retrieves AzAPI Terraform provider documentation and schema for a specified Azure resource type.
+        Retrieves AzAPI Terraform provider documentation and schema for an Azure resource type named in ARM
+        namespace format, such as Microsoft.Storage/storageAccounts, Microsoft.Network/virtualNetworks, or
+        Microsoft.Compute/virtualMachines. Returns the schema for the latest stable API version unless a specific
+        API version, such as 2024-07-01, is requested. Use this tool for AzAPI
+        provider documentation, AzAPI docs, and azapi_resource schema questions; it reads reference
+        documentation and does not query, read, or modify any live Azure resources in a subscription.
         Returns the resource schema in HCL format suitable for azapi_resource blocks, including property
         definitions with types and requirements, parent resource information, and Terraform usage examples.
         Use --resource-type to specify the Azure resource type in ARM format

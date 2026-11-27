@@ -1,0 +1,75 @@
+{
+    "parameters": {
+        "beta": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+                "displayName": "Policy set name",
+                "description": "A policy set description.",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "policyRules": [
+                    {
+                        "id": "3df10001-6271-4182-ad99-2676205dfeae",
+                        "displayName": "Policy name 1",
+                        "description": "A Policy description.",
+                        "policy": "ItemCreation",
+                        "createdDateTime": "2026-02-17T07:07:31.9030872Z",
+                        "lastModifiedDateTime": "2026-02-17T07:07:31.903088Z",
+                        "modifiedByUser": {
+                            "id": "6f23a8a6-d954-4550-b91a-4df73ccd0311",
+                            "type": "User"
+                        },
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "predicate": {
+                                    "operator": "NoneOf",
+                                    "values": [
+                                        "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                    ]
+                                },
+                                "targetProperty": "principal.groups.id"
+                            }
+                        ],
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "f0ae0001-6dbe-411e-9551-af27f7c8e89d",
+                        "displayName": "Policy name 2",
+                        "description": "A Policy description.",
+                        "policy": "ItemCreation",
+                        "createdDateTime": "2026-02-17T07:07:31.9030913Z",
+                        "lastModifiedDateTime": "2026-02-17T07:07:31.9030914Z",
+                        "modifiedByUser": {
+                            "id": "6f23a8a6-d954-4550-b91a-4df73ccd0311",
+                            "type": "User"
+                        },
+                        "conditions": [
+                            {
+                                "type": "Dynamic",
+                                "predicate": {
+                                    "operator": "AnyOf",
+                                    "values": [
+                                        "9763b213-de8c-484f-8e41-e1c9de4c8429"
+                                    ]
+                                },
+                                "targetProperty": "principal.groups.id"
+                            }
+                        ],
+                        "effects": [
+                            {
+                                "type": "Allow"
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -24,7 +24,7 @@ namespace Azure.Mcp.Tools.SreAgent.Commands.Incidents;
     OpenWorld = false,
     ReadOnly = false,
     Secret = true,
-    LocalRequired = false)]
+    LocalRequired = true)]
 public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServicenowCommand> logger, ISreAgentService sreAgentService, ISubscriptionResolver subscriptionResolver)
     : SubscriptionCommand<IncidentConnectorServiceNowOptions, SreAgentTextResult>(subscriptionResolver)
 {
@@ -52,7 +52,8 @@ public sealed class IncidentsSetupServicenowCommand(ILogger<IncidentsSetupServic
             {
                 if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable(options.TokenEnv)))
                 {
-                    validationResult.Errors.Add($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.");
+                    validationResult.AddError($"ServiceNow bearer token environment variable '{options.TokenEnv}' is not set.",
+                        "ServiceNow token environment variable not set.");
                 }
             }
         }

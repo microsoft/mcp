@@ -19,7 +19,7 @@ public partial class ApiVersionSelector
         string[] sortedApiVersions = [.. apiVersions.Order(ApiVersionComparer.Instance)];
         return sortedApiVersions.LastOrDefault(IsStableRelease) // prefer last stable release
             ?? sortedApiVersions.LastOrDefault() // if none, use latest pre-release
-            ?? throw new Exception("List of apiVersions should not be empty");
+            ?? throw new ArgumentException("List of apiVersions should not be empty");
     }
 
     public static bool IsStableRelease(string apiVersion)

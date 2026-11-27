@@ -44,7 +44,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Service.ValidateRecoveryPlanForOperationAsync(
             "sg1",
             "plan1",
-            Arg.Is<RecoveryOperationNames>(value => value.ToString() == operationName),
+            Arg.Is<RecoveryOperationName>(value => value.ToString() == operationName),
             null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
@@ -86,7 +86,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Service.ValidateRecoveryPlanForOperationAsync(
             "sg1",
             "plan1",
-            Arg.Is<RecoveryOperationNames>(value => value == RecoveryOperationNames.Reprotect),
+            Arg.Is<RecoveryOperationName>(value => value == RecoveryOperationName.Reprotect),
             null,
             Arg.Any<CancellationToken>())
             .Returns(expected);
@@ -114,7 +114,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Service.ValidateRecoveryPlanForOperationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RecoveryOperationNames>(),
+            Arg.Any<RecoveryOperationName>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)status, providerDetails));
@@ -136,7 +136,7 @@ public sealed class RecoveryPlanValidateForOperationCommandTests : CommandUnitTe
         Service.ValidateRecoveryPlanForOperationAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RecoveryOperationNames>(),
+            Arg.Any<RecoveryOperationName>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new TimeoutException(internalDetails));

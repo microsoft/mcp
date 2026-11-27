@@ -33,16 +33,15 @@ public class FabricDocsSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var fabricDocs = new CommandGroup(Name,
-            """
-            Microsoft Fabric Documentation Tools - Access OpenAPI specifications, best practices,
-            and example files for Microsoft Fabric APIs. Use this tool when you need to:
-            - Discover available Fabric item types and their API specifications
-            - Retrieve detailed OpenAPI documentation for specific item types
-            - Access best practice guidance for Fabric development
-            - Get example API request/response files for implementation reference
-            This tool provides read-only access to Microsoft Fabric documentation and does NOT
-            interact with live Fabric resources or require authentication.
-            """, Title);
+            "Microsoft Fabric Documentation Tools - Access OpenAPI specifications, best practices, " +
+            "and example files for Microsoft Fabric APIs. Use this tool when you need to:\n" +
+            "- Discover available Fabric item types and their API specifications\n" +
+            "- Retrieve detailed OpenAPI documentation for specific item types\n" +
+            "- Access best practice guidance for Fabric development\n" +
+            "- Get example API request/response files for implementation reference\n" +
+            "This tool provides read-only access to Microsoft Fabric documentation and does NOT " +
+            "interact with live Fabric resources or require authentication.",
+            Title);
 
         // Register all commands directly at the docs level (flat structure)
         fabricDocs.AddCommand<ListItemTypesCommand>(serviceProvider);

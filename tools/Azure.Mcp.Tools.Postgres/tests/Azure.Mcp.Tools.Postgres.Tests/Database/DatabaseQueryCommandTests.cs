@@ -86,11 +86,11 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
     }
 
     [Theory]
-    [InlineData("SELECT * FROM users; DROP TABLE users;")]
-    [InlineData("SELECT * FROM users -- comment")] // inline comment
-    [InlineData("SELECT * FROM users /* block comment */")] // block comment
-    [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
-    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
+    [InlineData("SELECT * FROM users; DROP TABLE users;", "Multiple or stacked SQL statements are not allowed.")]
+    [InlineData("SELECT * FROM users -- comment", "Comments are not allowed in the query.")]
+    [InlineData("SELECT * FROM users /* block comment */", "Comments are not allowed in the query.")]
+    [InlineData("SELECT * FROM users; SELECT * FROM other;", "Multiple or stacked SQL statements are not allowed.")]
+    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery, string expectedMessage)
     {
         var response = await ExecuteCommandAsync(
             $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra,
@@ -100,7 +100,8 @@ public class DatabaseQueryCommandTests : CommandUnitTestsBase<DatabaseQueryComma
             "--query", badQuery);
 
         Assert.NotNull(response);
-        Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(expectedMessage, response.Message);
         // Service should never be called for invalid queries.
         await Service.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }

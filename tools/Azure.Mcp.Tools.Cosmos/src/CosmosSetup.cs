@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.Cosmos.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 
 namespace Azure.Mcp.Tools.Cosmos;
 
@@ -19,6 +20,7 @@ public class CosmosSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddEndpointValidation();
         services.AddSingleton<ICosmosService, CosmosService>();
 
         services.AddSingleton<CosmosListCommand>();
@@ -33,7 +35,10 @@ public class CosmosSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Cosmos command group
-        var cosmos = new CommandGroup(Name, "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for accounts, databases, containers, and document queries.", Title);
+        var cosmos = new CommandGroup(Name,
+            "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes " +
+            "operations for accounts, databases, containers, and document queries.",
+            Title);
 
         // Consolidated hierarchical list command
         cosmos.AddCommand<CosmosListCommand>(serviceProvider);

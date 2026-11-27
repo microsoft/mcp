@@ -44,7 +44,7 @@ public sealed class SnapshotUpdateCommand(ILogger<SnapshotUpdateCommand> logger,
                 }
                 catch (Exception ex)
                 {
-                    logger.LogWarning(ex, "Failed to parse metadata JSON: {Metadata}", options.Metadata);
+                    logger.LogWarning(ex, "Failed to parse metadata JSON.");
                 }
             }
 

@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Tools.Extension.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Areas.Server;
@@ -17,7 +18,9 @@ namespace Azure.Mcp.Tools.Extension.Tests;
 
 public sealed class ExtensionSetupTests
 {
-    private static IServiceProvider BuildServiceProvider(ServerRuntimeConfiguration? configuration)
+    private static IServiceProvider BuildServiceProvider(
+        ServerRuntimeConfiguration? configuration,
+        bool azqrSupported = true)
     {
         var services = new ServiceCollection();
         services.AddLogging(b => b.AddConsole());
@@ -31,6 +34,9 @@ public sealed class ExtensionSetupTests
         services.AddSingleton(Substitute.For<IAzureTokenCredentialProvider>());
         services.AddSingleton(Substitute.For<IAzureCloudConfiguration>());
         services.AddSingleton(Substitute.For<ISubscriptionResolver>());
+        var azqrCliService = Substitute.For<IAzqrCliService>();
+        azqrCliService.GetSupportedExecutablePath().Returns(_ => azqrSupported ? "azqr" : null);
+        services.AddSingleton(azqrCliService);
 
         if (configuration is not null)
         {
@@ -82,7 +88,7 @@ public sealed class ExtensionSetupTests
     }
 
     [Fact]
-    public void RegisterCommands_LocalStdioMode_IncludesAzqrCommand()
+    public void RegisterCommands_LocalStdioMode_WithSupportedAzqr_IncludesAzqrCommand()
     {
         // Arrange: stdio transport
         var configuration = new ServerRuntimeConfiguration
@@ -99,6 +105,23 @@ public sealed class ExtensionSetupTests
         // In local mode the azqr command that shells out to an external process is allowed.
         Assert.Contains("azqr", commandGroup.Commands.Keys);
         Assert.Contains(commandGroup.SubGroup, g => g.Name == "cli");
+    }
+
+    [Fact]
+    public void RegisterCommands_LocalStdioMode_WithoutAzqr_ExcludesAzqrCommand()
+    {
+        var configuration = new ServerRuntimeConfiguration
+        {
+            Transport = TransportTypes.StdIo,
+        };
+        var provider = BuildServiceProvider(configuration, azqrSupported: false);
+        var setup = new ExtensionSetup();
+
+        var commandGroup = setup.RegisterCommands(provider);
+
+        Assert.DoesNotContain("azqr", commandGroup.Commands.Keys);
+        Assert.DoesNotContain("Azure Quick Review", commandGroup.Description);
+        Assert.Contains(commandGroup.SubGroup, group => group.Name == "cli");
     }
 
     [Fact]

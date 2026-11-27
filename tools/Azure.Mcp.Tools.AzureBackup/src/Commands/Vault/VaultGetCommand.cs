@@ -43,9 +43,27 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
     private readonly ILogger<VaultGetCommand> _logger = logger;
     private readonly IAzureBackupService _azureBackupService = azureBackupService;
 
+    public override void PostBindOptions(VaultGetOptions options)
+    {
+        options.Subscription = BackupVaultReferenceParser.ResolveSubscription(options.Subscription, options.Vault, options.ResourceGroup);
+        base.PostBindOptions(options);
+    }
+
     public override void ValidateOptions(VaultGetOptions options, ValidationResult validationResult)
     {
         base.ValidateOptions(options, validationResult);
+
+        // A blank --vault or --resource-group is treated as omitted (list mode / no resource group filter).
+        var reference = BackupVaultReferenceParser.Normalize(
+            options.Subscription,
+            string.IsNullOrWhiteSpace(options.ResourceGroup) ? null : options.ResourceGroup,
+            string.IsNullOrWhiteSpace(options.Vault) ? null : options.Vault,
+            options.VaultType,
+            rsvOnly: false,
+            validationResult);
+        options.ResourceGroup = reference.ResourceGroup;
+        options.Vault = reference.Vault;
+        options.VaultType = reference.VaultType;
 
         if (!string.IsNullOrEmpty(options.Vault) && string.IsNullOrEmpty(options.ResourceGroup))
         {
@@ -67,7 +85,7 @@ public sealed class VaultGetCommand(ILogger<VaultGetCommand> logger, IAzureBacku
             }
             catch (ArgumentException ex)
             {
-                validationResult.Errors.Add(ex.Message);
+                validationResult.AddError(ex.Message, "Invalid backup vault expansion.");
             }
         }
     }

@@ -68,7 +68,7 @@ public sealed class RecordSeeder : IAsyncLifetime
         var data = ReadFixture(Marker);
         var records = CreateRecords(DataPartition, legalTag, data);
         var response = await _storageService.UpsertRecordsAsync(
-            _endpoint, DataPartition, records, _tenant, CancellationToken.None);
+            _endpoint, DataPartition, records, _tenant, cancellationToken: CancellationToken.None);
         Ids = response.Result.RecordIds
             ?? throw new InvalidOperationException("ADME storage seeding returned no record IDs.");
         if (Ids.Count != records.Length)
@@ -87,7 +87,7 @@ public sealed class RecordSeeder : IAsyncLifetime
                 try
                 {
                     await _storageService.DeleteRecordAsync(
-                        _endpoint, DataPartition, id, _tenant, CancellationToken.None);
+                        _endpoint, DataPartition, id, _tenant, cancellationToken: CancellationToken.None);
                 }
                 catch
                 {

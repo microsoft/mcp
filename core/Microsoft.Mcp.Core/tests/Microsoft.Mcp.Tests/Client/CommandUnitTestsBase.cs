@@ -8,6 +8,7 @@ using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models.Command;
 using NSubstitute;
 using Xunit;
@@ -44,6 +45,7 @@ public abstract class CommandUnitTestsBase<TCommand, TService> : IDisposable
             .AddSingleton(Logger)
             .AddSingleton(Service)
             .AddSingleton<TCommand>();
+        Services.AddEndpointValidation();
     }
 
     protected Task<CommandResponse> ExecuteCommandAsync(params string[] args)

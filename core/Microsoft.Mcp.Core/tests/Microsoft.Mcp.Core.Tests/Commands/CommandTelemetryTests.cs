@@ -5,10 +5,12 @@ using System.CommandLine;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
+using Microsoft.Identity.Client;
 using Microsoft.Mcp.Core.Commands;
-using Microsoft.Mcp.Core.Extensions;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 using Xunit;
 
 namespace Microsoft.Mcp.Core.Tests.Commands;
@@ -27,9 +29,24 @@ public sealed class CommandTelemetryTests
         ReadOnly = false,
         Secret = false,
         LocalRequired = false)]
-    private sealed class TelemetryTestCommand(HttpStatusCode status, string? telemetryFailureMessage)
+    private sealed class TelemetryTestCommand(HttpStatusCode status, string? telemetryFailureMessage, bool failValidation = false, bool legacyValidation = false)
         : BaseCommand<EmptyOptions, string>
     {
+        public override void ValidateOptions(EmptyOptions options, ValidationResult validationResult)
+        {
+            base.ValidateOptions(options, validationResult);
+
+            if (failValidation)
+            {
+                validationResult.AddError("Invalid option 'private value'.", "Invalid option.");
+            }
+
+            if (legacyValidation)
+            {
+                validationResult.Errors.Add("Invalid option 'private value'.");
+            }
+        }
+
         public override Task<CommandResponse> ExecuteAsync(
             CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
         {
@@ -50,6 +67,49 @@ public sealed class CommandTelemetryTests
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal("Sanitized failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ValidationError_PreservesUserMessageAndCapturesSafeTelemetry()
+    {
+        using var activity = CreateActivity();
+        var response = await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, null, failValidation: true),
+            activity);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal("Invalid option 'private value'.", response.Message);
+        Assert.Equal("Invalid option.", response.TelemetryFailureMessage);
+        Assert.Equal("Invalid option.", activity.GetTagItem(TagName.ToolFailureMessage));
+        Assert.Null(activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LegacyValidationError_UsesGenericSafeTelemetry()
+    {
+        using var activity = CreateActivity();
+        var response = await ExecuteAsync(
+            new TelemetryTestCommand(HttpStatusCode.OK, null, legacyValidation: true),
+            activity);
+
+        Assert.Equal("Invalid option 'private value'.", response.Message);
+        Assert.Equal("Invalid options.", response.TelemetryFailureMessage);
+        Assert.Equal("Invalid options.", activity.GetTagItem(TagName.ToolFailureMessage));
+    }
+
+    [Fact]
+    public void Validate_ParserError_PreservesMessageAndUsesGenericSafeTelemetry()
+    {
+        var command = new TelemetryTestCommand(HttpStatusCode.OK, null);
+        var parseResult = command.GetCommand().Parse("--unknown private");
+        var response = new CommandResponse();
+
+        var result = ((IBaseCommand)command).Validate(parseResult.CommandResult, response);
+
+        Assert.False(result.IsValid);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Equal(string.Join('\n', result.Errors), response.Message);
+        Assert.Equal("Invalid options.", response.TelemetryFailureMessage);
     }
 
     [Fact]
@@ -93,6 +153,58 @@ public sealed class CommandTelemetryTests
 
         Assert.Equal("Command-specific failure details.", activity.GetTagItem(TagName.ToolFailureMessage));
         Assert.Equal("Generic failure details.", activity.GetTagItem(TagName.ExceptionMessage));
+    }
+
+    [CommandMetadata(
+        Id = "00000000-0000-0000-0000-0000000000d0",
+        Name = "test-throwing",
+        Title = "Test Throwing Command",
+        Description = "A command used only to exercise exception telemetry in tests.",
+        OperationPlane = ToolOperationPlane.NotApplicable,
+        Destructive = true,
+        Idempotent = false,
+        OpenWorld = true,
+        ReadOnly = false,
+        Secret = false,
+        LocalRequired = false)]
+    private sealed class ThrowingTestCommand(Exception exception) : BaseCommand<EmptyOptions, string>
+    {
+        public override Task<CommandResponse> ExecuteAsync(
+            CommandContext context, EmptyOptions options, CancellationToken cancellationToken)
+        {
+            HandleException(context, exception);
+            return Task.FromResult(context.Response);
+        }
+    }
+
+    [Theory]
+    [InlineData("AADSTS50013: Assertion failed signature validation. Trace ID: 1234", "AADSTS50013")]
+    [InlineData("A configuration issue is preventing authentication.", null)]
+    public async Task ExecuteAsync_MsalServiceException_CapturesAadStsErrorCode(string errorMessage, string? expectedAadStsCode)
+    {
+        using var activity = CreateActivity();
+        var command = new ThrowingTestCommand(new MsalServiceException("invalid_request", errorMessage));
+
+        Assert.True(command.GetCommand().TryParseFromDictionary(null, out ParseResult? parseResult, out _));
+        await ((IBaseCommand)command).ExecuteAsync(new CommandContext(activity), parseResult!, TestContext.Current.CancellationToken);
+
+        var exceptionDetails = Assert.IsType<JsonObject>(activity.GetTagItem(TagName.ExceptionMessage));
+        Assert.Equal("invalid_request", exceptionDetails["ErrorCode"]!.GetValue<string>());
+        Assert.Equal(expectedAadStsCode, exceptionDetails["AadStsErrorCode"]?.GetValue<string>());
+        Assert.DoesNotContain("Trace ID", exceptionDetails.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OnBehalfOfUserTokenRequired_ReturnsForbiddenWithActionableMessage()
+    {
+        using var activity = CreateActivity();
+        var command = new ThrowingTestCommand(new OnBehalfOfUserTokenRequiredException());
+
+        Assert.True(command.GetCommand().TryParseFromDictionary(null, out ParseResult? parseResult, out _));
+        var response = await ((IBaseCommand)command).ExecuteAsync(new CommandContext(activity), parseResult!, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("UseHostingEnvironmentIdentity", response.Message);
     }
 
     [Fact]

@@ -9,7 +9,6 @@ using Microsoft.Mcp.Core.Areas.Tools.Options;
 using Microsoft.Mcp.Core.Commands;
 using Microsoft.Mcp.Core.Models;
 using Microsoft.Mcp.Core.Models.Command;
-using Microsoft.Mcp.Core.Models.Option;
 
 namespace Microsoft.Mcp.Core.Areas.Tools.Commands;
 
@@ -110,7 +109,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
 
             // Get all tools with full details
             var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
-                .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
+                .Select(kvp => CreateCommand(kvp.Key, kvp.Value.Command));
 
             // Apply namespace filtering if specified
             var filteredToolNames = ApplyNamespaceFilterToNames(allTools.Select(t => t.Command), options.Namespace, ' ');
@@ -149,10 +148,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
         var commandDetails = command.GetCommand();
 
         var optionInfos = commandDetails.Options?
-            .Select(arg => new OptionInfo(
-                name: arg.Name,
-                description: arg.Description!,
-                required: arg.Required))
+            .Select(arg => arg.ToOptionInfo())
             .ToList();
 
         var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');
@@ -222,7 +218,7 @@ public sealed class ToolsListCommand(IServiceProvider serviceProvider, ILogger<T
     {
         var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
         {
-            var command = kvp.Value.GetCommand();
+            var command = kvp.Value.Command.GetCommand();
             return new CommandInfo
             {
                 Name = $"{commandPrefix.Replace(' ', CommandFactory.Separator)}{searchedGroup.Name}{CommandFactory.Separator}{command.Name}",

@@ -67,8 +67,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)\core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
-    <ProjectReference Include="$(RepoRoot)\areas\*\src\**\Template.*.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Template.Mcp.Core\src\Template.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)areas\*\src\**\Template.*.csproj" />
   </ItemGroup>
 
   <ItemGroup>

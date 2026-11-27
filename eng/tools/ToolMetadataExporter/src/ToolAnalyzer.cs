@@ -68,7 +68,7 @@ public class ToolAnalyzer
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var existingTools = (await _azureMcpDatastore.GetAvailableToolsAsync(cancellationToken)).ToDictionary(x => x.ToolId);
+        var existingTools = (await _azureMcpDatastore.GetAvailableToolsAsync(serverName, cancellationToken)).ToDictionary(x => x.ToolId);
 
         if (cancellationToken.IsCancellationRequested)
         {

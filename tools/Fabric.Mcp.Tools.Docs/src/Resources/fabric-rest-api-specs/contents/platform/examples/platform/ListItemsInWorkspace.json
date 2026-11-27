@@ -12,14 +12,16 @@
                         "displayName": "Lakehouse",
                         "description": "A lakehouse used by the analytics team.",
                         "type": "Lakehouse",
-                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "logicalId": "1423f3b4-dba5-44c1-a94f-6ae4d776369a"
                     },
                     {
                         "id": "58fa1eac-9694-4a6b-ba25-3520288e8fea",
                         "displayName": "Notebook",
                         "description": "A notebook for refining medical data analysis through machine learning algorithms.",
                         "type": "KustoDashboard",
-                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229"
+                        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                        "logicalId": null
                     }
                 ]
             }

@@ -3,6 +3,7 @@
 
 using Azure;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.MySql.Services;
 using Azure.ResourceManager;
 using Azure.ResourceManager.MySql.FlexibleServers;
@@ -22,7 +23,7 @@ public class MySqlServiceTests
 
     public MySqlServiceTests()
     {
-        _azureService = Substitute.For<IAzureService>();
+        _azureService = AzureServiceTestHelpers.CreateAzureService();
 
         _mysqlService = new MySqlService(_azureService);
     }

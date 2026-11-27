@@ -32,13 +32,12 @@ public class SearchSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var search = new CommandGroup(Name,
-        """
-        Search operations – Commands to manage and query Azure AI Search services, indexes, and
-        knowledge sources. Supports enterprise search, document search, and knowledge mining. Not
-        intended for database queries or Azure Monitor logs. This is a hierarchical MCP command
-        router using the command field and parameters; set learn=true to discover available
-        sub-commands.
-        """, Title);
+            "Search operations – Commands to manage and query Azure AI Search services, indexes, and " +
+            "knowledge sources. Supports enterprise search, document search, and knowledge mining. Not " +
+            "intended for database queries or Azure Monitor logs. This is a hierarchical MCP command " +
+            "router using the command field and parameters; set learn=true to discover available " +
+            "sub-commands.",
+            Title);
 
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");
         search.AddSubGroup(service);

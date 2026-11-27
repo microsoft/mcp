@@ -33,7 +33,25 @@
         {
           "$ref": "../common/definitions.json#/definitions/Item"
         }
-      ]
+      ],
+      "properties": {
+        "properties": {
+          "description": "The ontology properties.",
+          "$ref": "#/definitions/OntologyProperties"
+        }
+      }
+    },
+    "OntologyProperties": {
+      "description": "The properties of an ontology item.",
+      "type": "object",
+      "properties": {
+        "generation": {
+          "description": "The resolved ontology generation (`1` or `2`). The value reflects the generation created, regardless of creation mode.",
+          "type": "integer",
+          "format": "int32",
+          "readOnly": true
+        }
+      }
     },
     "CreateOntologyRequest": {
       "description": "Create ontology request payload.",

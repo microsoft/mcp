@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.AzureBackup.Commands.Policy;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -73,6 +74,74 @@ public class PolicyUpdateCommandTests : SubscriptionCommandUnitTestsBase<PolicyU
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_LogsOriginalExceptionAndSanitizesAzureResponse()
+    {
+        var exception = new RequestFailedException(400, "Backend diagnostic detail");
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.DoesNotContain("Backend diagnostic detail", response.Message);
+        Assert.Contains(Logger.ReceivedCalls(), call => call.GetMethodInfo().Name == "Log"
+            && Equals(call.GetArguments()[0], LogLevel.Error)
+            && ReferenceEquals(call.GetArguments()[3], exception));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AzureInvalidParameterWithoutName_ReturnsSuppliedOptionsAndLimits()
+    {
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400,
+                "Parameter NO_PARAM in request is invalid. Please provide correct value for parameter NO_PARAM",
+                "UserErrorInvalidRequestParameter", null));
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p --instant-rp-retention-days 4 --time-zone UTC");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the policy update (UserErrorInvalidRequestParameter)", response.Message);
+        Assert.Contains("Options supplied: --time-zone, --instant-rp-retention-days.", response.Message);
+        Assert.Contains("daily retention 7-9999 days", response.Message);
+        Assert.DoesNotContain("NO_PARAM", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_OtherAzureBadRequest_KeepsSanitizedMessage()
+    {
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(400, "Backend diagnostic detail", "BMSUserErrorInvalidPolicyInput", null));
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p --daily-retention-days 30");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Azure rejected the policy update", response.Message);
+        Assert.DoesNotContain("Backend diagnostic detail", response.Message);
+        Assert.DoesNotContain("Options supplied", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ForwardsMultipleScheduleTimes()
+    {
+        Service.UpdatePolicyAsync(
+            Arg.Any<PolicyUpdateRequest>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
+            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new OperationResult("Succeeded", null, null));
+
+        var response = await ExecuteCommandAsync("--subscription sub --vault v --resource-group rg --policy p --schedule-times 02:00,14:00");
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).UpdatePolicyAsync(
+            Arg.Is<PolicyUpdateRequest>(request => request.ScheduleTimes == "02:00,14:00"),
+            "v", "rg", "sub", Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]

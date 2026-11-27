@@ -1,0 +1,17 @@
+{
+  "parameters": {
+    "capacityId": "a35f02c0-ae64-4526-b1a8-52af7761426f",
+    "updateOverageConfigurationRequest": {
+      "state": "Enabled",
+      "thresholdCapacityUnitHours": 1000
+    }
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "state": "Enabled",
+        "thresholdCapacityUnitHours": 1000
+      }
+    }
+  }
+}
