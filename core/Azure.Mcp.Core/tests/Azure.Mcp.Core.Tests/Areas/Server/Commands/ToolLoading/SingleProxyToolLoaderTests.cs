@@ -306,7 +306,7 @@ public class SingleProxyToolLoaderTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task CallToolHandler_WithUnknownTool_RecordsUnknownIdentity(bool learn)
+    public async Task CallToolHandler_WithUnknownTool_ReturnsAvailableToolsAndRecordsUnknownIdentity(bool learn)
     {
         // Arrange
         var (toolLoader, _, _) = CreateToolLoader(useRealDiscovery: true);
@@ -320,10 +320,13 @@ public class SingleProxyToolLoaderTests
         var request = McpTestUtilities.CreateToolCallRequest("azure", arguments);
         using var activity = new Activity("test-activity").Start();
 
-        // Act & Assert
-        // The current implementation throws KeyNotFoundException for unknown tools
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken));
+        // Act
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+
+        // Assert: like a namespace that is not enabled, an unknown tool falls back to the list of available tools.
+        var text = Assert.IsType<TextContentBlock>(Assert.Single(result.Content)).Text;
+        Assert.Contains("Here are the available tools", text);
+        Assert.DoesNotContain("user@example.com", text);
         activity.AssertTagEquals(TagName.ToolName, TagConstants.Unknown);
         activity.AssertTagEquals(TagName.ToolArea, TagConstants.Unknown);
     }

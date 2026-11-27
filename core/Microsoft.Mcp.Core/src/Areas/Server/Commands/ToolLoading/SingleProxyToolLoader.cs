@@ -362,9 +362,11 @@ public sealed class SingleProxyToolLoader(
             }
             catch (KeyNotFoundException)
             {
+                // Neither a local tool group nor a discovered server. Like a namespace that is not enabled,
+                // return no tools so callers fall back to the list of available tools.
                 Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
                     .SetTag(TagName.ToolName, TagConstants.Unknown);
-                throw;
+                return [];
             }
 
             var toolsResponse = await ToolListCache.ListRemoteToolsAsync(client, cancellationToken);
@@ -380,7 +382,7 @@ public sealed class SingleProxyToolLoader(
 
         Activity.Current?.SetTag(TagName.ToolArea, TagConstants.Unknown)
             .SetTag(TagName.ToolName, TagConstants.Unknown);
-        throw new KeyNotFoundException("No tool found with the specified name.");
+        return [];
     }
 
     private async Task<CallToolResult> RootLearnModeAsync(
