@@ -58,10 +58,10 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
                 : await AzureService.GetTenantId(tenant, cancellationToken);
         }
 
-        var tenantResource = await GetTenantResourceAsync(queryTenantId, cancellationToken);
+        var resolvedTenantId = await ResolveOptimizationTenantIdAsync(queryTenantId, cancellationToken);
 
-        var recommendationsTask = ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId, cancellationToken);
-        var diskSummaryTask = GetDiskRecommendationSummaryAsync(tenantResource, subscriptionId, cancellationToken);
+        var recommendationsTask = ExecuteResourceGraphQueryAsync(resolvedTenantId, query, subscriptionId, cancellationToken);
+        var diskSummaryTask = GetDiskRecommendationSummaryAsync(resolvedTenantId, subscriptionId, cancellationToken);
         await Task.WhenAll(recommendationsTask, diskSummaryTask);
 
         var (rows, truncated) = recommendationsTask.Result;
@@ -75,14 +75,14 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
     /// A null <paramref name="subscriptionId"/> summarizes across all accessible subscriptions.
     /// </summary>
     private async Task<DiskRecommendationSummary?> GetDiskRecommendationSummaryAsync(
-        TenantResource tenantResource,
+        string tenantId,
         string? subscriptionId,
         CancellationToken cancellationToken)
     {
         try
         {
             var query = OptimizationKqlQueries.UnattachedDiskSummaryQuery.ReplaceLineEndings("\r\n");
-            var (rows, _) = await ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId, cancellationToken);
+            var (rows, _) = await ExecuteResourceGraphQueryAsync(tenantId, query, subscriptionId, cancellationToken);
             return BuildDiskRecommendationSummary(rows, subscriptionId);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -294,17 +294,17 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
         var (subscriptionId, subscriptionTenantId, _) = await ResolveSubscriptionAsync(
             subscription, tenant, returnCandidatesOnMultipleMatch: false, cancellationToken);
 
-        var tenantResource = await GetTenantResourceAsync(subscriptionTenantId, cancellationToken);
+        var resolvedTenantId = await ResolveOptimizationTenantIdAsync(subscriptionTenantId ?? tenant, cancellationToken);
 
-        return await ExecuteResourceGraphQueryAsync(tenantResource, query, subscriptionId!, cancellationToken);
+        return await ExecuteResourceGraphQueryAsync(resolvedTenantId, query, subscriptionId!, cancellationToken);
     }
 
     /// <summary>
     /// Executes an Azure Resource Graph query. When <paramref name="subscriptionId"/> is null the
     /// query is not scoped and covers every subscription the caller can access.
     /// </summary>
-    private static async Task<(List<JsonElement> Rows, bool Truncated)> ExecuteResourceGraphQueryAsync(
-        TenantResource tenantResource,
+    private async Task<(List<JsonElement> Rows, bool Truncated)> ExecuteResourceGraphQueryAsync(
+        string tenantId,
         string query,
         string? subscriptionId,
         CancellationToken cancellationToken)
@@ -315,22 +315,18 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             queryContent.Subscriptions.Add(subscriptionId);
         }
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
 
         var rows = new List<JsonElement>();
-        if (result != null && result.Count > 0)
+        if (result.Count > 0 && result.Data.ValueKind == JsonValueKind.Array)
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
+            foreach (var item in result.Data.EnumerateArray())
             {
-                foreach (var item in jsonDocument.RootElement.EnumerateArray())
-                {
-                    rows.Add(item.Clone());
-                }
+                rows.Add(item.Clone());
             }
         }
 
-        return (rows, result?.ResultTruncated == ResultTruncated.True);
+        return (rows, result.IsTruncated);
     }
 
     /// <summary>
@@ -355,18 +351,15 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
             return (subscription, tenantId, null);
         }
 
-        var tenantResource = await GetTenantResourceAsync(tenantId, cancellationToken);
+        var resolvedTenantId = await ResolveOptimizationTenantIdAsync(tenantId ?? tenant, cancellationToken);
+
         var queryContent = new ResourceQueryContent(OptimizationKqlQueries.BuildSubscriptionIdByNameQuery(subscription));
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, resolvedTenantId, cancellationToken);
 
         List<JsonElement> matches = [];
-        if (result != null && result.Count > 0)
+        if (result.Count > 0 && result.Data.ValueKind == JsonValueKind.Array)
         {
-            using var jsonDocument = JsonDocument.Parse(result.Data);
-            if (jsonDocument.RootElement.ValueKind == JsonValueKind.Array)
-            {
-                matches.AddRange(jsonDocument.RootElement.EnumerateArray().Select(item => item.Clone()));
-            }
+            matches.AddRange(result.Data.EnumerateArray().Select(item => item.Clone()));
         }
 
         if (matches.Count == 0)
@@ -396,25 +389,32 @@ public class OptimizationService(IAzureService azureService, ILogger<Optimizatio
 
         var subscriptionId = GetString(matches[0], "subscriptionId")
             ?? throw new KeyNotFoundException($"Could not find subscription with name '{subscription}'.");
-        var resolvedTenantId = GetString(matches[0], "tenantId") ?? tenantId;
+        var matchedTenantId = GetString(matches[0], "tenantId") ?? tenantId;
 
-        return (subscriptionId, resolvedTenantId, null);
+        return (subscriptionId, matchedTenantId, null);
     }
 
-    /// <summary>
-    /// Returns a <see cref="TenantResource"/> whose client authenticates against <paramref name="tenantId"/>
-    /// (or the default tenant when null). Resource Graph queries use the client's credential, so the client
-    /// must be created for the target tenant rather than selecting a tenant from the default client.
-    /// </summary>
-    private async Task<TenantResource> GetTenantResourceAsync(string? tenantId, CancellationToken cancellationToken)
+    private async Task<string> ResolveOptimizationTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
-        var armClient = await CreateArmClientAsync(tenantId, cancellationToken: cancellationToken);
-        await foreach (var tenant in armClient.GetTenants().GetAllAsync(cancellationToken))
+        if (!string.IsNullOrWhiteSpace(tenant))
         {
-            return tenant;
+            return await ResolveTenantIdAsync(tenant, cancellationToken);
         }
 
-        throw new InvalidOperationException("No accessible Azure tenants were found for the current credential.");
+        var tenantId = await AzureService.ResolveTenantIdAsync(null, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(tenantId))
+        {
+            return tenantId;
+        }
+
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible Azure tenants were found for the current credential.");
+        }
+
+        return tenants[0].Data.TenantId?.ToString()
+            ?? throw new InvalidOperationException("Default tenant did not contain a valid tenant ID.");
     }
 
     private static CostSavingsRecommendation ConvertToCostSavings(JsonElement item) => new(

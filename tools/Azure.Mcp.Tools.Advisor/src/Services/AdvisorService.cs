@@ -771,7 +771,6 @@ public class AdvisorService(IAzureService azureService)
             Caption: action.Caption,
             DocumentLink: action.DocumentLink,
             BladeName: action.BladeName);
-
     private async Task<TenantResource> GetTenantResourceAsync(CancellationToken cancellationToken)
         => await GetTenantResourceAsync(null, cancellationToken);
 
@@ -779,7 +778,6 @@ public class AdvisorService(IAzureService azureService)
         string? tenant,
         CancellationToken cancellationToken) =>
         await _queryExecutor.ResolveTenantResourceAsync(tenant, cancellationToken);
-
     public async Task<RecommendationMetadata?> GetRecommendationMetadataAsync(
         string recommendationTypeId,
         string language,
@@ -788,7 +786,7 @@ public class AdvisorService(IAzureService azureService)
         ArgumentException.ThrowIfNullOrWhiteSpace(recommendationTypeId);
         ArgumentException.ThrowIfNullOrWhiteSpace(language);
 
-        var tenantResource = await GetTenantResourceAsync(cancellationToken);
+        var tenantId = await ResolveMetadataTenantIdAsync(null, cancellationToken);
 
         var query =
             "advisorresources " +
@@ -799,20 +797,13 @@ public class AdvisorService(IAzureService azureService)
 
         var queryContent = new ResourceQueryContent(query);
 
-        ResourceQueryResult result = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        if (result == null || result.Count == 0)
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, tenantId, cancellationToken);
+        if (result.Count == 0 || result.Data.ValueKind != JsonValueKind.Array || result.Data.GetArrayLength() == 0)
         {
             return null;
         }
 
-        using var jsonDocument = JsonDocument.Parse(result.Data);
-        var dataArray = jsonDocument.RootElement;
-        if (dataArray.ValueKind != JsonValueKind.Array || dataArray.GetArrayLength() == 0)
-        {
-            return null;
-        }
-
-        return ConvertToRecommendationMetadataModel(dataArray[0]);
+        return ConvertToRecommendationMetadataModel(result.Data[0]);
     }
 
     internal static Recommendation ConvertToAdvisorRecommendationModel(JsonElement item, bool showPrioritizationSignals = false)
@@ -943,5 +934,28 @@ public class AdvisorService(IAzureService azureService)
             message,
             errorCode,
             null);
+    }
+
+    private async Task<string> ResolveMetadataTenantIdAsync(string? tenant, CancellationToken cancellationToken)
+    {
+        if (!string.IsNullOrEmpty(tenant))
+        {
+            return await ResolveTenantIdAsync(tenant, cancellationToken);
+        }
+
+        var tenantId = await AzureService.ResolveTenantIdAsync(null, cancellationToken);
+        if (!string.IsNullOrEmpty(tenantId))
+        {
+            return tenantId;
+        }
+
+        var tenants = await AzureService.GetTenants(cancellationToken);
+        if (tenants.Count == 0)
+        {
+            throw new InvalidOperationException("No accessible tenants found");
+        }
+
+        return tenants[0].Data.TenantId?.ToString()
+            ?? throw new InvalidOperationException("First accessible tenant does not have a valid tenant ID.");
     }
 }

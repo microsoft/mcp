@@ -194,45 +194,25 @@ public class AppLensService(IAzureService azureService)
 
         // If subscription is provided, scope to that subscription and the related tenant.
         // Otherwise query all accessible subscriptions.
-        Guid? targetTenantId = null;
+        string? resolvedTenantId = null;
         if (!string.IsNullOrEmpty(subscription))
         {
             var subscriptionResource = await AzureService.GetSubscription(subscription, tenantId, cancellationToken: cancellationToken);
             queryContent.Subscriptions.Add(subscriptionResource.Data.SubscriptionId);
-            targetTenantId = subscriptionResource.Data.TenantId;
-        }
-        else if (!string.IsNullOrEmpty(tenantId))
-        {
-            targetTenantId = Guid.Parse(tenantId);
+            resolvedTenantId = subscriptionResource.Data.TenantId?.ToString();
         }
 
-        var tenants = await AzureService.GetTenants(cancellationToken);
-        var tenantResource = targetTenantId.HasValue
-            ? tenants.FirstOrDefault(t => t.Data.TenantId == targetTenantId)
-            : tenants.FirstOrDefault();
-        if (tenantResource is null)
-        {
-            throw new InvalidOperationException("No accessible tenants found.");
-        }
+        resolvedTenantId ??= await ResolveTenantIdAsync(tenantId, cancellationToken);
 
-        var response = await tenantResource.GetResourcesAsync(queryContent, cancellationToken);
-        var result = response.Value;
+        using var result = await ExecuteResourceGraphQueryAsync(queryContent, resolvedTenantId, cancellationToken);
 
-        if (result == null || result.Count == 0)
-        {
-            return [];
-        }
-
-        using var jsonDocument = JsonDocument.Parse(result.Data);
-        var dataArray = jsonDocument.RootElement;
-
-        if (dataArray.ValueKind != JsonValueKind.Array)
+        if (result.Count == 0 || result.Data.ValueKind != JsonValueKind.Array)
         {
             return [];
         }
 
         var results = new List<AppLensArgQueryResult>();
-        foreach (var item in dataArray.EnumerateArray())
+        foreach (var item in result.Data.EnumerateArray())
         {
             results.Add(new AppLensArgQueryResult(
                 Id: item.GetProperty("id").GetString() ?? string.Empty,
