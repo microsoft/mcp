@@ -135,6 +135,31 @@ To simplify the work of collection server and platform metadata in build scripts
 }
 ```
 
+### Test project selection
+
+The Initialize job also records `testProjects` in `build_info.json`: an array of
+repo-relative `.csproj` paths with `hasUnitTests` and `hasLiveTests` flags. Selection
+uses the existing `pathsToTest` prefixes, including the Azure server PR canary,
+and reuses project properties already collected for those paths.
+
+Build jobs already pass this artifact to `Test-Code.ps1` through
+`-ScopingBuildInfoPath`. When `testProjects` is present, the script skips recursive
+project discovery and property evaluation, applies the requested test mode and
+path filters, and writes `.work/tests/Tests.slnx` directly without `dotnet sln add`.
+The generated solution uses paths relative to its own directory, so no checkout
+paths are shared between agents. Recorded mode still requires `assets.json` next
+to the test project. Missing listed projects fail explicitly.
+
+Local invocations without build info, older build-info files without `testProjects`,
+and live jobs that do not pass scoped build info retain local project discovery.
+An empty `testProjects` list does not fall back to running the full repository.
+This only moves selection work out of the test jobs; the matching test build and
+test execution still happen on each runner. Any added Initialize time is on the
+pipeline's critical path.
+
+Run the selection and solution-generation regression tests with
+`Invoke-Pester -Path .\eng\scripts\Test-Code.Tests.ps1` (Pester 5).
+
 ### [eng/scripts/Build-Code.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Build-Code.ps1)
 `Build-Code.ps1` is a common build script that compiles server projects in the repository, using the metadata collected in `build_info.json`. It supports building for multiple platforms, including native builds, and can be used in both local and CI environments.
 
