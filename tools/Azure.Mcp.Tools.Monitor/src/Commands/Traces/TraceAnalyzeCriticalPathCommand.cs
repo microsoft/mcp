@@ -46,22 +46,8 @@ public sealed class TraceAnalyzeCriticalPathCommand(
             validationResult.AddError("--aggregate-by accepts bare field references using ASCII letters, digits, underscores, and dots.", "Invalid aggregate-by.");
         }
         ValidateCriticalPathPercentiles(options.Percentiles, validationResult);
-        if (options.ExcludeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true)
-        {
-            validationResult.AddError("Exclude subtree prefixes must not be empty or whitespace.", "Invalid exclude subtree prefixes.");
-        }
-        if (options.DeprioritizeSubtreePrefixes?.Any(string.IsNullOrWhiteSpace) == true)
-        {
-            validationResult.AddError("Deprioritize subtree prefixes must not be empty or whitespace.", "Invalid deprioritize subtree prefixes.");
-        }
-        if (options.ExcludeSubtreePrefixes is { } excludePrefixes
-            && options.DeprioritizeSubtreePrefixes is { } deprioritizePrefixes
-            && !excludePrefixes.Any(string.IsNullOrWhiteSpace)
-            && !deprioritizePrefixes.Any(string.IsNullOrWhiteSpace)
-            && excludePrefixes.Intersect(deprioritizePrefixes, StringComparer.Ordinal).Any())
-        {
-            validationResult.AddError("The exact same subtree prefix cannot appear in both prefix lists.", "Conflicting subtree prefixes.");
-        }
+        TraceQueryValidator.ValidateSubtreePrefixes(
+            options.ExcludeSubtreePrefixes, options.DeprioritizeSubtreePrefixes, validationResult.AddError);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(

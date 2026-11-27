@@ -35,7 +35,7 @@ public sealed class MonitorTracesServiceTests()
             Content = new StringContent("""{"error":{"code":"InvalidQuery","message":"Invalid trace ID format"}}""")
         };
         using var handler = new MonitorTracesTestHandler(1, false,
-            submitResponse: submitResponse);
+            firstSubmitResponse: submitResponse);
         var (service, _) = CreateService(handler);
         var command = new TraceAnalyzeCriticalPathCommand(
             NullLogger<TraceAnalyzeCriticalPathCommand>.Instance, service, new SubscriptionResolver());
@@ -49,6 +49,24 @@ public sealed class MonitorTracesServiceTests()
         Assert.Contains("Invalid trace ID format", response.Message);
         Assert.Contains("\"traceId\":\"invalid\"", handler.LastSubmitBody);
         Assert.Equal(0, handler.PollCalls);
+    }
+
+    [Fact]
+    public async Task Submit_RetriesTransientResponses()
+    {
+        using var failure = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        failure.Headers.Add("Retry-After", "0");
+        using var handler = new MonitorTracesTestHandler(1, false, firstSubmitResponse: failure);
+        var (service, _) = CreateService(handler);
+        var end = DateTimeOffset.UtcNow;
+
+        var result = await service.RunQueryAsync(
+            MonitorTracesTestHandler.Subscription, ResourceGroup, "amw0", "Traces",
+            end.AddMinutes(-30), end, 10, true, cancellationToken: TestContext.Current.CancellationToken);
+
+        Assert.Equal("Succeeded", result.Status);
+        Assert.Equal(2, handler.SubmitCalls);
+        Assert.Equal(1, handler.PollCalls);
     }
 
     [Fact]
@@ -428,7 +446,7 @@ public sealed class MonitorTracesServiceTests()
         using var handler = new MonitorTracesTestHandler(1, false, resultPages: [page, last]);
         var clock = Substitute.For<IDateTimeProvider>();
         var now = new DateTime(2026, 10, 12, 0, 0, 0, DateTimeKind.Utc);
-        clock.UtcNow.Returns(now, now, now.AddSeconds(180));
+        clock.UtcNow.Returns(now, now, now, now.AddSeconds(180));
         (MonitorTracesService service, IAzureService _) = CreateService(handler, clock);
 
         var result = await service.ResumeQueryAsync(
@@ -458,7 +476,7 @@ public sealed class MonitorTracesServiceTests()
         using var handler = new MonitorTracesTestHandler(1, false, resultPages: [pending]);
         var clock = Substitute.For<IDateTimeProvider>();
         var now = new DateTime(2026, 10, 12, 0, 0, 0, DateTimeKind.Utc);
-        clock.UtcNow.Returns(now, now, now.AddSeconds(180));
+        clock.UtcNow.Returns(now, now, now, now.AddSeconds(180));
         (MonitorTracesService service, IAzureService _) = CreateService(handler, clock);
 
         var result = await service.ResumeQueryAsync(
@@ -502,6 +520,7 @@ public sealed class MonitorTracesServiceTests()
 
     [Theory]
     [InlineData(400, """{"error":"query failed"}""", HttpStatusCode.BadRequest)]
+    [InlineData(503, """{"error":"query unavailable"}""", HttpStatusCode.ServiceUnavailable)]
     [InlineData(200, """{"value":{}}""", HttpStatusCode.BadGateway)]
     [InlineData(200, """{"value":[],"nextLink":123}""", HttpStatusCode.BadGateway)]
     [InlineData(200, "not-json", HttpStatusCode.BadGateway)]
@@ -570,7 +589,7 @@ public sealed class MonitorTracesServiceTests()
         Assert.Equal("received", error.PartialResult.Payload!.Value.GetProperty("value")[0].GetProperty("trace_id").GetString());
     }
 
-    private static (MonitorTracesService Service, IAzureService AzureService) CreateService(
+    internal static (MonitorTracesService Service, IAzureService AzureService) CreateService(
         MonitorTracesTestHandler handler, IDateTimeProvider? clock = null)
     {
         var armClient = new HttpClient(handler, disposeHandler: false);

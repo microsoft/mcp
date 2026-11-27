@@ -31,6 +31,16 @@ public interface IMonitorTracesService
         string? tenant = null,
         CancellationToken cancellationToken = default);
 
+    Task<TraceQueryResult> ComparePopulationsAsync(
+        string subscription,
+        string resourceGroup,
+        string workspace,
+        string analysis,
+        TraceComparisonRequest request,
+        string? criticalPathQuery = null,
+        string? tenant = null,
+        CancellationToken cancellationToken = default);
+
     Task<ResourceQueryResults<TraceAccountInfo>> ListAccountsAsync(
         string subscription,
         string? resourceGroup = null,

@@ -105,7 +105,7 @@ internal static class LogSearchQueryValidator
     /// Standard literals ('..' / "..") use backslash escapes; verbatim literals (@'..' / @"..")
     /// have no backslash escape and represent an embedded quote by doubling it.
     /// </summary>
-    private static string BlankQuotedTextAndRejectComments(string pipeline)
+    internal static string BlankQuotedTextAndRejectComments(string pipeline)
     {
         var result = pipeline.ToCharArray();
         char quote = '\0';

@@ -79,6 +79,8 @@ namespace Azure.Mcp.Tools.Monitor.Commands;
 [JsonSerializable(typeof(TraceQueryResult))]
 [JsonSerializable(typeof(TraceQueryPage))]
 [JsonSerializable(typeof(TraceQueryRequest))]
+[JsonSerializable(typeof(TraceComparisonRequest))]
+[JsonSerializable(typeof(Dictionary<string, JsonElement>))]
 [JsonSerializable(typeof(TraceQueryCancelResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]

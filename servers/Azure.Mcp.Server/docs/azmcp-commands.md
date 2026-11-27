@@ -4325,9 +4325,15 @@ Run's `--max-results` and resume's `--page-size` default to 100 and are clamped 
 Resuming does not change the query or its submitted time range and row limit.
 Queries collect subsequent result pages for up to 180 seconds and return the results collected so far.
 If the status is `Running`, use `query resume` with the returned operation ID.
+If an error reports an uncertain page position, submit a new query rather than resuming incomplete results.
 Requested row limits are approximate; responses preserve truncation and partial-result indicators.
 For critical-path analysis, `--max-results` defaults to 10 and is clamped to 1-1000 requested rows.
 For top-attributes analysis, it defaults to 10000 and is clamped to 1-10000 sampled traces.
+For trace comparisons, `--max-results` defaults to 10000 and is clamped to 1-10000.
+For statistics it limits aggregation rows per population, not input traces; for attributes it
+limits fetched traces per population. These backend limits may be approximate. Critical-path
+comparisons reject populations over the requested limit instead of sampling; the backend also
+allows at most 1000 trace IDs per population.
 Consolidated mode exposes resume as `resume_azure_monitor_trace_query` because each call advances the results.
 
 ```bash
@@ -4358,6 +4364,38 @@ azmcp monitor traces query analyze-critical-path --subscription <subscription> \
 azmcp monitor traces field list --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --workspace <workspace>
+
+# Compare independent attribute populations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query compare-attributes --subscription <subscription> \
+                                        --resource-group <resource-group> --workspace <workspace> \
+                                        --query <current-kql> --start-time <iso-8601> --end-time <iso-8601> \
+                                        [--compare-query <comparison-kql>] \
+                                        [--compare-start-time <iso-8601> --compare-end-time <iso-8601>] \
+                                        [--max-results <n>]
+
+# Compare critical paths for explicit IDs or filters-only discovery queries
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query compare-critical-path --subscription <subscription> \
+                                          --resource-group <resource-group> --workspace <workspace> \
+                                          --start-time <iso-8601> --end-time <iso-8601> \
+                                          [--trace-ids <ids> | --query <selection-kql>] \
+                                          [--compare-trace-ids <ids> | --compare-query <selection-kql>] \
+                                          [--compare-start-time <iso-8601> --compare-end-time <iso-8601>] \
+                                          [--aggregate-by <fields>] [--percentiles <values>] \
+                                          [--include-samples <true|false>] [--include-rollups <true|false>] \
+                                          [--resolve-trace-links <true|false>] [--max-results <n>] \
+                                          [--exclude-subtree-prefixes <prefixes>] \
+                                          [--deprioritize-subtree-prefixes <prefixes>]
+
+# Compare matching statistics shapes over independent populations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor traces query compare-statistics --subscription <subscription> \
+                                        --resource-group <resource-group> --workspace <workspace> \
+                                        --query <current-kql> --start-time <iso-8601> --end-time <iso-8601> \
+                                        [--compare-query <comparison-kql>] \
+                                        [--compare-start-time <iso-8601> --compare-end-time <iso-8601>] \
+                                        [--max-results <n>]
 
 # Resume polling an existing query without submitting a new one
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

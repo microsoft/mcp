@@ -1301,6 +1301,7 @@ with the same subscription, tenant, and listing options. Stop when `nextCursor` 
 * "Query the last 30 minutes of distributed traces in 'my-trace-workspace' in resource group 'my-rg' where duration exceeds 100ms"
 * "Find attributes distinguishing traces with span_count > 10 from other traces in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg', using the last 30 minutes for both windows"
 * "Analyze the critical path for trace ID '<trace-id>' in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg' from '<start-time>' to '<end-time>'"
+* "Compare trace statistics, attributes, and critical paths between two time windows in Trace Store workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Resume polling trace query operation '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 * "Cancel the running distributed trace query with operation id '<operation-id>' for workspace 'my-trace-workspace' in resource group 'my-rg'"
 
