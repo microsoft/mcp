@@ -41,12 +41,13 @@ Issues = "https://github.com/microsoft/mcp/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/{{MODULE_NAME}}"]
-artifacts = ["src/{{MODULE_NAME}}/bin/*"]
+artifacts = ["src/{{MODULE_NAME}}/bin/*", "src/{{MODULE_NAME}}/release.json"]
 
 [tool.hatch.build.targets.sdist]
 include = [
     "src/{{MODULE_NAME}}/**/*.py",
     "src/{{MODULE_NAME}}/bin/**/*",
+    "src/{{MODULE_NAME}}/release.json",
     "README.md",
     "LICENSE",
     "NOTICE.txt",

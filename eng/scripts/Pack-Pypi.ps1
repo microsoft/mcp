@@ -3,17 +3,14 @@
 
 <#
 .SYNOPSIS
-    Packs MCP server binaries into PyPI wheels for distribution.
+    Packs MCP servers into PyPI wheels for distribution.
 
 .DESCRIPTION
-    This script creates platform-specific PyPI wheels for configured MCP servers.
-    Each wheel contains the binary for a specific platform (OS + architecture).
+    Azure MCP uses a universal Python launcher wheel with an integrity manifest
+    for version-pinned GitHub Release ZIPs. Other servers retain bundled binaries.
     
-    The wheels are named according to PyPI conventions:
-    - msmcp_azure-1.0.0-py3-none-win_amd64.whl
-    - msmcp_azure-1.0.0-py3-none-macosx_11_0_arm64.whl
-    - msmcp_azure-1.0.0-py3-none-manylinux_2_17_x86_64.whl
-    etc.
+    Azure wheels use the universal tag, e.g. msmcp_azure-1.0.0-py3-none-any.whl.
+    Other servers retain OS/architecture tags such as win_amd64.
 
     Users can install with:
     - pip install msmcp-azure
@@ -25,6 +22,9 @@
 
 .PARAMETER BuildInfoPath
     Path to the build_info.json file containing server and platform details.
+
+.PARAMETER ReleaseArtifactsPath
+    Path to the exact signed ZIPs uploaded to GitHub Releases (required for Azure).
 
 .PARAMETER OutputPath
     Path where the PyPI packages will be created.
@@ -42,7 +42,8 @@
 param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
-    [string] $OutputPath
+    [string] $OutputPath,
+    [string] $ReleaseArtifactsPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,6 +60,10 @@ if (!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work/build"
 }
 
+if (!$ReleaseArtifactsPath) {
+    $ReleaseArtifactsPath = "$RepoRoot/.work/binaries_signed_zipped"
+}
+
 if (!$BuildInfoPath) {
     $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
@@ -66,11 +71,6 @@ if (!$BuildInfoPath) {
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/packages_pypi"
     Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-}
-
-if (!(Test-Path $ArtifactsPath)) {
-    LogError "Artifacts path $ArtifactsPath does not exist."
-    $exitCode = 1
 }
 
 if (!(Test-Path $BuildInfoPath)) {
@@ -83,6 +83,11 @@ if ($exitCode -ne 0) {
 }
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+if (($buildInfo.servers | Where-Object { $_.name -ne 'Azure.Mcp.Server' }) -and !(Test-Path $ArtifactsPath)) {
+    LogError "Artifacts path $ArtifactsPath does not exist."
+    exit 1
+}
 
 $tempFolder = "$RepoRoot/.work/temp_pypi"
 
@@ -179,10 +184,68 @@ function Get-PythonCommand {
     throw "Python is not installed or not in PATH. Please install Python 3.10+."
 }
 
+function New-ReleaseManifest([hashtable] $server, [object[]] $platforms, [bool] $native) {
+    if ([string]::IsNullOrWhiteSpace($server.releaseTag)) {
+        throw "Missing release tag for $($server.name)."
+    }
+    $manifest = [ordered]@{
+        version = $server.version
+        platforms = [ordered]@{}
+    }
+    foreach ($platform in $platforms) {
+        $key = "$($platform.nodeOs)-$($platform.architecture)"
+        if (!$wheelPlatformMap.ContainsKey($key)) {
+            throw "Unsupported Azure PyPI release platform: $key"
+        }
+        $suffix = if ($native) { '-native' } else { '' }
+        $asset = "$($server.name)-$($platform.dotnetOs)-$($platform.architecture)$suffix.zip"
+        $archivePath = Join-Path $ReleaseArtifactsPath $asset
+        if (!(Test-Path -LiteralPath $archivePath -PathType Leaf)) {
+            # Never publish a launcher that silently lacks a configured release platform.
+            throw "Required signed release archive does not exist: $archivePath"
+        }
+        $files = [ordered]@{}
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($archivePath)
+        try {
+            foreach ($entry in $archive.Entries) {
+                if ($entry.FullName.EndsWith('/')) {
+                    continue
+                }
+                $stream = $entry.Open()
+                try {
+                    $hash = [System.Security.Cryptography.SHA256]::HashData($stream)
+                    $files[$entry.FullName] = @{
+                        sha256 = [Convert]::ToHexString($hash).ToLowerInvariant()
+                        size = $entry.Length
+                    }
+                }
+                finally {
+                    $stream.Dispose()
+                }
+            }
+        }
+        finally {
+            $archive.Dispose()
+        }
+        $executable = "$($server.cliName)$($platform.extension)"
+        if (!$files.Contains($executable)) {
+            throw "Release archive $asset does not contain $executable."
+        }
+        $manifest.platforms[$key] = @{
+            url = "https://github.com/microsoft/mcp/releases/download/$($server.releaseTag)/$asset"
+            sha256 = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+            size = (Get-Item -LiteralPath $archivePath).Length
+            files = $files
+        }
+    }
+    return $manifest
+}
+
 function BuildServerPackages([hashtable] $server, [bool] $native) {
+    $isLauncher = $server.name -eq 'Azure.Mcp.Server'
     $serverDirectory = "$ArtifactsPath/$($server.artifactPath)"
 
-    if (!(Test-Path $serverDirectory)) {
+    if (!$isLauncher -and !(Test-Path $serverDirectory)) {
         $message = "Server directory $serverDirectory does not exist."
         if ($ignoreMissingArtifacts) {
             Write-Warning $message
@@ -193,13 +256,20 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native -and -not $_.specialPurpose }
+    $filteredPlatforms = @($server.platforms | Where-Object {
+        $_.native -eq $native -and (
+            -not $_.specialPurpose -or ($isLauncher -and $_.specialPurpose -eq 'native')
+        )
+    })
     if ($filteredPlatforms.Count -eq 0) {
         Write-Host "No platforms to build for server $($server.name) with native=$native"
         return
     }
 
     $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+    if ($isLauncher -and $native) {
+        $serverOutputPath += "-native"
+    }
     New-Item -ItemType Directory -Force -Path $serverOutputPath | Out-Null
 
     # Use PyPI package name from csproj, skip servers without PyPI configuration
@@ -231,11 +301,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
     $builtPlatforms = @()
 
-    # Build a wheel for each platform
-    foreach ($platform in $filteredPlatforms) {
+    # A launcher wheel covers every platform in its manifest; bundled servers keep one wheel per platform.
+    $packagePlatforms = $filteredPlatforms
+    if ($isLauncher) {
+        $releaseManifest = New-ReleaseManifest $server $filteredPlatforms $native
+        $packagePlatforms = @($filteredPlatforms[0])
+    }
+    foreach ($platform in $packagePlatforms) {
         $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
 
-        if (!(Test-Path $platformDirectory)) {
+        if (!$isLauncher -and !(Test-Path $platformDirectory)) {
             $errorMessage = "Platform directory $platformDirectory does not exist."
             if ($ignoreMissingArtifacts) {
                 Write-Warning $errorMessage
@@ -256,7 +331,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             continue
         }
 
-        $osClassifier = $osClassifierMap[$pypiOs]
+        $osClassifier = if ($isLauncher) { 'OS Independent' } else { $osClassifierMap[$pypiOs] }
         $extension = $platform.extension
 
         Write-Host "`nBuilding wheel for $basePackageName ($platformKey)" -ForegroundColor Cyan
@@ -264,14 +339,18 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         # Clean temp folder
         Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
         New-Item -ItemType Directory -Force -Path $tempFolder | Out-Null
-        New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName/bin" | Out-Null
-
-        # Copy binary files
-        Write-Host "  Copying binaries from $platformDirectory"
-        Copy-Item -Path "$platformDirectory/*" -Destination "$tempFolder/src/$moduleName/bin" -Recurse -Force
-
-        # Copy package __init__.py
-        Copy-Item -Path "$pypiSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
+        New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName" | Out-Null
+        if ($isLauncher) {
+            Copy-Item -Path "$pypiSourcePath/azure_launcher.py" -Destination "$tempFolder/src/$moduleName/__init__.py"
+            $releaseManifest | ConvertTo-Json -Depth 10 |
+                Set-Content -LiteralPath "$tempFolder/src/$moduleName/release.json" -Encoding utf8NoBOM
+        }
+        else {
+            New-Item -ItemType Directory -Force -Path "$tempFolder/src/$moduleName/bin" | Out-Null
+            Write-Host "  Copying binaries from $platformDirectory"
+            Copy-Item -Path "$platformDirectory/*" -Destination "$tempFolder/src/$moduleName/bin" -Recurse -Force
+            Copy-Item -Path "$pypiSourcePath/__init__.py" -Destination "$tempFolder/src/$moduleName/__init__.py" -Force
+        }
 
         # Remove symbols files before packing
         Write-Host "  Removing symbol files"
@@ -296,17 +375,21 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         Write-Host $pyprojectContent
         $pyprojectContent | Out-File -FilePath $pyprojectPath -Encoding utf8 -Force
 
-        # Configure version and CLI name in __init__.py
+        # Configure package identity and CLI name in __init__.py.
         $initPyPath = "$tempFolder/src/$moduleName/__init__.py"
         $initPyContent = Get-Content $initPyPath -Raw
         $initPyContent = $initPyContent `
             -replace '{{VERSION}}', $pythonVersion `
+            -replace '{{PACKAGE_NAME}}', $basePackageName `
             -replace '{{CLI_NAME}}', $cliName
         $initPyContent | Out-File -FilePath $initPyPath -Encoding utf8 -Force
 
         # Set executable permissions on non-Windows
         $binPath = "bin/$cliName$extension"
-        if (!$IsWindows) {
+        if ($isLauncher) {
+            Write-Host "  Executable permissions will be set by the launcher after download."
+        }
+        elseif (!$IsWindows) {
             Write-Host "  Setting executable permissions" -ForegroundColor Yellow
             $binFullPath = "$tempFolder/src/$moduleName/$binPath"
             if (Test-Path $binFullPath) {
@@ -332,11 +415,32 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             -InsertPayload $insertPayload `
             -OutputDirectory $tempFolder
 
+        if ($isLauncher) {
+            @'
+
+## Executable download and cache
+
+This package contains a small Python launcher, not the Azure MCP executable.
+The first invocation downloads the matching OS/architecture ZIP from the
+version-pinned `microsoft/mcp` GitHub Release over HTTPS. SHA-256 hashes embedded
+in this package verify the archive and all cached files before execution.
+Subsequent invocations reuse the cache and work offline.
+
+The cache defaults to the user's local application cache directory. Set
+`AZURE_MCP_CACHE_DIR` to choose a writable cache location or to share a cache
+between Python environments. To provision an offline environment, run the
+same package version and platform once with network access, then copy that
+cache to the offline host. An empty or corrupt cache requires network access.
+Downloads require access to `github.com` and GitHub's release asset hosts.
+Download diagnostics go to stderr; MCP stdout remains unchanged.
+'@ | Add-Content -LiteralPath "$tempFolder/README.md"
+        }
+
         Write-Host "  Copying LICENSE and NOTICE.txt"
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
         Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
 
-        # Build the wheel with platform-specific tag
+        # Azure keeps the universal wheel tag; other servers retain platform-specific tags.
         Write-Host "  Building wheel" -ForegroundColor Green
         Push-Location $tempFolder
         try {
@@ -344,8 +448,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             
             Invoke-LoggedCommand "$pythonCmd -m pip install --quiet build==1.2.2 wheel==0.45.1"
             
-            # Build wheel only (no sdist for platform packages)
-            # We use --wheel and then rename to set the correct platform tag
+            # Build wheels only; bundled servers are renamed to their platform tag below.
             Invoke-LoggedCommand "$pythonCmd -m build --wheel"
 
             # Rename the wheel to include the correct platform tag
@@ -353,13 +456,15 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             if (Test-Path $distPath) {
                 $wheels = Get-ChildItem -Path $distPath -Filter "*.whl"
                 foreach ($wheel in $wheels) {
-                    # The default wheel name is like: msmcp_azure-1.0.0-py3-none-any.whl
-                    # We need to change it to: msmcp_azure-1.0.0-py3-none-<platform>.whl
-                    $newName = $wheel.Name -replace '-py3-none-any\.whl$', "-py3-none-$wheelPlatformTag.whl"
+                    $newName = if ($isLauncher) { $wheel.Name } else {
+                        $wheel.Name -replace '-py3-none-any\.whl$', "-py3-none-$wheelPlatformTag.whl"
+                    }
                     $newPath = Join-Path $distPath $newName
                     
                     Write-Host "  Renaming wheel to $newName"
-                    Move-Item -Path $wheel.FullName -Destination $newPath -Force
+                    if ($newName -ne $wheel.Name) {
+                        Move-Item -Path $wheel.FullName -Destination $newPath -Force
+                    }
                     
                     # Copy to output
                     Copy-Item -Path $newPath -Destination $serverOutputPath -Force
