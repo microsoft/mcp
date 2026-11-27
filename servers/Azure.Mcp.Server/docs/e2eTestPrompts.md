@@ -1168,6 +1168,8 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | get_azure_bestpractices_get | Get the latest Azure Static Web Apps best practices | none |
 | get_azure_bestpractices_get | What are azure function best practices? | none |
 | get_azure_bestpractices_get | Use the Azure MCP best-practices guidance tool to get instructions for configuring Azure MCP in a coding-agent repository; do not create files or invoke cloud-agent customization | none |
+| get_azure_bestpractices_get_coding_agent | Get focused Azure best practices for an AI coding agent | none |
+| get_azure_bestpractices_get_coding_agent | Show me the coding-agent guidance for generating Azure code | none |
 | get_azure_bestpractices_ai_app | Get best practices for building AI applications in Azure | none |
 | get_azure_bestpractices_ai_app | Show me the best practices for Microsoft Foundry agents code generation | none |
 | get_azure_bestpractices_ai_app | Get guidance for building agents with Microsoft Foundry | none |

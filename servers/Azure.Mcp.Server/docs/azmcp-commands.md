@@ -3977,6 +3977,10 @@ azmcp get azure bestpractices get --resource <resource> --action <action>
 #   code-generation - Best practices for code generation (for general and azurefunctions)
 #   deployment      - Best practices for deployment (for general and azurefunctions)
 
+# Get focused Azure best practices for an AI coding agent (no arguments)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp get azure bestpractices get coding agent
+
 # Get best practices for building AI applications, workflows and agents in Azure
 # Call this before generating code for any AI application, working with Microsoft Agent Framework,
 # or implementing AI solutions in Azure.
