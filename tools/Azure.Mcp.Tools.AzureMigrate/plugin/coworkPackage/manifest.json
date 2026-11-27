@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.28/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.28",
+  "version": "1.4.0",
+  "id": "__APP_ID__",
+  "developer": {
+    "name": "Azure Migrate",
+    "websiteUrl": "https://learn.microsoft.com/azure/migrate/",
+    "privacyUrl": "https://privacy.microsoft.com/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/legal/terms-of-use"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "__APP_NAME__",
+    "full": "__APP_NAME__ POC"
+  },
+  "description": {
+    "short": "Azure Migrate inventories and assessments from Cowork.",
+    "full": "Copilot Cowork plugin for Azure Migrate (__ENV_DESCRIPTION__). Creates or updates a server inventory for the signed-in user on the Azure Migrate Discovery Service and returns an azcopy command the user runs on their own machine to upload the file, updates an existing inventory from a message alone (corrections, guidance, questions), reports the inventory status and exports the refined inventory or offline zip. Creates an assessment, starts the HA assessment and reports their status. POC."
+  },
+  "accentColor": "#0078D4",
+  "agentConnectors": [
+    {
+      "id": "__CONNECTOR_ID__",
+      "displayName": "__APP_NAME__",
+      "description": "Azure Migrate tools: create or update a server inventory from a file on the user's machine or update it from a message, check its status and export it; create an assessment and HA assessment and check their status.",
+      "toolSource": {
+        "remoteMcpServer": {
+          "mcpServerUrl": "__MCP_URL__",
+          "mcpToolDescription": {
+            "file": "mcp-tools.json"
+          },
+          "authorization": {
+            "type": "None"
+          }
+        }
+      }
+    }
+  ]
+}
