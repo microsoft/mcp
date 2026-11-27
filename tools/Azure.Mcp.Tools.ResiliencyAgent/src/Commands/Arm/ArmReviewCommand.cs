@@ -53,6 +53,8 @@ public sealed class ArmReviewCommand(
         artifactInstructions: """
             Corrected ARM JSON files are authoritative backend output. Do not independently run ARM
             validate/what-if or another semantic validation against them. Do not patch them from
-            local diagnostics. Apply and present them exactly as returned; if the backend reports
-            incomplete validation, continue this backend conversation instead.
+            local diagnostics. For corrected source artifacts, ignore any returned timestamped
+            workspace path and update only the matching existing files. Do not create duplicate copies
+            under `azure-resiliency/`. Apply and present them exactly as returned; if the backend
+            reports incomplete validation, continue this backend conversation instead.
             """);

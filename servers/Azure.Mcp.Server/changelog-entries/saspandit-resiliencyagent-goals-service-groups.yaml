@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added Azure Resiliency Agent tools for zonal-resiliency goals, Standard Usage Plans, and ordinary Service Group inspection and management, with Portal-compatible Markdown artifacts and native MCP file delivery.
+  - section: Other Changes
+    description: Updated Azure Resiliency Agent artifact materialization to group each completed result into a timestamped artifact-family folder and reject duplicate resolved filenames within one result instead of assigning suffixed names.

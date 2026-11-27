@@ -53,6 +53,8 @@ public sealed class TerraformReviewCommand(
         artifactInstructions: """
             Corrected Terraform files are authoritative backend output. Do not independently run
             Terraform validate/plan or another semantic validation against them. Do not patch them
-            from local diagnostics. Apply and present them exactly as returned; if the backend
+            from local diagnostics. For corrected source artifacts, ignore any returned timestamped
+            workspace path and update only the matching existing files. Do not create duplicate copies
+            under `azure-resiliency/`. Apply and present them exactly as returned; if the backend
             reports incomplete validation, continue this backend conversation instead.
             """);

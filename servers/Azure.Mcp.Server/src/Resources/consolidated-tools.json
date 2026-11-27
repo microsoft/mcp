@@ -6086,7 +6086,7 @@
     },
     {
       "name": "use_azure_resiliency_agent",
-      "description": "Use the Azure Resiliency Agent for general Azure resiliency guidance, application architecture assessment, new resilient Bicep, ARM JSON, or Terraform generation, and review of existing infrastructure-as-code. The agent asks its own clarifying questions, so one call can carry a multi-turn conversation.",
+      "description": "Use the conversational Azure Resiliency Agent to explore and summarize resiliency across accessible Service Groups. Inspect ordinary Service Group members, metadata, hierarchy, criticality, and resource-type summaries; discover which visible Service Groups have zonal-resiliency goals; inspect goal-resource inclusion and exclusion; find available Standard Usage Plans; and check Service Group enrollment. Also use it for architecture assessment, resilient infrastructure-as-code generation or review, and resiliency guidance. Supports broad natural-language requests, aggregation, clarification, artifacts, and multi-turn conversation.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -6119,7 +6119,109 @@
         "resiliencyagent_iac_generate",
         "resiliencyagent_bicep_review",
         "resiliencyagent_arm_review",
-        "resiliencyagent_terraform_review"
+        "resiliencyagent_terraform_review",
+        "resiliencyagent_goals_get",
+        "resiliencyagent_usageplan_get",
+        "resiliencyagent_servicegroup_get"
+      ]
+    },
+    {
+      "name": "manage_azure_resiliency_goals",
+      "description": "Use the Azure Resiliency Agent for a guided conversational workflow to assign or delete one Azure Service Group's zonal-resiliency goal, attach Availability or Latency SLIs, include resources, exclude resources with an approved custom-solution reason, or refresh goal resources. The agent collects missing values, validates the user's intent, and asks for explicit confirmation before changing Azure.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can delete a goal assignment or change which resources participate in a goal."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can mutate Azure goal state and may materialize artifacts in the caller's working directory."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_goals_manage"
+      ]
+    },
+    {
+      "name": "manage_azure_resiliency_usage_plans",
+      "description": "Use the Azure Resiliency Agent to create a Standard Azure Resilience Management Usage Plan or attach an existing Standard plan to one Azure Service Group. The agent collects missing values, validates the request, and asks for explicit confirmation before changing Azure.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates Azure resources or changes a Service Group's Usage Plan enrollment."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can create Usage Plans or change enrollment state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_usageplan_manage"
+      ]
+    },
+    {
+      "name": "manage_azure_service_groups",
+      "description": "Use the Azure Resiliency Agent to create or update ordinary Azure Service Groups, add validated resources or scopes, nest groups, or update criticality. The agent validates the request and asks for explicit confirmation before changing Azure.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool creates or modifies Azure Service Groups, their membership, hierarchy, or criticality."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Each call is a new turn in a conversation, so repeating it does not produce the same result."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool interacts with an agent whose domain of interaction is open."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool can create or modify Service Group state."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution, because it can ask the user questions over the client connection."
+        }
+      },
+      "mappedToolList": [
+        "resiliencyagent_servicegroup_manage"
       ]
     }
   ]
