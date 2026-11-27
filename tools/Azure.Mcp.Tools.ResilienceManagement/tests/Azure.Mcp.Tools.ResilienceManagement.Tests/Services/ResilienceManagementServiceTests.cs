@@ -1216,60 +1216,71 @@ public sealed class ResilienceManagementServiceTests
         Assert.Contains("diskReprotectInputDetails", exception.Message, StringComparison.Ordinal);
     }
 
-    [Fact]
-    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresTypedDiskAndStorageIds()
-    {
-        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
-        setting.DiskReprotectInputDetails[0].DiskResourceId = new ResourceIdentifier(
-            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
-        RecoveryMembersData requested = CreateRecoveryResource(
-            ResourceInclusionState.Included,
-            ResourceProtectionSolutionType.AzureSiteRecovery,
-            setting);
-        RecoveryMembersData existing = CreateRecoveryResource(
-            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
-
-        ArgumentException exception = Assert.Throws<ArgumentException>(
-            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
-
-        Assert.Contains("Microsoft.Compute/disks", exception.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresVirtualNetworkId()
+    [Theory]
+    [InlineData(true, "Microsoft.Compute/disks")]
+    [InlineData(false, "Microsoft.Storage/storageAccounts")]
+    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresTypedDiskAndStorageIds(bool invalidDisk, string expectedResourceType)
     {
         ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
         setting.TestFailoverParamsNetworkResourceId = null;
+        if (invalidDisk)
+        {
+            setting.DiskReprotectInputDetails[0].DiskResourceId = new ResourceIdentifier(
+                "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
+        }
+        else
+        {
+            setting.DiskReprotectInputDetails[0].StagingStorageAccountResourceId = new ResourceIdentifier(
+                "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/disks/disk");
+        }
         RecoveryMembersData requested = CreateRecoveryResource(
             ResourceInclusionState.Included,
             ResourceProtectionSolutionType.AzureSiteRecovery,
             setting);
-        RecoveryMembersData existing = CreateRecoveryResource(
-            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+        RecoveryMembersData existing = CreateProtectedSiteRecoveryResource();
 
         ArgumentException exception = Assert.Throws<ArgumentException>(
             () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
 
-        Assert.Contains("testFailoverParams.networkResourceId", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(expectedResourceType, exception.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/network")]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account")]
+    public void ValidateRecoveryResourceUpdate_AllowsAzureSiteRecoveryRegardlessOfUnusedTestFailoverNetwork(string? networkResourceId)
+    {
+        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
+        setting.TestFailoverParamsNetworkResourceId = networkResourceId is null ? null : new ResourceIdentifier(networkResourceId);
+        RecoveryMembersData requested = CreateRecoveryResource(
+            ResourceInclusionState.Included,
+            ResourceProtectionSolutionType.AzureSiteRecovery,
+            setting);
+        RecoveryMembersData existing = CreateProtectedSiteRecoveryResource();
+
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
+
+        Assert.Same(setting, requested.Properties!.SelectedProtectionSolutionSetting);
+        Assert.Equal(networkResourceId, setting.TestFailoverParamsNetworkResourceId?.ToString());
     }
 
     [Fact]
-    public void ValidateRecoveryResourceUpdate_AzureSiteRecoveryRequiresTypedVirtualNetworkId()
+    public void ValidateRecoveryResourceUpdate_AllowsSparseAzureSiteRecoveryReinclusionWithoutTestFailoverNetwork()
     {
         ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
-        setting.TestFailoverParamsNetworkResourceId = new ResourceIdentifier(
-            "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/account");
-        RecoveryMembersData requested = CreateRecoveryResource(
-            ResourceInclusionState.Included,
-            ResourceProtectionSolutionType.AzureSiteRecovery,
-            setting);
-        RecoveryMembersData existing = CreateRecoveryResource(
-            azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
+        setting.TestFailoverParamsNetworkResourceId = null;
+        RecoveryMembersData requested = CreateRecoveryResource(ResourceInclusionState.Included);
+        RecoveryMembersData existing = CreateProtectedSiteRecoveryResource();
+        existing.Properties!.InclusionState = ResourceInclusionState.Excluded;
+        existing.Properties.SelectedProtectionSolutionType = ResourceProtectionSolutionType.AzureSiteRecovery;
+        existing.Properties.SelectedProtectionSolutionSetting = setting;
 
-        ArgumentException exception = Assert.Throws<ArgumentException>(
-            () => ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing));
+        ResilienceManagementService.ValidateRecoveryResourceUpdate(requested, existing);
 
-        Assert.Contains("Microsoft.Network/virtualNetworks", exception.Message, StringComparison.Ordinal);
+        Assert.Null(requested.Properties!.SelectedProtectionSolutionSetting);
+        Assert.Same(setting, existing.Properties.SelectedProtectionSolutionSetting);
+        Assert.Null(setting.TestFailoverParamsNetworkResourceId);
     }
 
     [Fact]
@@ -1287,10 +1298,12 @@ public sealed class ResilienceManagementServiceTests
     [Fact]
     public void ValidateRecoveryResourceUpdate_RejectsAzureSiteRecoveryWhenProtectionIsNotDetected()
     {
+        ResourceSiteRecoveryProtectionSetting setting = CreateSiteRecoverySetting();
+        setting.TestFailoverParamsNetworkResourceId = null;
         RecoveryMembersData requested = CreateRecoveryResource(
             ResourceInclusionState.Included,
             ResourceProtectionSolutionType.AzureSiteRecovery,
-            CreateSiteRecoverySetting());
+            setting);
         RecoveryMembersData existing = CreateRecoveryResource(
             azureResourceId: "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm");
 

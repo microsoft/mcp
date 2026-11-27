@@ -24,8 +24,9 @@ namespace Azure.Mcp.Tools.ResilienceManagement.Commands.Recovery.Plans;
         Updates recovery resources in a resilience recoveryplan in an Azure service group: includes and configures a resource
         with protection settings; keeps a resource in the plan but excludes it from recovery operations; or removes a resource
         from membership while retaining the plan and all other resources. Supports CustomRunbook with failover and reprotect
-        runbooks. Supports AzureSiteRecovery only for virtual machines with disk reprotection, staging storage, and a test
-        failover virtual network, and CrossZoneVMRecovery for virtual machines with an optional target zone and capacity reservation group.
+        runbooks. Supports AzureSiteRecovery only for virtual machines with healthy ASR protection, disk reprotection,
+        and staging storage; test-failover network parameters are not required. Supports CrossZoneVMRecovery for virtual
+        machines with an optional target zone and capacity reservation group.
         """,
     OperationPlane = ToolOperationPlane.Control,
     Destructive = true,

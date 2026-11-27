@@ -5137,6 +5137,7 @@ azmcp resiliency recoveryplan validateforoperation --service-group <service-grou
 # Configure recoveryplan resource inclusions, exclusions, removals, recovery groups, identities, and protection settings. At least one JSON array is required.
 # First inclusion requires matching protection type and settings. CustomRunbook requires failover and reprotect runbook resource IDs.
 # AzureSiteRecovery is supported for virtual machines and requires disk reprotect details. Existing configuration is preserved on sparse updates.
+# ASR test-failover parameters are not required for inclusion; the service does not currently support ASR test failover for Zonal or Regional recovery plans.
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resiliency recoveryplan resource update --service-group <service-group> \
                                                 --recoveryplan <recoveryplan> \

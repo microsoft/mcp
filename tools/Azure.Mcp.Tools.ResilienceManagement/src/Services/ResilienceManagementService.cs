@@ -1302,13 +1302,6 @@ public sealed partial class ResilienceManagementService(IAzureService azureServi
             ValidateResourceType(detail.StagingStorageAccountResourceId, "Microsoft.Storage/storageAccounts", resourceId, "diskReprotectInputDetails.stagingStorageAccountResourceId");
         }
 
-        if (siteRecoverySetting.TestFailoverParamsNetworkResourceId is null)
-        {
-            throw new ArgumentException($"Recovery resource '{resourceId}' requires testFailoverParams.networkResourceId in its AzureSiteRecovery selectedProtectionSolutionSetting.");
-        }
-
-        ValidateResourceType(siteRecoverySetting.TestFailoverParamsNetworkResourceId, "Microsoft.Network/virtualNetworks", resourceId, "testFailoverParams.networkResourceId");
-
         if (!existing.ResourceProtectionSolutions.Any(solution =>
             solution.ProtectionSolutionType == ResourceProtectionSolutionType.AzureSiteRecovery &&
             solution.ProtectionStatus == ResourceProtectionStatus.Protected))

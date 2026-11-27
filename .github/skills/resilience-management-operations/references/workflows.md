@@ -106,6 +106,8 @@ For an existing plan, read it first and preserve omitted values. If it retains a
 1. List plan members with `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_get`.
 2. Get every intended target and capture its full recovery-resource ID, unique ID, inclusion state, existing solution type, and settings.
 3. Build sparse resource updates. For first inclusion/re-inclusion, supply the selected protection solution and complete required settings.
+   For ASR, require healthy discovered protection and disk/staging storage inputs. Do not request a test-failover network:
+   RO does not currently support ASR test failover for Zonal or Regional plans. Preserve any supplied test-failover settings.
 4. Call `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_update`.
 5. Get each affected resource and verify inclusion and protection configuration.
 6. Distinguish:

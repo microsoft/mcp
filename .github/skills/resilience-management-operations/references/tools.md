@@ -111,7 +111,7 @@ For action, group, and resource-update JSON schemas and examples, use the [paylo
 | Tool | Purpose | Parameters |
 |---|---|---|
 | `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_get` | List plan members or get one | **`service-group`**, **`recoveryplan`**, `name?`, `tenant?` |
-| `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_update` | Include, configure, exclude, or remove members | **`service-group`**, **`recoveryplan`**, `resources-to-update?`, `resources-to-remove?`, `tenant?`. Supply at least one update/removal payload. |
+| `mcp_azure_mcp_ser_resiliency_recoveryplan_resource_update` | Include, configure, exclude, or remove members | **`service-group`**, **`recoveryplan`**, `resources-to-update?`, `resources-to-remove?`, `tenant?`. Supply at least one update/removal payload. ASR inclusion requires a healthy ASR-protected VM and disk/staging storage settings, not test-failover network parameters. |
 
 ## Recovery Jobs
 

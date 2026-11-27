@@ -235,17 +235,18 @@ Use only for `Microsoft.Compute/virtualMachines` resources with healthy Azure Si
 
 - Disk resource IDs under disk reprotection input details.
 - Staging storage account resource ID.
-- Test-failover virtual network resource ID.
 - Any associated identity required by the service.
 
-The VM must already have a discovered `AzureSiteRecovery` solution in `Protected` state. `selectedProtectionSolutionSetting` requires at least one `diskReprotectInputDetails` entry containing a `Microsoft.Compute/disks` ID and a `Microsoft.Storage/storageAccounts` staging ID, plus `testFailoverParams.networkResourceId` for a `Microsoft.Network/virtualNetworks` resource. Do not use this protection type for non-VM resources.
+The VM must already have a discovered `AzureSiteRecovery` solution in `Protected` state. `selectedProtectionSolutionSetting` requires at least one `reprotectParams.diskReprotectInputDetails` entry containing a `Microsoft.Compute/disks` ID and a `Microsoft.Storage/storageAccounts` staging ID. Do not use this protection type for non-VM resources.
+
+`testFailoverParams` is not required for inclusion or re-inclusion. RO does not currently support ASR test failover for either Zonal or Regional plans and skips its parameter validation. Preserve supplied test-failover settings without requiring or inventing a network ID.
 
 ### Protection choice
 
 | Protection type | Use when | Do not use when |
 |---|---|---|
 | `CustomRunbook` | Runbooks implement resource-level failover and reprotect | Only a group-level pre/post action is needed |
-| `AzureSiteRecovery` | The resource is a VM with healthy ASR protection and complete reprotect/test-failover inputs | The resource is not a VM or ASR is not `Protected` |
+| `AzureSiteRecovery` | The resource is a VM with healthy ASR protection and complete reprotect disk/staging storage inputs | The resource is not a VM or ASR is not `Protected` |
 | `CrossZoneVMRecovery` | The resource is a zone-pinned VM with zone movement enabled (`resiliencyProfile.zoneMovement.isEnabled`, all disks ZRS) so the service detects zone-movement protection; optionally set `targetZone` and `capacityReservationGroupId` (`Microsoft.Compute/capacityReservationGroups`) | The resource is not a VM, or zone-movement protection is not detected (the service rejects the update as not protected) |
 | `AzureNative` | Never for an included resource; Recovery Orchestration rejects it | Adding or re-including any resource |
 
@@ -272,7 +273,7 @@ Use the smallest fixture that reaches the state required by the command under te
 - Retry success test: use a real job in `Failed` state and retry that job; do not reuse a completed, paused, or stale job.
 - Resource-update tests: exercise inclusion, sparse update, exclusion, re-inclusion, removal, and update/remove conflicts.
 - Custom-runbook protection tests: provide mandatory failover/reprotect runbooks and add optional operation runbooks only for operations covered by the test.
-- ASR tests: provision an ASR-protected VM and supply valid disk, staging storage, and test-failover network IDs; include negative coverage for non-VM, unhealthy protection, and mistyped resource IDs.
+- ASR tests: use an approved ASR-protected VM and valid disk/staging storage IDs; verify inclusion and sparse re-inclusion without test-failover parameters, preservation of supplied settings, and rejection of non-VM resources, unhealthy protection, missing reprotect details, and mistyped disk/storage IDs.
 - Recorded tests: preserve generated operation and job IDs through playback variables or sanitizers, inspect recordings for secrets, then verify playback before publishing assets.
 
 ## Recovery Resource Removal
