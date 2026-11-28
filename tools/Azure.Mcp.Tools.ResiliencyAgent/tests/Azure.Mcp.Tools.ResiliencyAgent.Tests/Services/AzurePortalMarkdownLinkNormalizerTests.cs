@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// cspell:ignore Bprimary
 
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Xunit;
