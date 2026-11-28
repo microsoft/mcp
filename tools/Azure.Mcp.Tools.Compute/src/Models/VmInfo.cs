@@ -14,4 +14,5 @@ public sealed record VmInfo(
     [property: JsonPropertyName("osType")] string? OsType,
     [property: JsonPropertyName("licenseType")] string? LicenseType,
     [property: JsonPropertyName("zones")] IReadOnlyList<string>? Zones,
-    [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags);
+    [property: JsonPropertyName("tags")] IReadOnlyDictionary<string, string>? Tags,
+    [property: JsonPropertyName("timeCreated")] DateTimeOffset? TimeCreated = null);
