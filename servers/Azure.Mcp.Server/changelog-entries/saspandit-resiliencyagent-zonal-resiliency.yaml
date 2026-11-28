@@ -1,0 +1,3 @@
+changes:
+  - section: Features Added
+    description: Added Azure Resiliency Agent tools for deployed zonal-posture assessment, enablement readiness, confirmed direct enablement, existing-resource remediation scripts or replacement scaffolds, and automatic application Discovery inspection, management, and confirmed Service Group plan execution.

@@ -67,7 +67,7 @@ public sealed class IacGenerateCommandTests
     {
         var command = Command.GetCommand();
         Assert.Equal("generate", command.Name);
-        Assert.Contains("create or generate new zone-resilient", command.Description, StringComparison.Ordinal);
+        Assert.Contains("create a new Azure resource from scratch", command.Description, StringComparison.Ordinal);
         Assert.Contains("does not review or correct", command.Description, StringComparison.Ordinal);
         Assert.DoesNotContain("open files", ResiliencyAgentOptionDescriptions.Request, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(
@@ -119,6 +119,14 @@ public sealed class IacGenerateCommandTests
         Assert.Equal("conv-1", result.ConversationId);
         Assert.Equal("completed", result.State);
         Assert.Equal("Done.", result.Reply);
+        Assert.Equal("Done.", result.AuthoritativeUserResponse);
+        Assert.Equal("verbatim", result.PresentationPolicy.Mode);
+        Assert.True(result.PresentationPolicy.Terminal);
+        Assert.False(result.PresentationPolicy.AllowParaphrase);
+        Assert.False(result.PresentationPolicy.AllowSummarization);
+        Assert.False(result.PresentationPolicy.AllowOmission);
+        Assert.False(result.PresentationPolicy.AllowReordering);
+        Assert.True(result.PresentationPolicy.SuggestedNextStepsRequireUserSelection);
         Assert.Empty(result.ElicitationResponses);
         Assert.Contains("Do not run Bicep", result.ArtifactInstructions, StringComparison.Ordinal);
         Assert.Contains("ARM validate/what-if", result.ArtifactInstructions, StringComparison.Ordinal);

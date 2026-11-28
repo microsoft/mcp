@@ -61,6 +61,44 @@ public sealed class ArtifactWriterTests : IDisposable
     }
 
     [Fact]
+    public void Write_UsesSemanticFamilyForZonalResiliencyArtifacts()
+    {
+        var artifact = new AgentArtifact(
+            "Zone-Resilient Posture Report.md",
+            "posture",
+            "text/markdown",
+            "# Zonal Posture Report",
+            "resiliencyagent",
+            "zonal-resiliency");
+
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-zr"));
+
+        Assert.Contains(
+            Path.Combine("azure-resiliency", "zonal-resiliency-20261112T093045123Z"),
+            written.Path,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void Write_UsesSemanticFamilyForStayResilientArtifacts()
+    {
+        var artifact = new AgentArtifact(
+            "FullList.md",
+            "complete list",
+            "text/markdown",
+            "# Full list",
+            "md",
+            "stay-resilient");
+
+        WrittenArtifact written = AssertWritten(_writer.Write([artifact], "conv-stay"));
+
+        Assert.Contains(
+            Path.Combine("azure-resiliency", "stay-resilient-20261112T093045123Z"),
+            written.Path,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void Write_UsesStrictUtf8WithoutBom()
     {
         const string content = "# Résilience\n\n東京 — ✅";
@@ -125,6 +163,7 @@ public sealed class ArtifactWriterTests : IDisposable
     [InlineData("main", "text/plain", "terraform", "main.tf")]
     [InlineData("main.txt", "text/plain", "terraform", "main.tf")]
     [InlineData("main.tf", "text/plain", "terraform", "main.tf")]
+    [InlineData("main", "text/plain", "tf", "main.tf")]
     [InlineData("variables.tfvars", "text/plain", "terraform", "variables.tfvars")]
     public void Write_AddsAUsefulExtension(
         string name,

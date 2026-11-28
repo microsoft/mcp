@@ -1,0 +1,5 @@
+changes:
+  - section: Features Added
+    description: Added Azure Resiliency Agent tools for Azure Backup and Azure Site Recovery assessment and guidance, supported guided Azure Backup changes, and customer-run Azure Backup automation.
+  - section: Other Changes
+    description: Added a shared authoritative terminal-response presentation contract, portable Azure Portal links in agent responses, and Backup-aware rendering for result tables, protection coverage, charts, and generated artifacts.

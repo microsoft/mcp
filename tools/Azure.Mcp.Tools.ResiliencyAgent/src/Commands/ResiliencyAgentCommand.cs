@@ -214,6 +214,8 @@ public abstract class ResiliencyAgentCommand<
                 turn.ConversationId,
                 turn.State,
                 turn.Reply,
+                turn.Reply,
+                ResiliencyAgentPresentationPolicy.AuthoritativeTerminal,
                 turn.SuggestedNextSteps ?? [],
                 elicitationResponses,
                 turn.Artifacts.Count > 0 ? _artifactInstructions : null),
@@ -534,7 +536,12 @@ public abstract class ResiliencyAgentCommand<
 
 /// <param name="ConversationId">Pass this back on the next related call to continue the conversation.</param>
 /// <param name="State">Final state of the agent turn.</param>
-/// <param name="Reply">The agent's answer, to be shown to the user.</param>
+/// <param name="Reply">Compatibility copy of the agent's answer.</param>
+/// <param name="AuthoritativeUserResponse">
+/// Backend-authored response, with Azure Portal-relative links made usable by non-Portal clients,
+/// that must be presented exactly under <paramref name="PresentationPolicy"/>.
+/// </param>
+/// <param name="PresentationPolicy">Model-visible instructions for presenting the terminal backend response.</param>
 /// <param name="SuggestedNextSteps">
 /// The agent's own suggestions for what the user could do next.
 /// </param>
@@ -549,9 +556,45 @@ public sealed record ResiliencyAgentCommandResult(
     string ConversationId,
     string State,
     string? Reply,
+    string? AuthoritativeUserResponse,
+    ResiliencyAgentPresentationPolicy PresentationPolicy,
     IReadOnlyList<string> SuggestedNextSteps,
     IReadOnlyList<ElicitationResponse> ElicitationResponses,
     string? ArtifactInstructions);
+
+/// <summary>
+/// Presentation contract for a completed backend turn.
+/// </summary>
+/// <param name="Mode">Required presentation mode.</param>
+/// <param name="Terminal">Whether the current result ends the requested workflow operation.</param>
+/// <param name="AllowParaphrase">Whether the host may paraphrase the authoritative response.</param>
+/// <param name="AllowSummarization">Whether the host may summarize the authoritative response.</param>
+/// <param name="AllowOmission">Whether the host may omit authoritative response content.</param>
+/// <param name="AllowReordering">Whether the host may reorder authoritative response content.</param>
+/// <param name="SuggestedNextStepsRequireUserSelection">
+/// Whether suggested next steps require a new explicit user request before another operation.
+/// </param>
+public sealed record ResiliencyAgentPresentationPolicy(
+    string Mode,
+    bool Terminal,
+    bool AllowParaphrase,
+    bool AllowSummarization,
+    bool AllowOmission,
+    bool AllowReordering,
+    bool SuggestedNextStepsRequireUserSelection)
+{
+    /// <summary>
+    /// Shared authoritative policy for terminal Azure Resiliency Agent responses.
+    /// </summary>
+    public static ResiliencyAgentPresentationPolicy AuthoritativeTerminal { get; } = new(
+        Mode: "verbatim",
+        Terminal: true,
+        AllowParaphrase: false,
+        AllowSummarization: false,
+        AllowOmission: false,
+        AllowReordering: false,
+        SuggestedNextStepsRequireUserSelection: true);
+}
 
 /// <summary>
 /// One accepted MCP elicitation answer and the exact question shown to the user.

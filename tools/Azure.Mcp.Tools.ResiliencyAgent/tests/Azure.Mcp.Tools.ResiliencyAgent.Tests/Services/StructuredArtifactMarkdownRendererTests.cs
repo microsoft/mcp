@@ -347,4 +347,188 @@ public sealed class StructuredArtifactMarkdownRendererTests
         Assert.Contains("| [child1](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
         Assert.Contains("| [default](https://portal.azure.com/#@/resource/", artifact.Content, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void ReadArtifact_RendersBackupDataGridWithBackendTitleAndFamily()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Jobs",
+              "metadata": { "type": "datagrid" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "columns": [
+                    { "id": "item", "header": "Backup item", "type": "deepLink" },
+                    { "id": "status", "header": "Status", "type": "string" }
+                  ],
+                  "data": [{
+                    "item": {
+                      "label": "vm-prod",
+                      "deepLink": "#@/resource/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm-prod"
+                    },
+                    "status": "Failed"
+                  }]
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("Jobs.md", artifact.Name);
+        Assert.Equal("data-resiliency", artifact.Family);
+        Assert.Contains("# Jobs", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("**Rows:** 1", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("vm-prod", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Azure resiliency data", artifact.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_RendersBackupProtectionCoverageWithoutZonalTerminology()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Backup protection coverage",
+              "metadata": { "type": "resiliencyagent" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "resiliencyAgentArtifactType": "GetZonalPosture",
+                  "summary": {
+                    "totalResources": 2,
+                    "resilientResources": 1,
+                    "nonResilientResources": 1
+                  },
+                  "resources": {
+                    "Microsoft.Compute/virtualMachines": [{
+                      "resourceId": "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1",
+                      "status": "Protected"
+                    }],
+                    "Microsoft.Storage/storageAccounts": [{
+                      "resourceId": "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/st1",
+                      "status": "Unprotected"
+                    }]
+                  }
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("Backup protection coverage.md", artifact.Name);
+        Assert.Equal("data-resiliency", artifact.Family);
+        Assert.Contains("# Backup Protection Coverage", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| Existing Resources | Protected | Unprotected |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| 2 | 1 | 1 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("deleted resources are not counted", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Zonal Posture", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("Resilient Resources", artifact.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_RendersBackupPieChartAsDataAndMermaid()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Backup protection coverage chart",
+              "metadata": { "type": "chart" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "title": "Protected and unprotected resources",
+                  "chartType": "pie",
+                  "series": [{
+                    "name": "Protected and unprotected resources",
+                    "data": [
+                      { "name": "Protected", "y": 8 },
+                      { "name": "Unprotected", "y": 3 }
+                    ]
+                  }]
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("Backup protection coverage chart.md", artifact.Name);
+        Assert.Equal("data-resiliency", artifact.Family);
+        Assert.Contains("| Protected | 8 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| Unprotected | 3 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("```mermaid", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("pie showData", artifact.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_RendersBackupColumnChartAsDataAndMermaid()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Backup jobs by status",
+              "metadata": { "type": "chart" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "title": "Backup jobs by status",
+                  "chartType": "column",
+                  "series": [{
+                    "name": "Jobs",
+                    "data": [12, 2, 1]
+                  }],
+                  "xAxis": {
+                    "type": "category",
+                    "title": { "text": "Status" },
+                    "categories": ["Completed", "Failed", "Running"]
+                  },
+                  "yAxis": {
+                    "title": { "text": "Count" }
+                  }
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("Backup jobs by status.md", artifact.Name);
+        Assert.Equal("data-resiliency", artifact.Family);
+        Assert.Contains("| Completed | 12 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("| Failed | 2 |", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("xychart-beta", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("bar [12, 2, 1]", artifact.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReadArtifact_UnsupportedLocalChartTypeUsesNoLossFallback()
+    {
+        using JsonDocument document = JsonDocument.Parse(
+            """
+            {
+              "name": "Backup trend",
+              "metadata": { "type": "chart" },
+              "parts": [{
+                "kind": "data",
+                "data": {
+                  "title": "Backup trend",
+                  "chartType": "line",
+                  "series": [{ "name": "Jobs", "data": [1, 2] }],
+                  "xAxis": { "categories": ["Day 1", "Day 2"] }
+                }
+              }]
+            }
+            """);
+
+        AgentArtifact artifact = Assert.Single(ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Contains("chartType", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("line", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains("Day 1", artifact.Content, StringComparison.Ordinal);
+        Assert.DoesNotContain("xychart-beta", artifact.Content, StringComparison.Ordinal);
+    }
 }

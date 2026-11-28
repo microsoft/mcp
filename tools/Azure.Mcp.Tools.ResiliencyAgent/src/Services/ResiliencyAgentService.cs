@@ -175,7 +175,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         if (result.TryGetProperty("status", out JsonElement statusElement)
             && statusElement.TryGetProperty("message", out JsonElement statusMessage))
         {
-            reply = ReadTextParts(statusMessage);
+            reply = AzurePortalMarkdownLinkNormalizer.Normalize(ReadTextParts(statusMessage));
         }
 
         List<AgentArtifact> artifacts = [];
@@ -307,9 +307,12 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         string? format = artifact.TryGetProperty("metadata", out JsonElement artifactMetadata)
             ? ReadString(artifactMetadata, "type")
             : null;
+        string? templateFileName = artifactMetadata.ValueKind == JsonValueKind.Object
+            ? ReadString(artifactMetadata, "templateFileName")
+            : null;
         if (!artifact.TryGetProperty("parts", out JsonElement parts) || parts.ValueKind != JsonValueKind.Array)
         {
-            return [new AgentArtifact(name, description, null, null, format)];
+            return [new AgentArtifact(name, description, null, null, format, KnownArtifactFamily(name))];
         }
 
         List<AgentArtifact> decoded = [];
@@ -318,12 +321,21 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
             switch (ReadString(part, "kind"))
             {
                 case "file" when part.TryGetProperty("file", out JsonElement file):
+                    string fileName = ReadString(file, "name") ?? name;
+                    string mimeType = ReadString(file, "mimeType") ?? "text/plain";
+                    string? content = DecodeFile(file);
+                    if (string.Equals(mimeType, "text/markdown", StringComparison.OrdinalIgnoreCase))
+                    {
+                        content = AzurePortalMarkdownLinkNormalizer.Normalize(content);
+                    }
+
                     decoded.Add(new AgentArtifact(
-                        ReadString(file, "name") ?? name,
+                        fileName,
                         description,
-                        ReadString(file, "mimeType") ?? "text/plain",
-                        DecodeFile(file),
-                        format));
+                        mimeType,
+                        content,
+                        format,
+                        KnownArtifactFamily(fileName)));
                     break;
 
                 case "text":
@@ -335,16 +347,18 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                             format);
                         if (envelope is not null)
                         {
-                            decoded.AddRange(envelope);
+                            decoded.AddRange(envelope.Select(item =>
+                                item with { Family = item.Family ?? KnownArtifactFamily(item.Name) }));
                         }
                         else
                         {
                             decoded.Add(new AgentArtifact(
-                                name,
+                                templateFileName ?? name,
                                 description,
-                                "text/markdown",
+                                TextArtifactMimeType(format),
                                 text,
-                                format));
+                                format,
+                                KnownArtifactFamily(templateFileName ?? name)));
                         }
 
                         break;
@@ -359,7 +373,7 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
                             "text/markdown",
                             TranscodeDataToMarkdown(data),
                             format,
-                            "structured-data");
+                            StructuredArtifactFamily(name, data));
                     decoded.Add(rendered);
                     break;
             }
@@ -368,6 +382,43 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         return decoded.Count > 0 ? decoded : [new AgentArtifact(name, description, null, null, format)];
     }
 
+    private static string StructuredArtifactFamily(string name, JsonElement data)
+    {
+        string? artifactType = ReadString(data, "resiliencyAgentArtifactType");
+        return string.Equals(artifactType, "GetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artifactType, "CheckPrerequisites", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artifactType, "SetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            || KnownArtifactFamily(name) is not null
+            ? "zonal-resiliency"
+            : "structured-data";
+    }
+
+    private static string? KnownArtifactFamily(string name)
+    {
+        if (name.StartsWith("Zone-Resilient ", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("EnableZonalResiliency-", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("CreateZonallyResilientResource-", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("SG-assessment-report-", StringComparison.OrdinalIgnoreCase))
+        {
+            return "zonal-resiliency";
+        }
+
+        return name.StartsWith("AzureBackup", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("RetriggerSelectedFailedBackups", StringComparison.OrdinalIgnoreCase)
+            || name.StartsWith("DeleteVault-", StringComparison.OrdinalIgnoreCase)
+                ? "data-resiliency"
+                : string.Equals(name, "FullList.md", StringComparison.OrdinalIgnoreCase)
+                    ? "stay-resilient"
+                : null;
+    }
+
+    private static string TextArtifactMimeType(string? format) =>
+        string.Equals(format, "bicep", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(format, "terraform", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(format, "tf", StringComparison.OrdinalIgnoreCase)
+            ? "text/plain"
+            : "text/markdown";
+
     /// <summary>
     /// Renders a structured data part as readable Markdown without discarding unfamiliar JSON.
     /// Uniform object arrays become tables; other structures remain inspectable as headings, bullets,
@@ -375,11 +426,6 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
     /// </summary>
     private static string TranscodeDataToMarkdown(JsonElement data)
     {
-        if (TryRenderZonalPosture(data, out string zonalPosture))
-        {
-            return zonalPosture;
-        }
-
         if (data.ValueKind != JsonValueKind.Object)
         {
             var single = new StringBuilder();
@@ -399,119 +445,6 @@ public sealed class ResiliencyAgentService : IResiliencyAgentService
         string markdown = builder.ToString().TrimEnd();
         return markdown.Length == 0 ? "_No data._" : markdown;
     }
-
-    private static bool TryRenderZonalPosture(JsonElement data, out string markdown)
-    {
-        markdown = string.Empty;
-
-        if (data.ValueKind != JsonValueKind.Object
-            || !string.Equals(
-                ReadString(data, "resiliencyAgentArtifactType"),
-                "GetZonalPosture",
-                StringComparison.OrdinalIgnoreCase)
-            || !data.TryGetProperty("summary", out JsonElement summary)
-            || summary.ValueKind != JsonValueKind.Object
-            || !TryReadNumber(summary, "totalResources", out string totalResources)
-            || !TryReadNumber(summary, "resilientResources", out string resilientResources)
-            || !TryReadNumber(summary, "nonResilientResources", out string nonResilientResources)
-            || !data.TryGetProperty("resources", out JsonElement resources)
-            || resources.ValueKind != JsonValueKind.Object)
-        {
-            return false;
-        }
-
-        List<ZonalPostureResource> rows = [];
-        foreach (JsonProperty resourceType in resources.EnumerateObject())
-        {
-            if (string.IsNullOrWhiteSpace(resourceType.Name)
-                || resourceType.Value.ValueKind != JsonValueKind.Array)
-            {
-                return false;
-            }
-
-            foreach (JsonElement resource in resourceType.Value.EnumerateArray())
-            {
-                if (resource.ValueKind != JsonValueKind.Object
-                    || ReadString(resource, "resourceId") is not string resourceId
-                    || string.IsNullOrWhiteSpace(resourceId)
-                    || ReadString(resource, "status") is not string status
-                    || string.IsNullOrWhiteSpace(status)
-                    || !TryNormalizeArmResourceId(resourceId, out string normalizedId, out string label))
-                {
-                    return false;
-                }
-
-                rows.Add(new ZonalPostureResource(label, resourceType.Name, status, normalizedId));
-            }
-        }
-
-        StringBuilder builder = new();
-        builder.AppendLine("# Zonal Posture Report");
-        builder.AppendLine();
-        builder.AppendLine("## Summary");
-        builder.AppendLine();
-        builder.AppendLine("| Total Resources | Resilient Resources | Non-Resilient Resources |");
-        builder.AppendLine("|---|---|---|");
-        builder.AppendLine($"| {totalResources} | {resilientResources} | {nonResilientResources} |");
-        builder.AppendLine();
-        builder.AppendLine("## Resources");
-        builder.AppendLine();
-        builder.AppendLine("| Resource | Resource Type | Status |");
-        builder.AppendLine("|---|---|---|");
-
-        foreach (ZonalPostureResource row in rows)
-        {
-            string portalUrl = MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId);
-            string resourceLink = $"[{MarkdownRenderingHelpers.EscapeLinkLabel(row.Label)}]({portalUrl})";
-            builder.AppendLine(
-                $"| {resourceLink} | {MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType)} | " +
-                $"{MarkdownRenderingHelpers.EscapeTableCell(row.Status)} |");
-        }
-
-        markdown = builder.ToString().TrimEnd();
-        return true;
-    }
-
-    private static bool TryReadNumber(JsonElement element, string propertyName, out string value)
-    {
-        value = string.Empty;
-        if (!element.TryGetProperty(propertyName, out JsonElement property)
-            || property.ValueKind != JsonValueKind.Number)
-        {
-            return false;
-        }
-
-        value = property.GetRawText();
-        return true;
-    }
-
-    private static bool TryNormalizeArmResourceId(
-        string resourceId,
-        out string normalizedId,
-        out string label)
-    {
-        normalizedId = string.Empty;
-        label = string.Empty;
-
-        string[] segments = resourceId
-            .Replace('\\', '/')
-            .Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-        if (segments.Length < 2)
-        {
-            return false;
-        }
-
-        normalizedId = "/" + string.Join("/", segments);
-        label = segments[^1];
-        return !string.IsNullOrWhiteSpace(label);
-    }
-
-    private sealed record ZonalPostureResource(
-        string Label,
-        string ResourceType,
-        string Status,
-        string ResourceId);
 
     private static void WriteElement(StringBuilder builder, JsonElement element, string prefix)
     {

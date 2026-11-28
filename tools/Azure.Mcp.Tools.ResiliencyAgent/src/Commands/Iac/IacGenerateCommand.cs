@@ -11,13 +11,15 @@ namespace Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
 [CommandMetadata(
     Id = "13caf95e-b18e-4f7b-a70d-b2bf4456a0ee",
     Name = "generate",
-    Title = "Generate new resilient infrastructure as code",
+    Title = "Create new Azure resources from scratch with resilient IaC",
     Description = """
-        Use this command when the user asks to create or generate new zone-resilient Bicep, ARM JSON,
-        or Terraform for an application described in request. This command does not review or correct
-        existing files and does not accept attachments. Preserve the user's requested architecture,
-        resources, regions, naming constraints, relationships, and target format. If the requested
-        IaC format is ambiguous, let the backend ask whether to generate Bicep, ARM JSON, or Terraform.
+        Use this command when the user asks to create a new Azure resource from scratch or generate
+        new zone-resilient Bicep, ARM JSON, or Terraform for an application described in request.
+        It owns new-resource generation whether the request contains one individual resource or a
+        complete application architecture. This command does not review or correct existing files
+        and does not accept attachments. Preserve the user's requested architecture, resources,
+        regions, naming constraints, relationships, and target format. If the requested IaC format
+        is ambiguous, let the backend ask whether to generate Bicep, ARM JSON, or Terraform.
         Use resiliencyagent_architecture_assess for assessment without generation, and use the
         format-specific review commands when existing source must be corrected.
         Backend-generated files are authoritative and a completed result has already passed the

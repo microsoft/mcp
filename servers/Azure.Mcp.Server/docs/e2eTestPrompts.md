@@ -1511,7 +1511,7 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_architecture_assess | Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment | context-required |
 | resiliencyagent_architecture_assess | Assess this application architecture for resiliency; the target region has not been selected yet | clarification-required |
 | resiliencyagent_iac_generate | Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2 | context-required |
-| resiliencyagent_iac_generate | Generate an ARM JSON template for a zone-resilient Azure Container Registry in East US 2 | context-required |
+| resiliencyagent_iac_generate | Create a new zone-resilient Azure Container Registry from scratch in East US 2 and generate ARM JSON | context-required |
 | resiliencyagent_iac_generate | Generate resilient infrastructure-as-code for this architecture; ask me which format to use | clarification-required |
 | resiliencyagent_bicep_review | Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }` | none |
 | resiliencyagent_bicep_review | Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency | context-required |
@@ -1535,6 +1535,56 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | resiliencyagent_servicegroup_get | Show the parent, criticality, and resource-type summary for Service Group `ContosoAppFleetSG` | context-required |
 | resiliencyagent_servicegroup_manage | Create a nested Azure Service Group under `ContosoAppFleetSG` and ask for confirmation before writing | none |
 | resiliencyagent_servicegroup_manage | Add resource group `contoso-rg` as a direct scope member of Service Group `ContosoAppFleetSG` | none |
+| resiliencyagent_zonalresiliency_get | Show the zonal-resiliency posture of Service Group `ContosoAppFleetSG` | context-required |
+| resiliencyagent_zonalresiliency_get | Check the zonal-resiliency prerequisites and blockers for Azure resource `<resource-id>` without making changes | context-required |
+| resiliencyagent_zonalresiliency_manage | Enable zone redundancy on Azure resource `<resource-id>` only after explicit confirmation | none |
+| resiliencyagent_zonalresiliency_generate | Generate a PowerShell script to enable zone redundancy on existing Azure resource `<resource-id>` | context-required |
+| resiliencyagent_zonalresiliency_generate | Generate a Bicep replacement scaffold for existing non-zonal NAT Gateway `<resource-id>` | context-required |
+| resiliencyagent_discovery_get | List the previous saved Azure application discoveries for subscription `<subscription-id>` without running discovery again | context-required |
+| resiliencyagent_discovery_get | Show the selected application-resource boundary report from my saved discovery | context-required |
+| resiliencyagent_discovery_get | Display the current unchanged automatic-Discovery arrangement preview for Plan Group `<plan-group-id>` revision `<revision>` without applying it | context-required |
+| resiliencyagent_discovery_get | List the available Discovery Agents for subscription `<subscription-id>` | context-required |
+| resiliencyagent_discovery_get | Check whether Discovery Agent `<agent-name>` has Reader access for resource group `<resource-group-name>` without assigning access | context-required |
+| resiliencyagent_discovery_manage | Create a Discovery Agent for subscription `<subscription-id>` and ask for confirmation before creating it | context-required |
+| resiliencyagent_discovery_manage | Assign Reader access to Discovery Agent `<agent-name>` for resource group `<resource-group-name>` only after confirmation | context-required |
+| resiliencyagent_discovery_manage | The Discovery Agent is already configured; run a fresh application discovery for subscription `<subscription-id>` | context-required |
+| resiliencyagent_discovery_manage | Create a Service Group arrangement from my latest saved application discovery | context-required |
+| resiliencyagent_discovery_manage | Rename and regroup the proposed automatic-Discovery Service Group arrangement, then show the updated preview | context-required |
+| resiliencyagent_discovery_manage | Undo the last change to my saved Discovery arrangement | context-required |
+| resiliencyagent_discovery_execute | Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing | context-required |
+| resiliencyagent_discovery_execute | Apply Plan Group `<plan-group-id>` revision `<revision>` only after showing the exact arrangement and receiving confirmation | context-required |
+| resiliencyagent_dataresiliency_get | Assess Azure Backup protected-versus-unprotected coverage for Service Group `ContosoAppFleetSG` and attach the complete posture report and chart | context-required |
+| resiliencyagent_dataresiliency_get | Analyze why Azure Backup jobs are failing across subscription `<subscription-id>` in the last 7 days and recommend only evidence-backed next steps | context-required |
+| resiliencyagent_dataresiliency_get | Evaluate Azure VM Backup eligibility for resources `<resource-id-1>` and `<resource-id-2>` without changing Azure | context-required |
+| resiliencyagent_dataresiliency_get | Explain the restore options and provide the verified recovery portal route for protected resource `<resource-id>` without performing a restore | context-required |
+| resiliencyagent_dataresiliency_get | Help me configure Azure Site Recovery for VM `<resource-id>` using the supported portal guidance; do not execute ASR configuration | context-required |
+| resiliencyagent_dataresiliency_get | Help me enable Azure Files Backup for storage account `<resource-id>` using the supported portal workflow; do not perform unsupported native enablement | context-required |
+| resiliencyagent_dataresiliency_manage | Assess and safely enable Azure VM Backup for `<resource-id>` by guiding vault, policy, disk selection, confirmation, protection, and verification | none |
+| resiliencyagent_dataresiliency_manage | Enable Backup for VM `<resource-id>` using existing vault `<vault-name>`, policy `<policy-name>`, and all disks, while still validating eligibility and asking for confirmation | none |
+| resiliencyagent_dataresiliency_manage | Improve the Azure Backup security posture of vault `<vault-name>` through the minimum supported confirmed changes | none |
+| resiliencyagent_dataresiliency_manage | Guide me through creating the right Recovery Services vault and VM Backup policy for resources `<resource-id-1>` and `<resource-id-2>` | none |
+| resiliencyagent_dataresiliency_generate | Generate an Azure CLI script to configure Azure VM Backup for `<resource-id>` without changing Azure | context-required |
+| resiliencyagent_dataresiliency_generate | Generate a native PowerShell script to configure Azure VM Backup for `<resource-id>` without executing it | context-required |
+| resiliencyagent_dataresiliency_generate | Generate a validated REST script to configure Azure VM Backup for `<resource-id>` | context-required |
+| resiliencyagent_dataresiliency_generate | Generate ARM JSON, Bicep, and Terraform Azure VM Backup automation as separate authoritative artifacts | context-required |
+| resiliencyagent_dataresiliency_generate | Generate the confirmed customer-run PowerShell script for deleting Recovery Services vault `<vault-name>` after showing its impact | context-required |
+| resiliencyagent_dataresiliency_generate | Generate one PowerShell script to retrigger the selected failed Azure Backup jobs | context-required |
+| resiliencyagent_drills_get | Compare several drills across my visible Service Groups and explain their different readiness blockers, monitoring dependencies, Recovery Plan relationships, and recent outcomes | context-required |
+| resiliencyagent_drills_get | Analyze the recent runs of drill `<drill-name>`, compare their outcomes and failed resources, and attach the complete supporting list | context-required |
+| resiliencyagent_drills_get | Correlate drill `<drill-name>` readiness observations, monitoring evidence, failed resources, and historical runs into one diagnosis | context-required |
+| resiliencyagent_drills_get | Compare the failed-resource patterns across drills `<drill-name-1>` and `<drill-name-2>` and explain the evidence behind their different outcomes | context-required |
+| resiliencyagent_drills_manage | Guide me through setting up a drill for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, Recovery Plan, and monitoring choices are not yet settled | none |
+| resiliencyagent_drills_manage | Discover the missing prerequisites for a new drill on `<service-group>`, explain their dependencies, and keep one conversation through the final confirmed proposal | none |
+| resiliencyagent_drills_manage | Help me choose between SLI and health-model monitoring, resolve the required Recovery Plan and usage enrollment, and then propose the complete drill setup for confirmation | none |
+| resiliencyagent_drills_manage | Coordinate the goal, enrollment, Recovery Plan, monitoring, identity, and resource decisions needed before creating the drill for `<service-group>` | none |
+| resiliencyagent_recoveryplans_get | Compare several Recovery Plans across my visible Service Groups and explain their different blockers, protection choices, recovery groups, and job outcomes | context-required |
+| resiliencyagent_recoveryplans_get | Compare the recent recovery outcomes and failed-resource patterns of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and attach the complete supporting list | context-required |
+| resiliencyagent_recoveryplans_get | Correlate the protection choices, recovery order, failed resources, drill relationships, and historical outcomes of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` | context-required |
+| resiliencyagent_recoveryplans_get | Compare plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and explain why their resource blockers and recovery outcomes differ | context-required |
+| resiliencyagent_recoveryplans_manage | Guide me through setting up recovery for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, protection choices, groups, and resources are not yet settled | none |
+| resiliencyagent_recoveryplans_manage | Discover the missing prerequisites and supported protection choices for a new Recovery Plan, then keep one conversation through the confirmed proposal | none |
+| resiliencyagent_recoveryplans_manage | Help me design recovery groups, settle protection for several resources, resolve enrollment dependencies, and present one complete plan proposal for confirmation | none |
+| resiliencyagent_recoveryplans_manage | Coordinate the goal, enrollment, protection, recovery-group, runbook, and resource decisions needed before creating a Recovery Plan for `<service-group>` | none |
 
 ## Azure Resource Health
 

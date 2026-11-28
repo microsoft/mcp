@@ -5,13 +5,18 @@ using Azure.Mcp.Core;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Architecture;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Arm;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Bicep;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.DataResiliency;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.Drills;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.File;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Goals;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Guidance;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Iac;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.RecoveryPlans;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.ServiceGroup;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Terraform;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.UsagePlan;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands.ZonalResiliency;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -64,6 +69,19 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         services.AddSingleton<UsagePlanManageCommand>();
         services.AddSingleton<ServiceGroupGetCommand>();
         services.AddSingleton<ServiceGroupManageCommand>();
+        services.AddSingleton<ZonalResiliencyGetCommand>();
+        services.AddSingleton<ZonalResiliencyManageCommand>();
+        services.AddSingleton<ZonalResiliencyGenerateCommand>();
+        services.AddSingleton<DiscoveryGetCommand>();
+        services.AddSingleton<DiscoveryManageCommand>();
+        services.AddSingleton<DiscoveryExecuteCommand>();
+        services.AddSingleton<DataResiliencyGetCommand>();
+        services.AddSingleton<DataResiliencyManageCommand>();
+        services.AddSingleton<DataResiliencyGenerateCommand>();
+        services.AddSingleton<DrillsGetCommand>();
+        services.AddSingleton<DrillsManageCommand>();
+        services.AddSingleton<RecoveryPlansGetCommand>();
+        services.AddSingleton<RecoveryPlansManageCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -76,15 +94,27 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             zones, zone resilience, or zone redundancy. Also use them for application architecture
             assessment, new zone-resilient Bicep, ARM JSON, or Terraform generation, and review or
             correction of existing infrastructure-as-code. Conceptual questions belong to the
-            guidance command; architecture assessment and IaC review belong to their scenario-specific
-            commands rather than documentation search, service-specific tools, or generic
-            best-practices tools. Goals commands inspect and manage one Service Group's zonal-
-            resiliency goals, participation, and SLIs, with cross-Service Group status supported as a
-            read. Usage Plan commands inspect, create, and attach Standard plans. Service Group
-            commands inspect ordinary group metadata and members or perform confirmed creation,
-            resource addition, nesting, and criticality updates. Automatic application discovery,
-            Discovery Agents, saved discoveries, arrangements, and discovery-plan execution are not
-            exposed by this tool area.
+            guidance command; deployed zonal posture, enablement readiness, direct enablement, and
+            existing-resource remediation scripts belong to the zonal-resiliency commands. Architecture
+            assessment and IaC review belong to their scenario-specific commands rather than
+            documentation search, service-specific tools, or generic best-practices tools. Goals
+            commands inspect and manage one Service Group's zonal-resiliency goals, participation,
+            and SLIs, with cross-Service Group status supported as a read. Usage Plan commands inspect,
+            create, and attach Standard plans. Service Group commands inspect ordinary group metadata
+            and members or perform confirmed creation, resource addition, nesting, and criticality
+            updates. Discovery commands inspect saved application discoveries and arrangements,
+            configure and run automatic discovery, edit arrangements, and execute confirmed
+            discovery-backed Service Group plans. Ordinary Service Group requests remain separate
+            from automatic discovery. Data Resiliency commands assess Azure Backup and Azure Site
+            Recovery posture, coverage, alerts, jobs, eligibility, troubleshooting, restore guidance,
+            and portal handoffs; orchestrate supported confirmed Azure Backup changes; or generate
+            customer-run Azure Backup automation. Existing direct Azure Backup commands remain
+            available for their established atomic operations.
+            Stay Resilient drills commands interpret and check zone-down drills or orchestrate
+            confirmed drill configuration changes. Recovery Plans commands inspect plan health,
+            resources, jobs, readiness, and validation or orchestrate confirmed plan configuration.
+            These agent-backed commands do not execute or delete drills or Recovery Plans; existing
+            direct Azure Resilience Management commands retain their established atomic operations.
             Prefer file attachments for complete templates and multi-file configurations: prepare
             local files through the file attachment command and pass their opaque attachment IDs.
             Templates pasted directly in the user's current prompt are also supported without
@@ -94,6 +124,10 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
             rerun Bicep build, ARM validate/what-if, Terraform validate/plan, or patch returned files
             from local diagnostics. Continue the backend conversation when it explicitly reports
             incomplete validation.
+            A completed backend response is authoritative and terminal. Present it and stop. Do not
+            repeat a tool call, act on suggestedNextSteps, infer another workflow operation, or call
+            another Resiliency Agent tool without a new explicit user request. Backend elicitation
+            inside the current tool call is the only exception.
             """,
             Title);
 
@@ -127,6 +161,21 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         var serviceGroup = new CommandGroup(
             "servicegroup",
             "Inspect, create, or update ordinary Azure Service Groups without automatic application discovery.");
+        var zonalResiliency = new CommandGroup(
+            "zonalresiliency",
+            "Inspect deployed zonal posture, check enablement readiness, perform confirmed direct enablement, or generate existing-resource remediation scripts.");
+        var discovery = new CommandGroup(
+            "discovery",
+            "Inspect saved Azure application discoveries, set up or run automatic discovery, edit Service Group arrangements, or execute a confirmed persisted arrangement.");
+        var dataResiliency = new CommandGroup(
+            "dataresiliency",
+            "Assess Azure Backup and recovery posture, orchestrate supported Azure Backup changes, or generate customer-run Azure Backup automation.");
+        var drills = new CommandGroup(
+            "drills",
+            "Inspect and check Stay Resilient zone-down drills or perform confirmed drill configuration changes.");
+        var recoveryPlans = new CommandGroup(
+            "recoveryplans",
+            "Inspect and check Stay Resilient Recovery Plans or perform confirmed plan configuration changes.");
 
         guidance.AddCommand<GuidanceGetCommand>(serviceProvider);
         file.AddCommand<FileAttachCommand>(serviceProvider);
@@ -141,6 +190,19 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         usagePlan.AddCommand<UsagePlanManageCommand>(serviceProvider);
         serviceGroup.AddCommand<ServiceGroupGetCommand>(serviceProvider);
         serviceGroup.AddCommand<ServiceGroupManageCommand>(serviceProvider);
+        zonalResiliency.AddCommand<ZonalResiliencyGetCommand>(serviceProvider);
+        zonalResiliency.AddCommand<ZonalResiliencyManageCommand>(serviceProvider);
+        zonalResiliency.AddCommand<ZonalResiliencyGenerateCommand>(serviceProvider);
+        discovery.AddCommand<DiscoveryGetCommand>(serviceProvider);
+        discovery.AddCommand<DiscoveryManageCommand>(serviceProvider);
+        discovery.AddCommand<DiscoveryExecuteCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyGetCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyManageCommand>(serviceProvider);
+        dataResiliency.AddCommand<DataResiliencyGenerateCommand>(serviceProvider);
+        drills.AddCommand<DrillsGetCommand>(serviceProvider);
+        drills.AddCommand<DrillsManageCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlansGetCommand>(serviceProvider);
+        recoveryPlans.AddCommand<RecoveryPlansManageCommand>(serviceProvider);
         resiliencyAgent.AddSubGroup(guidance);
         resiliencyAgent.AddSubGroup(file);
         resiliencyAgent.AddSubGroup(architecture);
@@ -151,6 +213,11 @@ public sealed class ResiliencyAgentSetup : IAreaSetup
         resiliencyAgent.AddSubGroup(goals);
         resiliencyAgent.AddSubGroup(usagePlan);
         resiliencyAgent.AddSubGroup(serviceGroup);
+        resiliencyAgent.AddSubGroup(zonalResiliency);
+        resiliencyAgent.AddSubGroup(discovery);
+        resiliencyAgent.AddSubGroup(dataResiliency);
+        resiliencyAgent.AddSubGroup(drills);
+        resiliencyAgent.AddSubGroup(recoveryPlans);
         return resiliencyAgent;
     }
 }

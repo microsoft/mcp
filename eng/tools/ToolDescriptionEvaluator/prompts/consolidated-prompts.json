@@ -1,11 +1,204 @@
 {
+  "get_azure_resilience_management_details": [
+    "Get drill run <drill_run_name> for drill <drill_name> in service group <service_group>",
+    "Get drill target <resource_name> for resilience drill <drill_name> in service group <service_group>",
+    "Get goal assignment <goal_assignment_name> in service group <service_group>, including its zonal resiliency requirement, service-level indicator targets, and provisioning state",
+    "Get goal resource <resource_name> for assignment <goal_assignment_name> in service group <service_group> and show its resourceArmId and nested zonalResiliency participation, attestation, and user confirmation",
+    "Get resource <resource_name> from drill run <drill_run_name> for drill <drill_name> in service group <service_group>",
+    "Get the complete details of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group>",
+    "Get the details of Azure Resilience Management enrollment <enrollment_name> for usage plan <usage_plan_name> in resource group <resource_group_name>",
+    "Get the details of Azure Resilience Management usage plan <usage_plan_name> in resource group <resource_group_name>",
+    "Get the details of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Get the details of recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Get the details of resilience drill <drill_name> in service group <service_group>",
+    "Get the recovery job resource <resource_name> for recovery job <recovery_job_name> of recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Get the recovery resource <resource_name> for recoveryplan <recoveryplan_name> in service group <service_group>",
+    "List all Azure Resilience Management enrollments of usage plan <usage_plan_name> in resource group <resource_group_name>",
+    "List all drill resources for resilience drill <drill_name> in service group <service_group>",
+    "List all drill targets for resilience drill <drill_name> in service group <service_group>",
+    "List all recovery jobs of recoveryplan <recoveryplan_name> in service group <service_group>",
+    "List all resilience drills in service group <service_group>",
+    "List all resilience goal assignments in service group <service_group>",
+    "List all resilience recovery plans in service group <service_group>",
+    "List all resilience usage plans in my subscription",
+    "List all resilience usage plans in resource group <resource_group_name>",
+    "List all resources (members) of goal assignment <goal_assignment_name> in service group <service_group>",
+    "List all resources (members) of recoveryplan <recoveryplan_name> in service group <service_group>",
+    "List all resources (targets) of recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group>",
+    "List all resources of drill run <drill_run_name> for drill <drill_name> in service group <service_group>",
+    "List all runs of drill <drill_name> in service group <service_group>",
+    "Retrieve the ARM properties of drill resource <resource_name> for resilience drill <drill_name> in service group <service_group>",
+    "Show the resources targeted by resilience drill <drill_name> in service group <service_group>"
+  ],
+  "create_azure_resilience_management_resources": [
+    "Add recovery resource <recovery_resource_id> to recoveryplan <recoveryplan_name> in service group <service_group>. Protect it with CustomRunbook using failover runbook <failover_runbook_resource_id> and reprotect runbook <reprotect_runbook_resource_id>",
+    "Add resource <resource_id> to resilience drill <drill_name> in service group <service_group> with a fault duration of <fault_duration_minutes> minutes",
+    "All separately authorized enrollment cleanup has completed successfully; retry Azure Resiliency Management deletion of the entire usage plan <usage_plan_name> from resource group <resource_group_name> and report any remaining blocker",
+    "Attempt Azure Resiliency Management usage-plan deletion for <usage_plan_name> in resource group <resource_group_name> now; do not remove dependent enrollments automatically, and report their exact names if they block deletion",
+    "Change the Chaos resource identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id>",
+    "Change the Health Model monitored by resilience drill <drill_name> in service group <service_group> to <health_model_id> without changing its identity",
+    "Change the managed identity of resilience drill <drill_name> in service group <service_group> to system-assigned plus user-assigned identity <user_assigned_identity_id>",
+    "Change the monitoring identity of resilience drill <drill_name> in service group <service_group> to user-assigned identity <user_assigned_identity_id>",
+    "Clear all service-level indicator associations of existing goal assignment <goal_assignment_name> in service group <service_group>, preserving its zonal requirement and not deleting the indicators",
+    "Clear SLI monitoring on resilience drill <drill_name> in service group <service_group> while preserving its other configuration",
+    "Complete the fault injection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> so the drill run can proceed",
+    "Configure a new resilience drill with goal-assignment identity and Availability and Latency SLI monitoring",
+    "Create a new resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group; I have read access to it",
+    "Create a regional resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, and manual RBAC setup",
+    "Create a resilience drill for service group <service_group>",
+    "Create a resilience usage plan <usage_plan_name> with plan type Standard in resource group <resource_group_name>",
+    "Create a Standard resilience usage plan <usage_plan_name> in resource group <resource_group_name> tagged env=prod",
+    "Create a usage plan enrollment <enrollment_name> for usage plan <usage_plan_name> associated with service group <service_group> in resource group <resource_group_name>",
+    "Create a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>",
+    "Create a zonal resilience drill in service group <service_group> with Health Model monitoring for <health_model_id> using a system-assigned identity",
+    "Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and a drill-level managed identity of type user-assigned with identity <user_assigned_identity_id>",
+    "Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, automated built-in roles, and user-assigned identity <user_assigned_identity_id> for its monitoring",
+    "Create a zonal resilience drill named <drill_name> in service group <service_group> using subscription <subscription>, region <region>, resource group <resource_group>, and automated built-in roles",
+    "Create resilience goal assignment <goal_assignment_name> in service group <service_group> with zonal resiliency required and no service-level targets",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> and attach user-assigned managed identity <user_assigned_identity_resource_id>. Use <plan_description> for the plan description and <default_group_description> for the default recovery group",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity and plan description <plan_description>. Add manual pre-action <manual_action_name> with timeout <timeout_minutes> to the default group, and add CustomRunbook post-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> to an additional group described as <additional_group_description>",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default group description <default_group_description>. Add a ManualAction pre-action named <manual_action_name>, description <manual_action_description>, and timeout <timeout_minutes> to the default group",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, and default recovery group unique ID <default_group_unique_id>",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with a system-assigned managed identity, plan description <plan_description>, default recovery group description <default_group_description>, and one additional recovery group described as <additional_group_description>",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with no managed identity and description <plan_description>",
+    "Create Zonal recoveryplan <recoveryplan_name> in service group <service_group> with user-assigned managed identity <user_assigned_identity_resource_id> and plan description <plan_description>. Add CustomRunbook pre-action <runbook_action_name> with timeout <runbook_timeout_minutes> using Automation runbook <runbook_resource_id> that runs as associated user-assigned identity <runbook_identity_resource_id>",
+    "Delete goal assignment <goal_assignment_name> from service group <service_group>, leaving its underlying Azure resources intact",
+    "Delete resilience usage plan <usage_plan_name> from resource group <resource_group_name>",
+    "Delete the entire recoveryplan <recoveryplan_name> from service group <service_group>",
+    "Exclude resource <resource_arm_id> from zonal goal participation in assignment <goal_assignment_name> in service group <service_group> without deleting the resource",
+    "In resilience goal assignment <goal_assignment_name> in service group <service_group>, confirm that I approve the ZonePinnedVmWithZrsDisk zonal resilience solution for goal resource <resource_arm_id>",
+    "Include and configure recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> with selected protection solution type <protection_solution_type> and settings <protection_settings_json>",
+    "Include recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but I have not chosen CustomRunbook or AzureSiteRecovery protection settings",
+    "Include virtual machine recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> using AzureSiteRecovery protection settings <protection_settings_json> with disk reprotection, staging storage, and a test failover virtual network",
+    "Include virtual machine recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> using CrossZoneVMRecovery with target zone <target_zone>",
+    "Keep recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group>, but exclude it from recovery operations",
+    "Mark the FaultInjection stage of drill run <drill_run_name> for drill <drill_name> in service group <service_group> as complete",
+    "Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region>",
+    "Move the supporting resources of resilience drill <drill_name> in service group <service_group> to subscription <subscription> and region <region>, keeping its existing resource group <resource_group>",
+    "Record ManuallyAttested zonal resiliency for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>; I have verified its resilience",
+    "Recoveryplan <recoveryplan_name> is no longer needed. Delete it from resilience service group <service_group>",
+    "Remove resilience goal assignment <goal_assignment_name> in service group <service_group> and report whether it existed or was already absent",
+    "Remove the service group association named <enrollment_name> from resilience usage plan <usage_plan_name> in resource group <resource_group_name>",
+    "Remove the usage plan of service group <service_group>",
+    "Replace only the service-level indicator associations of goal assignment <goal_assignment_name> in service group <service_group> with existing Microsoft.Monitor/slis resource <existing_sli_arm_id> in that same service group, retaining its zonal requirement; I have read access to the indicator",
+    "Set up a Standard resilience usage plan named <usage_plan_name> in resource group <resource_group_name>",
+    "Set up a Zonal recoveryplan named <recoveryplan_name> in service group <service_group>. Use a system-assigned managed identity, description <plan_description>, and default recovery group description <default_group_description>",
+    "Switch resilience drill <drill_name> in service group <service_group> to the AutomatedCustomRole RBAC setup mode",
+    "Unenroll service group <service_group> from usage plan <usage_plan_name>, but keep the usage plan itself",
+    "Update enrollment <enrollment_name> under usage plan <usage_plan_name> to use service group <service_group> in resource group <resource_group_name>",
+    "Update or exclude the resources of resilience drill <drill_name> in service group <service_group>",
+    "Update recoveryplan <recoveryplan_name> in service group <service_group> by removing recovery resource <recovery_resource_id> from its resource membership while retaining the recoveryplan and its other recovery resources",
+    "Update recoveryplan <recoveryplan_name> in service group <service_group> to use both its system-assigned identity and user-assigned managed identity <user_assigned_identity_resource_id>. Preserve its existing plan settings",
+    "Update resilience drill <drill_name> in service group <service_group> to use manual RBAC setup",
+    "Update resilience usage plan <usage_plan_name> in resource group <resource_group_name> to use the Standard plan type",
+    "Update the identity of zonal resilience recoveryplan <recoveryplan_name> in service group <service_group> from system-assigned to a user-assigned managed identity",
+    "Use Azure Resiliency Management enrollment delete to remove enrollment <enrollment_name> from usage plan <usage_plan_name> in resource group <resource_group_name> while retaining the parent plan",
+    "Use Azure Resiliency Management enrollment delete to remove only enrollment <enrollment_name> from usage plan <usage_plan_name>; retain the parent usage plan",
+    "Use Azure Resiliency Management recovery-plan create or update to set recoveryplan <recoveryplan_name> in service group <service_group> to a system-assigned managed identity and description <plan_description>; retain its stored Zonal plan type and recovery groups",
+    "Use Azure Resiliency Management usage-plan delete to permanently remove the entire usage plan <usage_plan_name> from resource group <resource_group_name>, not an enrollment",
+    "Use Azure Resiliency Management usage-plan delete to remove usage plan <usage_plan_name> entirely from resource group <resource_group_name>; do not delete only a service-group enrollment",
+    "Use Azure Resiliency Management usage-plan enrollment create to associate service group <service_group> with usage plan <usage_plan_name> as enrollment <enrollment_name> in resource group <resource_group_name>"
+  ],
+  "assess_azure_resilience_goal_resources": [
+    "Recommend zonal resiliency capacity for resource <resource_arm_id> in goal assignment <goal_assignment_name> in service group <service_group>, without provisioning capacity",
+    "Rediscover resources for resilience goal assignment <goal_assignment_name> in service group <service_group> after membership removals, without changing manual attestations",
+    "Refresh the tracked resources of goal assignment <goal_assignment_name> in service group <service_group> after new members were added to the service group",
+    "Start a capacity assessment for automatically discovered non-resilient resources in goal assignment <goal_assignment_name> in service group <service_group> and return the operation ID"
+  ],
+  "add_notes_to_azure_resilience_drill_run": [
+    "Add the note <notes> to drill run <drill_run_name> for drill <drill_name> in service group <service_group>"
+  ],
+  "failover_azure_resilience_drill_run": [
+    "Fail over drill run <drill_run_name> from physical zone <source_location> and pause for manual input instead of automatic failover",
+    "Fail over drill run <drill_run_name> of drill <drill_name> in service group <service_group> from <source_location> with user consent allowed even though the recovery plan is not Ready",
+    "Fail over selected drill-resource ARM IDs <drill_resource_ids> in drill run <drill_run_name> of drill <drill_name> in service group <service_group> from physical zones <source_locations>, and automatically continue after fault injection",
+    "Start failover for drill run <drill_run_name> of drill <drill_name> in service group <service_group>, using source location <source_location>",
+    "Start failover for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group> from physical zone <source_location> and continue automatically to failover after fault injection"
+  ],
+  "resume_azure_resilience_drill_run": [
+    "Resume paused drill run <drill_run_name> for drill <drill_name> in service group <service_group> and proceed from fault injection to failover"
+  ],
+  "reprotect_azure_resilience_drill_run": [
+    "Reprotect failed-over resources in drill run <drill_run_name> for drill <drill_name> in service group <service_group>",
+    "Reprotect only recovery resources <resource_ids> in drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group>",
+    "Start reprotection for all qualified resources in drill run <drill_run_name> without specifying a resource selection"
+  ],
+  "generate_azure_resilience_drill_run_report": [
+    "Generate the report for drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group>",
+    "Regenerate the resilience drill run report for run <drill_run_name> of drill <drill_name> in service group <service_group> and show its generation status"
+  ],
+  "get_azure_resilience_drill_run_report_download_url": [
+    "Get the download URL for the generated report of drill run <drill_run_name> of resilience drill <drill_name> in service group <service_group>",
+    "Give me a link to download the HTML report for resilience drill run <drill_run_name> of drill <drill_name> in service group <service_group>"
+  ],
+  "finalize_azure_resilience_recoveryplan": [
+    "Complete or finalize the current recoveryplan operation for recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Finish finalizing recoveryplan <recoveryplan_name> in service group <service_group> and return the operation ID"
+  ],
+  "start_azure_resilience_recoveryplan_failover": [
+    "Fail over recoveryplan <recoveryplan_name> in service group <service_group> without specifying source locations or recovery resources",
+    "Start Azure Resiliency Management recovery-plan failover for qualified resources in recoveryplan <recoveryplan_name> from source location <source_location> in service group <service_group>; I authorize this failover"
+  ],
+  "start_azure_resilience_recoveryplan_reprotect": [
+    "Start Azure Resiliency Management recovery-plan reprotection after failover for selected recovery resources <recovery_resource_ids> in recoveryplan <recoveryplan_name> in service group <service_group>; do not use Azure Backup",
+    "Start Azure Resiliency Management recovery-plan reprotection for all qualified resources after failover in recoveryplan <recoveryplan_name> in service group <service_group>; do not use Azure Backup"
+  ],
+  "retry_azure_resilience_recovery_job": [
+    "Use Azure Resiliency Management recovery-job retry to rerun failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Use Azure Resiliency Management recovery-job retry to retry failed recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group>"
+  ],
+  "resume_azure_resilience_recovery_job": [
+    "Resume paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group> with description <description>",
+    "Use Azure Resiliency Management to resume, not retry, paused recovery job <recovery_job_name> for recoveryplan <recoveryplan_name> in service group <service_group>"
+  ],
+  "validate_azure_resilience_recoveryplan_for_failover": [
+    "Use Azure Resiliency Management failover qualification validation to check recovery resource <recovery_resource_id> in recoveryplan <recoveryplan_name> in service group <service_group> without executing failover",
+    "Validate Azure Resiliency Management recoveryplan <recoveryplan_name> in service group <service_group> for failover from <source_location>; user consent is Allowed, and return per-resource qualification results without updating resources",
+    "Validate recoveryplan <recoveryplan_name> for failover in service group <service_group>, but I have not specified a source location or selected recovery-resource ID",
+    "Validate which resources in recoveryplan <recoveryplan_name> in service group <service_group> can fail over from <source_location> and report blocking reasons"
+  ],
+  "validate_azure_resilience_recoveryplan_for_reprotect": [
+    "Check whether recovery resource <recovery_resource_id> in Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group> is qualified for reprotect without executing reprotect or updating resources",
+    "Validate all qualified resources in recoveryplan <recoveryplan_name> in service group <service_group> for reprotect after failover and report blocking reasons"
+  ],
+  "validate_azure_resilience_recoveryplan_for_operation": [
+    "Check whether recoveryplan <recoveryplan_name> can perform my intended recovery operation in service group <service_group>; ask me to choose Failover, FailoverCommit, Reprotect, TestFailover, or TestFailoverCleanup",
+    "Run operation-level pre-validation for Failover on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check whether the plan's current state, readiness, and permissions support the operation, not per-resource failover qualification",
+    "Run operation-level pre-validation for TestFailoverCleanup on Azure Resilience Management recoveryplan <recoveryplan_name> in service group <service_group>; check plan support, current state, readiness, and permissions without executing it",
+    "Run operation-specific pre-validation for recoveryplan <recoveryplan_name> in service group <service_group>, but ask me which supported operation to validate before proceeding",
+    "Validate an operation on recoveryplan <recoveryplan_name> in service group <service_group>",
+    "We were discussing failover earlier. Now validate an operation on recoveryplan <recoveryplan_name> in service group <service_group>, but do not assume which operation I mean"
+  ],
+  "check_azure_resilience_management_readiness": [
+    "Check whether recoveryplan <recoveryplan_name> and its protected resources are ready for recovery operations in service group <service_group>",
+    "Check whether resilience drill <drill_name> in service group <service_group> is ready to resync",
+    "Discover readiness issues for the resources in recoveryplan <recoveryplan_name> in service group <service_group>",
+    "Preflight resilience drill <drill_name> in service group <service_group> to confirm it is ready to run from source locations <source_locations>",
+    "Preflight resilience drill <drill_name> in service group <service_group> using default validation from source location <source_location>",
+    "Run a resync readiness check for resilience drill <drill_name> in service group <service_group>",
+    "Validate resilience drill <drill_name> in service group <service_group> for execution from source location <source_location>",
+    "Validate resilience drill <drill_name> in service group <service_group> for Reprotect without specifying source locations"
+  ],
+  "delete_azure_resilience_management_resources": [
+    "Delete resilience drill <drill_name> from service group <service_group>",
+    "Permanently remove drill <drill_name> in service group <service_group>"
+  ],
+  "manage_azure_resilience_management_drill_executions": [
+    "End resilience drill <drill_name> in service group <service_group> with a Success attestation and notes \"Validation completed\"",
+    "Run resilience drill <drill_name> in service group <service_group> as a TestFailover",
+    "Start resilience drill <drill_name> in service group <service_group> in Failover mode",
+    "Stop the running resilience drill <drill_name> in service group <service_group> and attest it as Failed with notes \"Validation failed\""
+  ],
   "get_azure_subscriptions_and_resource_groups": [
     "List all resource groups in my subscription",
+    "List all resources in my resource group",
     "List all subscriptions for my account",
     "Show me my resource groups",
     "Show me my subscriptions",
     "Show me the resource groups in my subscription",
+    "Show me what resources are in the resource group myRG",
     "What is my current subscription?",
+    "What resources exist in resource group myRG?",
     "What subscriptions do I have?"
   ],
   "get_azure_app_resource_details": [
@@ -22,6 +215,21 @@
     "What function apps do I have?",
     "What is the status of function app <function_app_name>?"
   ],
+  "get_azure_functions_info": [
+    "Check the available languages that Azure Functions supports.",
+    "Create a Timer trigger function in C# that runs every 5 minutes",
+    "Generate a MCP Tool trigger in TypeScript for Node.js 22",
+    "Generate the project files for a TypeScript Azure Functions app",
+    "Get the available triggers and bindings for C# Azure Functions.",
+    "Show me a Cosmos DB trigger with an output binding in Java",
+    "Show me all the Go Azure Function templates",
+    "Show me all the Python Azure Function templates",
+    "Use an Azure Functions project template to create boilerplate for a Java app using JDK 21",
+    "Use Azure Functions language discovery to list the supported languages and compare them",
+    "Use Azure Functions project get to return the generated files for a new Go Functions project; do not install dependencies, build, or run the project",
+    "Use Azure Functions project get to return the generated files for a new Python Functions project; do not install dependencies, build, or run the project",
+    "Use Azure Functions runtime discovery to list the available runtime versions"
+  ],
   "add_azure_app_service_database": [
     "Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group>",
     "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
@@ -35,35 +243,44 @@
     "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>"
   ],
   "get_azure_databases_details": [
-    "Display the properties of SQL server <server_name>",
-    "Get the configuration details for SQL server <server_name>",
-    "Get the configuration details for the SQL database <database_name> on server <server_name>",
-    "List all Azure SQL servers in resource group <resource_group_name>",
+    "Display the properties of Azure SQL server <server_name>",
+    "Find documents similar to \"<text_to_search>\" in container <container_name> of database <database_name> in cosmosdb account <account_name> using vector property <vector_property> with Azure OpenAI endpoint <endpoint> and deployment <deployment>",
+    "Find the document <document_id> in container <container_name> from database <database_name> of the cosmosdb account <account_name> using partition key <partition_key>",
+    "Get Azure SQL server <server_name> info",
+    "Get every Azure SQL server resource in resource group <resource_group_name> using Azure SQL server discovery",
+    "Get the collection of Azure SQL databases hosted by server <server_name>; return database resources rather than server details",
+    "Get the document with id <document_id> from container <container_name> in database <database_name> of the cosmosdb account <account_name>",
+    "Get the latest documents from <container_name> in <database_name> for cosmosdb account <account_name>",
+    "Infer the schema of container <container_name> in database <database_name> for cosmosdb account <account_name>",
     "List all cosmosdb accounts in my subscription",
     "List all databases in the Azure SQL server <server_name>",
     "List all MySQL databases in server <server>",
     "List all MySQL servers in my subscription",
     "List all PostgreSQL databases in server <server>",
     "List all PostgreSQL servers in my subscription",
+    "List all tables in the <schema> schema of the PostgreSQL database <database> in server <server>",
     "List all tables in the MySQL database <database> in server <server>",
     "List all tables in the PostgreSQL database <database> in server <server>",
     "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
+    "List all the cosmosdb accounts in resource group <resource_group>",
     "List all the databases in the cosmosdb account <account_name>",
-    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>",
-    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>",
-    "Show me all the databases configuration details in the Azure SQL server <server_name>",
-    "Show me every SQL server available in resource group <resource_group_name>",
+    "List all the databases in the cosmosdb account <account_name> in resource group <resource_group>",
+    "Run a full-text search for the word \"<search_phrase>\" against property <search_property> in container <container_name> of database <database_name> for cosmosdb account <account_name>",
+    "Sample <sample_size> documents from container <container_name> in database <database_name> of the cosmosdb account <account_name> and tell me the property names and types",
+    "Search documents in container <container_name> from database <database_name> of the cosmosdb account <account_name> where <search_property> contains \"<search_phrase>\"",
     "Show me if the parameter my PostgreSQL server <server> has replication enabled",
     "Show me my cosmosdb accounts",
     "Show me my MySQL servers",
     "Show me my PostgreSQL servers",
+    "Show me the 15 most recent documents in container <container_name> of database <database_name> in cosmosdb account <account_name>",
+    "Show me the Azure SQL database <database_name> details in server <server_name>",
+    "Show me the Azure SQL database <database_name> in server <server_name>",
+    "Show me the Azure SQL server <server_name> details",
     "Show me the configuration of MySQL server <server>",
     "Show me the configuration of PostgreSQL server <server>",
     "Show me the containers in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the cosmosdb accounts in my subscription",
     "Show me the databases in the cosmosdb account <account_name>",
-    "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
-    "Show me the details of SQL database <database_name> in server <server_name>",
     "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>",
     "Show me the MySQL databases in server <server>",
     "Show me the MySQL servers in my subscription",
@@ -73,7 +290,13 @@
     "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>",
     "Show me the tables in the MySQL database <database> in server <server>",
     "Show me the tables in the PostgreSQL database <database> in server <server>",
-    "Show me the value of connection timeout in seconds in my MySQL server <server>"
+    "Show me the top <count> documents in container <container_name> of database <database_name> for cosmosdb account <account_name> most similar to \"<text_to_search>\" using vector property <vector_property>, embedding deployment <deployment> at endpoint <endpoint> with <embedding_dimensions> dimensions, and project only <properties_to_select>",
+    "Show me the value of connection timeout in seconds in my MySQL server <server>",
+    "Use Azure SQL server get to list the Azure SQL server resources in resource group <resource_group_name>; the get operation lists servers, so do not use Resource Graph or generic resource listing"
+  ],
+  "execute_azure_database_query": [
+    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>",
+    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
   ],
   "create_azure_sql_databases_and_servers": [
     "Create a new Azure SQL server named <server_name> in resource group <resource_group_name>",
@@ -102,12 +325,19 @@
     "Set connection timeout to 20 seconds for my MySQL server <server>"
   ],
   "get_azure_resource_and_app_health_status": [
-    "Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period>",
+    "Analyze the critical path for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time>",
     "Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period>",
-    "Get metric definitions for <resource_type> <resource_name> from the namespace",
+    "Check whether <log_data_json> is compliant with stream <stream_name> of data collection rule <dcr_name> in resource group <resource_group>",
+    "Find distributed traces with errors in the last <time_period> for workspace <workspace_name> in resource group <resource_group>",
+    "Find records matching <search_query> in the Basic table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over <timespan>",
+    "Find top attributes distinguishing traces where duration_nano > <threshold> during <selection_start_time> to <selection_end_time> from the pool of traces in Trace Store workspace <workspace_name> in resource group <resource_group> from <overall_start_time> to <overall_end_time>",
+    "Get Azure Resource Health availability status for all resources in my subscription",
+    "Get details for the web test named <webtest_resource_name> in resource group <resource_group>",
+    "Get metric definitions for <resource_type> <resource_name> from the namespace <namespace>",
     "Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals",
+    "Get the <metric_name> metric for storage accounts <resource_name_1>, <resource_name_2>, and <resource_name_3> over the last <time_period>",
     "Get the availability status for resource <resource_name>",
-    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
+    "Get the top slowest distributed traces for <service_name> in the last <time_period> for workspace <workspace_name> in resource group <resource_group>",
     "Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period>",
     "List active service health events in my subscription",
     "List all available table types in the Log Analytics workspace <workspace_name>",
@@ -116,54 +346,78 @@
     "List all monitored resources in the Datadog resource <resource_name>",
     "List all service health events in my subscription",
     "List all tables in the Log Analytics workspace <workspace_name>",
-    "List all Web Test resources in my subscription",
-    "List all Web Test resources in my subscription in <resource_group>",
-    "List availability status for all resources in my subscription",
+    "List all web tests in my subscription",
+    "List Application Insights code optimization recommendations for improving application performance",
     "List code optimization recommendations across my Application Insights components",
     "List profiler recommendations for Application Insights in resource group <resource_group_name>",
     "List the activity logs of the last month for <resource_name>",
+    "List the Azure Monitor health models in my subscription",
+    "List the distributed trace accounts in my subscription",
     "Please help me diagnose issues with my app using app lens",
+    "Query <aggregation_type> <metric_name> for multiple <resource_type> resources <resource_name_1>, <resource_name_2> in one request",
+    "Query Azure Monitor metric time-series data to analyze performance trends and response-time metrics for Application Insights resource <resource_name> over the last <time_period>; do not query logs or metric definitions",
     "Query the <metric_name> metric for <resource_type> <resource_name> for the last <time_period>",
+    "Query the last <time_period> of distributed traces in workspace <workspace_name> in resource group <resource_group> where duration exceeds <duration>",
+    "Search for <search_query> in the Basic or Auxiliary table <table_name> in Log Analytics workspace <workspace_name> in resource group <resource_group> over the last day",
+    "Search the Auxiliary table <table_name> in workspace <workspace_name> in resource group <resource_group> for <search_query> during <timespan>, limited to <limit> results",
     "Show me all available metrics and their definitions for storage account <account_name>",
     "Show me Azure service health events for subscription <subscription_id>",
     "Show me code optimization recommendations for all Application Insights resources in my subscription",
     "Show me my Log Analytics workspaces",
-    "Show me performance improvement recommendations from Application Insights",
     "Show me planned maintenance events for my Azure services",
     "Show me the available table types in the Log Analytics workspace <workspace_name>",
+    "Show me the Azure Monitor Workspaces enabled for Trace Store",
+    "Show me the health model <health_model_name> in resource group <resource_group>",
     "Show me the health status of all my Azure resources",
-    "Show me the health status of entity <entity_id> using the health model <health_model_name>",
-    "Show me the health status of the storage account <storage_account_name>",
     "Show me the Log Analytics workspaces in my subscription",
     "Show me the logs for the past hour for the resource <resource_name> in the Log Analytics workspace <workspace_name>",
     "Show me the logs for the past hour in the Log Analytics workspace <workspace_name>",
     "Show me the monitored resources in the Datadog resource <resource_name>",
     "Show me the tables in the Log Analytics workspace <workspace_name>",
+    "Show me the trace and span schema fields for Azure Monitor Workspace <workspace_name> in resource group <resource_group>",
+    "Show me traces from service <service_name> over the last <time_period> for workspace <workspace_name> in resource group <resource_group>",
+    "Show p50, p95, and p99 critical-path latency grouped by service and operation for trace IDs <trace_ids> in Trace Store workspace <workspace_name> in resource group <resource_group> from <start_time> to <end_time>",
     "Use app lens to check why my app is slow?",
+    "Use one Azure Monitor batch metrics query to compare <metric_name> across resources <resource_name_1> and <resource_name_2> in resource group <resource_group> for the last <time_period>; do not issue a single-resource metrics query",
+    "Validate this log data against the schema of data collection rule <dcr_name> in resource group <resource_group> before uploading: <log_data_json>",
+    "What attributes distinguish traces where error_rate > <threshold> during <selection_start_time> to <selection_end_time> from the baseline in Trace Store workspace <workspace_name> in resource group <resource_group> over <overall_start_time> to <overall_end_time>?",
     "What does app lens say is wrong with my service?",
+    "What health models are in resource group <resource_group>?",
     "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
+    "What is the Azure Resource Health availability status of the storage account <storage_account_name>?",
     "What metric definitions are available for the Application Insights resource <resource_name>",
     "What resources in resource group <resource_group_name> have health issues?",
     "What service issues have occurred in the last 30 days?",
-    "What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period>"
+    "What span attributes are available in distributed trace workspace <workspace_name> in resource group <resource_group>?",
+    "What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period>",
+    "Which attributes distinguish traces with more than <span_count> spans during <selection_start_time> to <selection_end_time> from the overall pool in Trace Store workspace <workspace_name> in resource group <resource_group> during <overall_start_time> to <overall_end_time>? Compare up to 10000 traces",
+    "Which services dominate end-to-end latency on the critical path of trace IDs <trace_ids> in Azure Monitor Workspace Trace Store <workspace_name> in resource group <resource_group> from <start_time> to <end_time>?",
+    "Which trace stores do I have in resource group <resource_group>?"
   ],
-  "create_azure_monitor_webtests": [
-    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  "resume_azure_monitor_trace_query": [
+    "Continue waiting for the existing distributed trace query operation <operation_id> in workspace <workspace_name> in resource group <resource_group> without submitting a new query",
+    "Fetch the results of the running distributed trace query operation <operation_id> for workspace <workspace_name> in resource group <resource_group>",
+    "Resume polling the trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group>"
   ],
-  "update_azure_monitor_webtests": [
-    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  "create_or_update_azure_monitor_webtests": [
+    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component>",
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in resource group <resource_group> in a given <appinsights_component>"
+  ],
+  "cancel_azure_monitor_trace_query": [
+    "Cancel the running distributed trace query with operation id <operation_id> for workspace <workspace_name> in resource group <resource_group>"
+  ],
+  "upload_custom_logs_to_azure_monitor": [
+    "Send custom log data <log_data_json> to the Log Analytics table behind stream <stream_name> using data collection rule <dcr_immutable_id>",
+    "Upload these log records to Azure Monitor using data collection endpoint <ingestion_endpoint>, data collection rule <dcr_immutable_id> and stream <stream_name>: <log_data_json>"
   ],
   "deploy_azure_resources_and_applications": [
-    "Generate an Azure deployment plan for this project using Azure CLI and IaC templates",
     "Generate a CI/CD pipeline using GitHub Actions workflow to deploy my application to Azure with best practices",
-    "Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep",
-    "Generate the Azure architecture diagram for this application"
+    "Generate an Azure deployment plan for this project using Azure CLI and IaC templates",
+    "Generate the Azure architecture diagram for this application",
+    "Give me the IaC rules for deploying this application to Azure Container Apps using Azure CLI and Bicep"
   ],
   "get_azd_deployed_app_logs": [
     "Show me the log of the application deployed by azd"
-  ],
-  "deploy_azure_ai_models": [
-    "Deploy a GPT4o instance on my resource <resource-name>"
   ],
   "get_azure_app_config_settings": [
     "List all App Configuration stores in my subscription",
@@ -200,35 +454,318 @@
     "Provide compliance recommendations for my current Azure subscription",
     "Scan my Azure subscription for compliance recommendations"
   ],
+  "check_azure_data_manager_for_energy_health": [
+    "Check health and authentication for ADME endpoint <endpoint> and data partition <data-partition>",
+    "Check health for customer-hosted ADME endpoint <endpoint> in tenant <tenant> and data partition <data-partition>, using resource application ID <application-id> as the token audience"
+  ],
+  "get_azure_data_manager_for_energy_records": [
+    "Continue listing ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 using cursor <cursor> from endpoint <endpoint> in data partition <data-partition>",
+    "Fetch ADME record <record-id> with frame-of-reference conversion and report its conversion status and errors from endpoint <endpoint> in data partition <data-partition>",
+    "Fetch ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition>",
+    "Fetch only attributes data.Name and data.Description for ADME records <record-id-1> and <record-id-2> from endpoint <endpoint> in data partition <data-partition>",
+    "Fetch the full content of ADME records <record-id-1>, <record-id-2>, and <record-id-3> in one batch from endpoint <endpoint> and data partition <data-partition>",
+    "Get a OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition>",
+    "Get only attributes data.WellID and data.Name from OSDU record <record-id> at endpoint <endpoint> in data partition <data-partition>",
+    "Get version <record-version> of OSDU record <record-id> from endpoint <endpoint> in data partition <data-partition>",
+    "List ADME records of kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition>",
+    "List all versions of ADME record <record-id> from endpoint <endpoint> in data partition <data-partition>",
+    "List the first 25 ADME record IDs for kind osdu:wks:master-data--Well:1.0.0 from endpoint <endpoint> in data partition <data-partition>"
+  ],
+  "search_azure_data_manager_for_energy_records": [
+    "Continue an ADME snapshot search using cursor <cursor>, resending the original kind osdu:wks:master-data--Wellbore:*, limit, and returned fields id, kind, and data.Name unchanged, from endpoint <endpoint> in data partition <data-partition>",
+    "Query records as owner for kind osdu:wks:master-data--Well:1.0.0, highlighting <field>, from endpoint <endpoint> in data partition <data-partition>",
+    "Search ADME records matching <lucene-query> across wildcard or multiple kinds osdu:wks:master-data--Well:* and osdu:wks:master-data--Wellbore:*, returning only id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition>",
+    "Search ADME records of kind osdu:wks:master-data--Well:1.0.0 inside bounding box <bounding-box>, sorted by id descending, from endpoint <endpoint> in data partition <data-partition>",
+    "Search ADME records of kind osdu:wks:master-data--Well:1.0.0 matching indexed-field Lucene filter <lucene-query> from endpoint <endpoint> in data partition <data-partition>",
+    "Search more than 10000 ADME records across kind osdu:wks:master-data--Wellbore:* as a cursor-paginated point-in-time snapshot, returning id, kind, and data.Name, from endpoint <endpoint> in data partition <data-partition>",
+    "Search more than 10000 ADME records using the cursor API with its search_after option for kind osdu:wks:master-data--Wellbore:*, returning only id and kind, from endpoint <endpoint> in data partition <data-partition>"
+  ],
+  "get_azure_data_manager_for_energy_schemas": [
+    "Get ADME schema for kind <authority:source:entity-type:version> from endpoint <endpoint> in data partition <data-partition>",
+    "List all shared Well schemas from ADME endpoint <endpoint> in data partition <data-partition>",
+    "List DEVELOPMENT OSDU schemas from authority <authority> and source <source> in ADME endpoint <endpoint> and data partition <data-partition>",
+    "List the latest published SHARED OSDU schemas for entity type master-data--Well from ADME endpoint <endpoint> in data partition <data-partition>",
+    "Retrieve the full JSON definition for OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition>",
+    "Show the fields, types, and structure of OSDU schema <authority:source:entity-type:version> from ADME endpoint <endpoint> in data partition <data-partition>"
+  ],
+  "list_azure_advisor_recommendations": [
+    "Are these selected unused resources safe to delete?",
+    "Break down Advisor recommendations in service group <service-group> by impact",
+    "Break down Advisor recommendations in service group <service-group> by lifecycle status",
+    "Break down my Advisor recommendations by impact",
+    "Check deletion safety for resource <resource-id> under Advisor recommendation type <recommendation-type-id> in subscription <subscription>, requiring 45 days of inactivity",
+    "Check whether unused resources for Advisor recommendation type <recommendation-type-id> in service group <service-group> are safe to delete",
+    "Count zone resiliency Advisor recommendations in service group <service-group> by impacted resource type",
+    "Find active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription>",
+    "Find Advisor recommendations for resource <resource-id> in subscription <subscription> without metadata filters",
+    "Find Advisor recommendations for service group <service-group> matching Service Health tracking ID QNY1-HB8",
+    "Find individual active Azure Advisor high-impact Security recommendation records whose problem text mentions \"encryption\" in subscription <subscription>",
+    "Find individual active Azure Advisor recommendation records for resource <resource-id> matching Service Health tracking IDs QNY1-HB8 and 9G0V-_G8 in subscription <subscription>",
+    "Find individual active Azure Advisor recommendation records whose problem text mentions \"right-size\" in subscription <subscription>",
+    "For service group Trey Research Shared Services, what Azure resources am I paying for that are no longer being used?",
+    "Give me an executive summary of Advisor recommendations for service group <service-group>",
+    "Give me an executive summary of my Azure Advisor recommendations",
+    "Group active service-retirement Advisor recommendations in service group <service-group> by retirement date",
+    "How many active Advisor recommendations are in each category for service group <service-group>?",
+    "How many active Advisor recommendations do I have in each category?",
+    "How many Advisor recommendations are new, completed, dismissed, or postponed?",
+    "How much could we save by deleting those unused resources?",
+    "How much could we save by deleting unused resources in subscription <subscription>?",
+    "How much have we saved after cleaning up unused resources in service group <service-group>?",
+    "How much waste has accumulated since unused resources were flagged in subscription <subscription>?",
+    "List active Advisor recommendations in my subscription",
+    "List active Advisor recommendations with recommendation type ID 1d70919c-1a4a-4f79-8300-bb576c291e9d in subscription <subscription>",
+    "List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is March 31, 2027",
+    "List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or after March 31, 2027",
+    "List active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is on or before March 31, 2027",
+    "List Advisor recommendations for service group <service-group>",
+    "List Advisor recommendations in subscription <subscription> for Service Health tracking ID QNY1-HB8 without setting a subcategory",
+    "List Advisor recommendations in the ServiceUpgradeAndRetirement subcategory in subscription <subscription>",
+    "List Advisor recommendations using subscriptions [\"<subscription>\"], recommendation-type-ids [\"1d70919c-1a4a-4f79-8300-bb576c291e9d\"], and resource-types [\"Microsoft.Compute/virtualMachines\"]; do not use singular aliases",
+    "List all recommendations in my subscription",
+    "List all resources for my selected idle-resource recommendation type, following continuation tokens without treating the 15-row display expansion as data retrieval",
+    "List Azure Advisor Cost recommendation records and affected-resource details for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by largest savings first",
+    "List Azure Advisor Cost recommendation records and affected-resource details for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by savings, with available prioritization signals",
+    "List Azure Advisor recommendation records and affected-resource details for recommendation type <recommendation-type-id> in subscription <subscription>, filtered to retirement dates before March 31, 2027",
+    "List Azure Advisor recommendation records and affected-resource details for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by criticality, with available prioritization signals",
+    "List Azure Advisor recommendation records for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by criticality, without prioritization signals",
+    "List Azure Advisor recommendation records for recommendation type <recommendation-type-id> in subscription <subscription>, with prioritization and signal output disabled",
+    "List Azure Advisor recommendations with postponed status in subscription <subscription>",
+    "List completed Advisor recommendations in subscription <subscription>",
+    "List completed Azure Advisor recommendation records for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by criticality",
+    "List Cost Advisor recommendations for service group <service-group>",
+    "List Cost recommendations with resource type Microsoft.Storage/storageAccounts, resource <resource-id>, search encryption, subcategory ZoneResiliency, and top 5 in subscription <subscription>",
+    "List dismissed Azure Advisor recommendation records for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by criticality",
+    "List individual active Azure Advisor Cost recommendation records affecting storage accounts in subscription <subscription>",
+    "List individual active Azure Advisor recommendation records affecting resource named my-web-app in subscription <subscription>",
+    "List individual active Azure Advisor recommendation records and affected resources for Service Health tracking ID QNY1-HB8 in subscription <subscription>",
+    "List individual active Azure Advisor recommendation records in resource group <resource-group> in subscription <subscription>",
+    "List individual active Azure Advisor Security recommendation records in subscription <subscription>",
+    "List individual Advisor recommendations in subscription <subscription> whose metadata service family is Analytics",
+    "List individual Azure Advisor recommendation records for the recommendation-type group selected from the summary, keeping the same scope and filters",
+    "List Operational Excellence Advisor recommendations in subscription <subscription>",
+    "List Performance Advisor recommendations in subscription <subscription>",
+    "List postponed Advisor recommendations for service group <service-group>",
+    "List postponed Azure Advisor recommendation records for recommendation type <recommendation-type-id> in subscription <subscription>, ordered by criticality",
+    "List the top 5 individual active Azure Advisor Cost recommendation records affecting storage accounts whose problem text mentions \"encryption\" in subscription <subscription>",
+    "List unused-resource recommendations across subscriptions <subscription-1> and <subscription-2>",
+    "List unused-resource recommendations in resource group <resource-group> in subscription <subscription>",
+    "List up to 10 Azure Advisor recommendation records and their affected-resource details for the selected recommendation type, keeping the same scope and filters",
+    "Prioritize Advisor recommendation types in service group <service-group> whose metadata service family is Analytics",
+    "Rank the Azure resource types with the most critical Advisor recommendations",
+    "Recheck only the exact affected-resource ARM IDs in the previous result, without matching resource names",
+    "Report savings from unused resources deleted in July 2026 in subscription <subscription>, as of August 1, 2026 UTC",
+    "Return up to 10 individual medium-impact Azure Advisor Cost recommendation records in subscription <subscription>; no priority ranking is needed",
+    "Search individual active Azure Advisor recommendation records whose problem text mentions \"encryption\" in subscription <subscription>",
+    "Show active Azure Advisor service-retirement recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8, VN1S-1V8, and XV1P-9X8 whose retirement date is on or after September 19, 2026",
+    "Show active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is after March 31, 2027",
+    "Show active Azure Advisor service-retirement recommendations in subscription <subscription> whose retirement date is before March 31, 2027",
+    "Show active service-retirement Advisor recommendations for service group <service-group> whose retirement date is before March 31, 2027",
+    "Show Advisor recommendations for resource types Microsoft.Compute/virtualMachines and Microsoft.Web/serverfarms in subscription <subscription>",
+    "Show Advisor recommendations in subscription <subscription> for Service Health tracking IDs QNY1-HB8 and 9G0V-_G8",
+    "Show Advisor recommendations in the Reservations subcategory in subscription <subscription>",
+    "Show Advisor ZoneResiliency recommendations in subscription <subscription>",
+    "Show Advisor's unused-resource recommendations for service group <service-group>",
+    "Show affected resources for Advisor cost recommendation type <recommendation-type-id> in subscription <subscription>, largest savings first",
+    "Show dismissed recommendations of type <recommendation-type-id> in subscription <subscription>, with the signals behind their scores",
+    "Show dismissed unused-resource recommendations in service group <service-group>",
+    "Show estimated savings from unused resources across subscriptions <subscription-1> and <subscription-2>",
+    "Show High Availability Advisor recommendations for service group <service-group>",
+    "Show High Availability Advisor recommendations in subscription <subscription>",
+    "Show high-impact Advisor recommendations for service group <service-group>",
+    "Show individual active Azure Advisor high-impact Security recommendation records affecting storage accounts in subscription <subscription>",
+    "Show me Advisor recommendations in the subscription <subscription>",
+    "Show me dismissed Advisor recommendations in subscription <subscription>",
+    "Show me high-impact Security recommendations in subscription <subscription>",
+    "Show me low-impact Advisor recommendations in subscription <subscription>",
+    "Show me the top 10 Advisor recommendations in subscription <subscription>",
+    "Show me the top 10 medium-impact Advisor recommendations in subscription <subscription>",
+    "Show me the top actions I can take for my Advisor recommendations in subscription <subscription>",
+    "Show prioritized high-impact Cost Advisor recommendations for service group <service-group>",
+    "Show the distribution of my Advisor recommendations by business impact",
+    "Show the impact breakdown for Advisor recommendations affecting resource my-web-app",
+    "Show the most critical Advisor recommendations in subscription <subscription>",
+    "Show the next page of the selected Advisor recommendation type using its continuation token and the same scope, filters, ordering and page size",
+    "Show the prioritized Advisor recommendations for service group <service-group>",
+    "Show the resources affected by Advisor recommendation type <recommendation-type-id> in service group <service-group>, and include the signals behind their scores",
+    "Show the resources affected by that cost recommendation in service group <service-group>, largest savings first",
+    "Show the top 10 most common Advisor recommendation types",
+    "Show the top 10 most common Advisor recommendation types in service group <service-group>",
+    "Show the top 3 unused-resource savings opportunities in service group <service-group>",
+    "Show the top 5 Advisor recommendations for service group <service-group>",
+    "Show unused Storage resources in subscription <subscription> with at least USD 100 in annual potential savings",
+    "Show unused-resource savings for service group /providers/Microsoft.Management/serviceGroups/<service-group-id> in tenant <tenant>",
+    "Show up to 10 recommendation records and their affected-resource details for Advisor recommendation type <recommendation-type-id> in service group <service-group>, ordered by criticality",
+    "Summarize Advisor recommendations in subscription <subscription> whose metadata service family is AI + Machine Learning",
+    "Summarize completed Advisor recommendations by category in subscription <subscription>",
+    "Summarize the key themes from Advisor recommendations in service group <service-group>",
+    "Summarize the key themes from my Advisor recommendations",
+    "Use Advisor recommendation summary aggregation to count active recommendations for services retiring on December 31, 2026",
+    "Use Advisor recommendation summary aggregation to count active recommendations grouped by metadata subcategory; do not list individual recommendation records",
+    "Use Advisor recommendation summary aggregation to count active service-retirement recommendations grouped by retirement date; do not list individual records",
+    "Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or after March 31, 2026",
+    "Use Advisor recommendation summary aggregation to count active service-retirement recommendations with retirement dates on or before December 31, 2026",
+    "Use Advisor recommendation summary aggregation to count active zone resiliency recommendations grouped by impacted resource type; do not list individual recommendation records",
+    "Use Advisor recommendation summary aggregation to count overdue active service-retirement recommendations; return a count rather than individual records",
+    "Use Advisor recommendation summary aggregation to count recommendations grouped by lifecycle status; do not list individual recommendation records",
+    "Use Advisor recommendation summary aggregation to group counts by impact for recommendations whose problem text mentions \"encryption\"; do not list individual records",
+    "Use Advisor recommendation summary aggregation to rank impacted Azure resource types by the count of High-impact recommendations; do not list individual recommendation records",
+    "Validate all 125 unused resources for Advisor recommendation type <recommendation-type-id> in subscription <subscription>; do not stop at 25 or 100",
+    "What are the main themes across my active Advisor recommendations?",
+    "What are the top Advisor actions I can take for service group <service-group>?",
+    "What Azure resources am I paying for that are no longer being used?",
+    "Which Advisor recommendation type occurs most often for resources in my subscription?",
+    "Which Advisor recommendations should I fix first in subscription <subscription>?",
+    "Which Cost Advisor recommendations should I address first in subscription <subscription>?",
+    "Which service-retirement Advisor recommendations should I prioritize in service group <service-group>?"
+  ],
+  "update_azure_advisor_recommendation_state": [
+    "After confirmation, postpone Advisor recommendation <recommendation-id> in Service Group \"Trey Research Shared Services\" until <future-date-time>",
+    "Change Advisor recommendation <recommendation-id> state to Completed for service group <service-group>",
+    "Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in service group <service-group>",
+    "Dismiss Advisor recommendation <recommendation-id> because the risk is acceptable in subscription <subscription>",
+    "Dismiss selected Advisor recommendation IDs <id1>, <id2> in service group <service-group> because the risk is acceptable, and report each result",
+    "Dismiss unused-resource recommendation <recommendation-id> in subscription <subscription> because we are keeping the resource",
+    "Dismiss unused-resource recommendations <recommendation-id-1> and <recommendation-id-2> in subscription <subscription> because we use an alternative solution",
+    "Ignore Advisor recommendation <recommendation-id> because the risk is acceptable for service group <service-group>",
+    "Mark Advisor recommendation <recommendation-id> as completed in service group <service-group>",
+    "Mark Advisor recommendation <recommendation-id> as completed in subscription <subscription>",
+    "Mark Advisor recommendation <recommendation-id> done for service group <service-group>",
+    "Mark unused-resource recommendation <recommendation-id> as completed in subscription <subscription> after cleanup",
+    "Postpone Advisor recommendation <recommendation-id> until <future-date-time-with-offset> in service group <service-group>",
+    "Postpone Advisor recommendation <recommendation-id> until <future-date-time-with-offset> in subscription <subscription>",
+    "Postpone these selected Advisor recommendation IDs <id1>, <id2> together in subscription <subscription> until <future-date-time-with-offset>, with one batch approval",
+    "Postpone those unused-resource recommendations until <future-date-time-with-offset>",
+    "Postpone unused-resource recommendations <recommendation-id-1> and <recommendation-id-2> in service group <service-group> until <future-date-time-with-offset>",
+    "Reactivate Advisor recommendation <recommendation-id> in service group <service-group>",
+    "Reactivate Advisor recommendation <recommendation-id> in subscription <subscription>",
+    "Reactivate unused-resource recommendation <recommendation-id> in service group <service-group>",
+    "Reopen completed Advisor recommendation <recommendation-id> in subscription <subscription>",
+    "Reset Advisor recommendation <recommendation-id> to New in service group <service-group>",
+    "Set Advisor recommendation <recommendation-id> status to Dismissed in subscription <subscription>",
+    "Snooze Advisor recommendation <recommendation-id> until <future-date-time-with-offset> in subscription <subscription>",
+    "Update the customer state of Advisor recommendation <recommendation-id> in subscription <subscription>"
+  ],
+  "list_azure_advisor_recommendation_metadata": [
+    "List Advisor metadata catalog entries for service retirements on or after March 31, 2026; do not query active recommendation records",
+    "List Advisor metadata in the ServiceUpgradeAndRetirement subcategory",
+    "List Advisor recommendation metadata types applicable to virtual machines before deployment; use the metadata catalog, not active recommendation records",
+    "List Advisor recommendation metadata types that include service-retirement details; search the metadata catalog, not active recommendation records",
+    "List high-impact Advisor metadata for microsoft.sql/servers/databases",
+    "List the Advisor recommendation metadata catalog",
+    "Retrieve the next page of the Advisor metadata catalog using the returned continuation token, keeping the language and filters unchanged",
+    "Search the Advisor recommendation metadata catalog for the service-retirement entry with tracking ID QNY1-HB8; do not query active recommendation records",
+    "Show the German metadata catalog for Advisor recommendations"
+  ],
+  "get_azure_advisor_recommendation_metadata": [
+    "Get the Advisor metadata catalog entry for recommendation type <recommendation-type-id> and return its impact and category; do not list active recommendation records",
+    "Get the Advisor metadata for recommendation type id <recommendation-type-id>",
+    "Get the German (de) metadata for Advisor recommendation type <recommendation-type-id>",
+    "Show me the catalog details for Advisor recommendation type <recommendation-type-id>",
+    "Use Advisor recommendation metadata get to explain what recommendation type <recommendation-type-id> means, including its description and recommended actions; do not query active recommendation records",
+    "What does Advisor recommendation type <recommendation-type-id> mean?",
+    "When does Advisor recommendation type <recommendation-type-id> retire?"
+  ],
+  "list_azure_advisor_insights": [
+    "Compare accessible Service Groups by current remaining service retirement backlog using pre-aggregated Advisor insights",
+    "Compare accessible subscriptions by current remaining service retirement exposure using pre-aggregated Advisor insights",
+    "Get the ServiceRetirement insight for service group <service-group>, including Day 1 baseline exposure, current remaining exposure, and exposure reduction percentage",
+    "Get the ServiceRetirement insight for subscription <subscription>, including Day 1 baseline exposure, current remaining exposure, and exposure reduction percentage",
+    "How many idle resources exist in service group <service-group>, and what is their potential savings amount in USD?",
+    "How much has service group <service-group>'s service retirement exposure reduced or increased since its Day 1 baseline count?",
+    "How much has subscription <subscription>'s service retirement exposure reduced or increased since its Day 1 baseline count?",
+    "List Azure Advisor insights across all accessible Service Groups and subscriptions without specifying a scope",
+    "List Azure Advisor insights with the default limit of 50 results",
+    "List Azure Advisor insights with the maximum limit of 500 results",
+    "Show Advisor insights for subscription <subscription>, including each insight's name, domain, scope type and ID, last updated time, and typed KPI values with units for USD amounts",
+    "Show IdleResources insights for service group <service-group>, including idle resource counts and potential savings in USD",
+    "Show pre-aggregated Advisor insight KPIs for service group <service-group>, not individual resources, recommendation records, or recommendation summaries",
+    "Show pre-aggregated Azure Advisor insight KPIs for service group <service-group>",
+    "Show pre-aggregated Azure Advisor insight KPIs for subscription <subscription>",
+    "Show ZonalResiliency insight coverage percentages for service group <service-group>",
+    "Which accessible subscriptions or Service Groups have reached 100 percent service retirement exposure reduction with zero remaining exposure?"
+  ],
+  "get_azure_advisor_service_group_status": [
+    "Give me the status of all service groups",
+    "Give me the status of my service group commerce",
+    "How is the Advisor status of service group commerce calculated?",
+    "Retrieve the next page of Service Group status with the returned continuation token, keeping the tenant, filters and page size unchanged",
+    "Show me the tier 0 service groups that are in critical status",
+    "Use Advisor servicegroupintelligence get to show the status and criticality of service group <Service-group-name>",
+    "Which mission critical service groups need attention?",
+    "Which service groups are at risk?"
+  ],
+  "get_azure_advisor_remediation": [
+    "Fix or remediate the Advisor recommendation type id <recommendation-type-id>?",
+    "Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its post-remediation verification checks",
+    "Get the Advisor remediation package for recommendation type id <recommendation-type-id> and return its step-by-step remediation instructions",
+    "Get the Azure CLI commands to remediate recommendation type id <recommendation-type-id>",
+    "Get the deployment artifacts to fix Advisor recommendation type id <recommendation-type-id>",
+    "Get the executable automation artifacts to remediate recommendation type id <recommendation-type-id>",
+    "Get the remediation package for Advisor recommendation type id <recommendation-type-id>",
+    "Give me a ready-to-run script to remediate recommendation type id <recommendation-type-id>",
+    "Give me the CLI and PowerShell scripts to remediate recommendation type id <recommendation-type-id>",
+    "Is remediating recommendation type id <recommendation-type-id> destructive or reversible?",
+    "Resolve or remediate Advisor recommendation type id <recommendation-type-id>?",
+    "Show cleanup guidance for those unused disks",
+    "Show cleanup steps and scripts for unused-resource recommendation type <recommendation-type-id>",
+    "Show me the remediation actions for recommendation type id <recommendation-type-id>",
+    "Show me the remediation steps for Advisor recommendation type id <recommendation-type-id>",
+    "Use Advisor remediation get for recommendation type id <recommendation-type-id> and return its ARM template and Bicep remediation artifacts; do not apply or list recommendations",
+    "Use Advisor remediation get for recommendation type id <recommendation-type-id> and return its Terraform remediation artifact; do not apply or list recommendations"
+  ],
+  "get_azure_optimization_recommendations": [
+    "Explain the recommendation <recommendation_type_id> for resource <resource_id> and show its utilization",
+    "Show cost optimization recommendations across all my accessible subscriptions",
+    "Show me alternative resize options for the VM <resource_id>",
+    "Show me the top cost-saving recommendations for my subscription",
+    "What are my cost optimization recommendations?",
+    "What other SKUs could I resize <resource_id> to, excluding AMD processors?",
+    "Why is <resource_id> recommended for resizing to <target_sku>?"
+  ],
+  "get_azure_retail_pricing": [
+    "Get consumption price for Standard_E8s_v5 in brazil",
+    "Get pricing where productName contains 'Premium'",
+    "Here's my Bicep template. Can you estimate the monthly cost of this deployment? <bicep_template>",
+    "How much does a Standard_D4s_v5 VM cost per hour?",
+    "How much does Hot access tier storage cost per GB in westeurope?",
+    "Show savings plan prices for Standard_E4s_v5 Linux VMs",
+    "What is the price for Virtual Machines?",
+    "What is the price of Standard_D4s_v5 VMs?",
+    "What's the price difference between Premium_LRS and Standard_LRS storage?",
+    "Which is cheaper- Standard_D4s_v5 in eastus vs westeurope"
+  ],
   "generate_azure_cli_commands": [
-    "Create a Storage account with name <storage_account_name> using Azure CLI",
     "List all virtual machines in my subscription using Azure CLI",
-    "Show me the details of the storage account <account_name> with Azure CLI commands"
+    "Show me the details of the storage account <account_name> using Azure CLI commands",
+    "What's the Azure CLI command for getting a storage account's details?"
   ],
   "install_azure_cli_extensions": [
-    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
     "How to install azd",
     "What is Azure Functions Core tools and how to install it"
   ],
   "get_azure_security_configurations": [
     "List all available role assignments in my subscription",
+    "List the role assignments at scope /providers/Microsoft.Management/managementGroups/<management-group>",
+    "List the role assignments at scope /subscriptions/<subscription>/resourceGroups/<resource-group>",
     "Show me the available role assignments in my subscription"
+  ],
+  "get_azure_policy_assignments": [
+    "List Azure Policies in the subscription <subscription_id>"
   ],
   "get_azure_key_vault_items": [
     "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
     "Display the key details for <key_name> in vault <key_vault_account_name>",
     "Enumerate certificates in key vault <key_vault_account_name>",
     "Enumerate keys in key vault <key_vault_account_name>",
-    "Enumerate secrets in key vault <key_vault_account_name>",
     "Get the account settings for my key vault <key_vault_account_name>",
     "Get the certificate <certificate_name> from vault <key_vault_account_name>",
     "Get the key <key_name> from vault <key_vault_account_name>",
+    "Get the value of the <setting_name> administrative setting in Key Vault <key_vault_account_name>",
     "List all certificates in the key vault <key_vault_account_name>",
     "List all keys in the key vault <key_vault_account_name>",
-    "List all secrets in the key vault <key_vault_account_name>",
     "List certificate names in vault <key_vault_account_name>",
     "List key names in vault <key_vault_account_name>",
-    "List secrets names in vault <key_vault_account_name>",
     "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>",
     "Retrieve key metadata for <key_name> in vault <key_vault_account_name>",
     "Show certificate names in the key vault <key_vault_account_name>",
@@ -240,19 +777,21 @@
     "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
     "Show me the key <key_name> in the key vault <key_vault_account_name>",
     "Show me the keys in the key vault <key_vault_account_name>",
-    "Show me the secrets in the key vault <key_vault_account_name>",
-    "Show secrets names in the key vault <key_vault_account_name>",
     "What certificates are in the key vault <key_vault_account_name>?",
-    "What keys are in the key vault <key_vault_account_name>?",
-    "What secrets are in the key vault <key_vault_account_name>?",
-    "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
+    "What keys are in the key vault <key_vault_account_name>?"
   ],
   "get_azure_key_vault_secret_values": [
     "Display the secret details for <secret_name> in vault <key_vault_account_name>",
+    "Enumerate secrets in key vault <key_vault_account_name>",
+    "Get all secret names and metadata from vault <key_vault_account_name> by enumerating secrets without a specific secret name",
+    "Get the collection of secret metadata from key vault <key_vault_account_name>; omit a secret name to enumerate the vault's secrets",
     "Get the secret <secret_name> from vault <key_vault_account_name>",
+    "List all secrets in the key vault <key_vault_account_name>",
     "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>",
     "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
-    "Show me the secret <secret_name> in the key vault <key_vault_account_name>"
+    "Show me the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Show secrets names in the key vault <key_vault_account_name>",
+    "What secrets are in the key vault <key_vault_account_name>?"
   ],
   "create_azure_key_vault_items": [
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
@@ -281,8 +820,9 @@
     "Upload certificate file <file_path> to key vault <key_vault_account_name>"
   ],
   "get_azure_best_practices": [
-    "configure azure mcp in coding agent for my repo",
     "Fetch the Azure Terraform best practices",
+    "Get best practices for building AI applications in Azure",
+    "Get guidance for building agents with Microsoft Foundry",
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
@@ -290,15 +830,24 @@
     "Get the latest Azure Functions code generation best practices",
     "Get the latest Azure Functions deployment best practices",
     "Get the latest Azure Static Web Apps best practices",
+    "Get Well-Architected Framework guidance for App Service",
     "How can I use Bicep to create an Azure OpenAI service?",
+    "List all services with Well-Architected Framework guidance",
+    "List the Azure services available in the Well-Architected Framework service-guide catalog",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault",
-    "What are azure function best practices?"
+    "Show me the best practices for Microsoft Foundry agents code generation",
+    "Use the Azure MCP AI application best-practices tool to return guidance for building an app that manages travel queries; do not create files, install packages, or build the app",
+    "Use the Azure MCP AI application best-practices tool to return Microsoft Foundry guidance for an app that manages travel queries; do not create files, install packages, or build the app",
+    "Use the Azure MCP best-practices guidance tool to get instructions for configuring Azure MCP in a coding-agent repository; do not create files or invoke cloud-agent customization",
+    "What are azure function best practices?",
+    "What's the architectural guidance for Azure Cosmos DB",
+    "What's the waf guidance for a VM?"
   ],
   "design_azure_architecture": [
-    "Generate the azure architecture diagram for this application",
-    "Help me design an Azure cloud service that will serve as an ATM for users",
+    "Generate the Azure architecture diagram for this application",
     "How can I design a cloud service in Azure that will store and present videos for users?",
-    "I want to design a cloud app for ordering groceries"
+    "I want to design a cloud app for ordering groceries",
+    "Use Azure Cloud Architect design guidance to design a cloud service that will serve as an ATM for users"
   ],
   "get_azure_load_testing_details": [
     "Get all the load test runs for the test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>",
@@ -306,81 +855,97 @@
     "Get the load test with id <test-id> in the load test resource <test-resource> in resource group <resource-group>",
     "List all load testing resources in the resource group <resource-group> in my subscription"
   ],
-  "create_azure_load_testing": [
+  "create_or_update_azure_load_testing": [
     "Create a basic URL test using the following endpoint URL <test-url> that runs for 30 minutes with 45 virtual users. The test name is <sample-name> with the test id <test-id> and the load testing resource is <load-test-resource> in the resource group <resource-group> in my subscription",
     "Create a load test resource <load-test-resource-name> in the resource group <resource-group> in my subscription",
-    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>"
-  ],
-  "update_azure_load_testing_configurations": [
+    "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
     "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
   ],
   "get_azure_ai_resources_details": [
-    "Get details for Foundry resource <resource_name> in resource group <resource_group_name>",
     "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
     "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
-    "Get the schema configuration for knowledge index <index-name>",
-    "List all agents in my Foundry resource",
-    "List all Foundry model deployments",
-    "List all Foundry models",
-    "List all Foundry resources in my subscription",
-    "List all available OpenAI models in my Foundry resource",
     "List all Cognitive Search services in my subscription",
     "List all indexes in the Cognitive Search service <service-name>",
     "List all knowledge bases in the Azure AI Search service <service-name>",
     "List all knowledge bases in the search service <service-name>",
-    "List all knowledge indexes in my Foundry project",
     "List all knowledge sources in the Azure AI Search service <service-name>",
     "List all knowledge sources in the search service <service-name>",
+    "Run a semantic query for <search_term> against index <index-name> in Cognitive Search service <service-name> using semantic configuration <semantic-configuration>",
+    "Run a semantic query for <search_term> against the index <index-name> in Cognitive Search service <service-name>",
     "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>",
-    "Show me all Foundry model deployments",
+    "Search the index <index-name> in Cognitive Search service <service-name> for <search_term> using the simple query syntax",
     "Show me my Cognitive Search services",
-    "Show me the Foundry resources in resource group <resource_group_name>",
-    "Show me the available agents in my Foundry resource",
-    "Show me the available Foundry models",
     "Show me the Cognitive Search services in my subscription",
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
     "Show me the indexes in the Cognitive Search service <service-name>",
     "Show me the knowledge base <agent-name> in search service <service-name>",
     "Show me the knowledge bases in the Azure AI Search service <service-name>",
     "Show me the knowledge bases in the search service <service-name>",
-    "Show me the knowledge indexes in my Foundry project",
     "Show me the knowledge source <source-name> in search service <service-name>",
     "Show me the knowledge sources in the Azure AI Search service <service-name>",
-    "Show me the knowledge sources in the search service <service-name>",
-    "Show me the OpenAI model deployments in my Foundry resource",
-    "Show me the schema for knowledge index <index-name> in my Foundry resource"
+    "Show me the knowledge sources in the search service <service-name>"
   ],
   "retrieve_azure_ai_knowledge_base_content": [
     "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
     "Find information about <query> using knowledge base <agent-name> in search service <service-name>",
     "Query knowledge base <agent-name> in search service <service-name> about <query>",
+    "Query knowledge base <agent-name> in search service <service-name> about <query> and include source document fields so I can cite the original sources",
+    "Query knowledge base <agent-name> in search service <service-name> about <query> with references but without source document fields",
     "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
     "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
     "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
     "What does knowledge base <agent-name> in search service <service-name> know about <query>"
   ],
   "use_azure_openai_models": [
-    "Create a chat completion with the message \"Hello, how are you today?\" using my Foundry resource",
-    "Create a completion with the prompt \"What is Azure?\" using my Foundry resource",
-    "Create vector embeddings for my text using my Foundry resource",
-    "Generate embeddings for the text \"Azure OpenAI Service\" using my Foundry resource"
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Microsoft Foundry resource",
+    "Create a completion with the prompt \"What is Azure?\" using my Microsoft Foundry resource",
+    "Create vector embeddings for my text using my Microsoft Foundry resource",
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Microsoft Foundry resource"
   ],
-  "connect_foundry_agents": [
-    "Query an agent in my Foundry resource"
-  ],
-  "query_and_evaluate_foundry_agents": [
-    "Query and evaluate an agent in my Foundry resource for task_adherence"
-  ],
-  "evaluate_foundry_agents": [
-    "Evaluate the full query and response I got from my agent for task_adherence"
+  "connect_foundry_agents": [],
+  "query_and_evaluate_foundry_agents": [],
+  "evaluate_foundry_agents": [],
+  "get_foundry_extensions_resources": [
+    "Get the schema configuration for knowledge index <index-name>",
+    "List all available OpenAI models in my Microsoft Foundry resource",
+    "List all knowledge indexes in my Microsoft Foundry project",
+    "Show me the knowledge indexes in my Microsoft Foundry project",
+    "Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource",
+    "Use Microsoft Foundry Extensions to get details for resource <resource_name> in resource group <resource_group_name>",
+    "Use Microsoft Foundry Extensions to list all Microsoft Foundry resources in my subscription",
+    "Use Microsoft Foundry Extensions to list Microsoft Foundry resources in resource group <resource_group_name>",
+    "Use Microsoft Foundry Extensions to list the OpenAI model deployments in my Microsoft Foundry resource"
   ],
   "get_azure_storage_details": [
+    "Analyze managed disk <disk-resource-id> for IOPS or throughput throttling during the last 24 hours",
+    "Diagnose disk performance and throttling for virtual machine <vm-resource-id>",
+    "Diagnose disks <disk-name-1> and <disk-name-2> attached to VM <vm-name> in resource group <resource-group>",
+    "Diagnose disks attached to virtual machine scale set instance <vmss-instance-resource-id>",
+    "Diagnose disks attached to VM <vm-name> in resource group <resource-group> and subscription <subscription> using tenant <tenant>",
+    "Diagnose managed disk <disk-resource-id> and include host-side 1-second and 5-second latency signals",
     "Get details about the storage account <account>",
+    "Get the Azure NetApp Files account named <account> in resource group <resource_group>",
+    "Get the Azure NetApp Files accounts in resource group <resource_group>",
     "Get the details about blob <blob> in the container <container> in storage account <account>",
+    "Get the details of all the autoimport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Get the details of autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Get the details of expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Get the details of import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
     "List all blob containers in the storage account <account>",
+    "List all blob containers in the storage account <account> with prefix <prefix>",
     "List all blobs in the blob container <container> in the storage account <account>",
+    "List all blobs in the blob container <container> in the storage account <account> with prefix <prefix>",
+    "List all expansion jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "List all one-time import jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
     "List all storage accounts in my subscription including their location and SKU",
-    "List all tables in the storage account <storage-account>",
+    "List all tables in the storage account <account>",
+    "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
+    "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
+    "List the Azure Managed Lustre SKUs available in location <location>",
+    "Show disk configuration, per-LUN performance, throttled intervals, and recommendations for virtual machine <vm-resource-id>",
+    "Show me details for NetApp Files account <account> in resource group <resource_group>",
+    "Show me details for NetApp Files accounts in resource group <resource_group>",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the blobs in the blob container <container> in the storage account <account>",
     "Show me the containers in the storage account <account>",
@@ -388,33 +953,148 @@
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Show me the properties of the storage container <container> in the storage account <account>",
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
-    "Show me the tables in the storage account <storage-account>"
-  ],
-  "get_azure_managed_lustre_details": [
-    "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
-    "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
-    "List the Azure Managed Lustre SKUs available in location <location>",
+    "Show me the tables in the storage account <account>",
+    "Show the list of autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
     "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>",
     "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
+  "get_azure_compute_details": [
+    "Get details for virtual machine <vm-name> in resource group <resource-group-name>",
+    "Get details for virtual machine scale set <vmss-name> in resource group <resource-group-name>",
+    "Get details of disk <disk-name> in resource group <resource-group>",
+    "Get information about disk <disk-name>",
+    "Get the Azure Compute virtual machine inventory for my subscription",
+    "Get virtual machine <vm-name> with instance view in resource group <resource-group-name>",
+    "Get VM <vm-name> status and provisioning state in resource group <resource-group-name>",
+    "List all virtual machine scale sets in my subscription",
+    "List Azure Compute managed disk resources across my subscription; use the Compute disk inventory rather than a generic Resource Graph query",
+    "List Azure Compute virtual machine resources across my subscription; use the Compute VM inventory rather than a generic Resource Graph query",
+    "List Azure Compute virtual machine scale sets in resource group <resource-group-name>; return scale sets rather than individual virtual machines",
+    "List the Azure virtual machines in resource group <resource-group-name>",
+    "List virtual machine scale sets in resource group <resource-group-name>",
+    "Show me all VMs in my subscription",
+    "Show me instance <instance-id> of VMSS <vmss-name> in resource group <resource-group-name>",
+    "Show me the current status of VM <vm-name>",
+    "Show me virtual machine <vm-name> in resource group <resource-group-name>",
+    "Show me VM <vm-name> with runtime status in resource group <resource-group-name>",
+    "Show me VMs in resource group <resource-group-name>",
+    "Show me VMSS <vmss-name> in resource group <resource-group-name>",
+    "Use Azure Compute managed disk get inventory to list all managed disks in resource group <resource-group>; the get operation lists disks, so do not invent a disk list command or use generic resource listing",
+    "Use Azure Compute managed disk get inventory to list managed disk sizes in resource group <resource-group>; do not invent a disk list command or use generic resource listing",
+    "Use Azure Compute managed disk get inventory to list managed disks across my subscription; do not use Resource Graph or invent a disk list command",
+    "Use Azure Compute VM get inventory to list all virtual machines in resource group <resource-group-name>; the get operation lists VMs, so do not invent a VM list command or use generic resource listing",
+    "Use Azure Compute VM get with instance view to read the current power state of virtual machine <vm-name> in resource group <resource-group-name>; do not invoke a power-state mutation",
+    "What are the details of VM <vm-name> in resource group <resource-group-name>?",
+    "What is the status of instance <instance-id> in scale set <vmss-name>?"
+  ],
+  "create_azure_compute_vm_and_vmss": [
+    "Create a new Linux VM named <vm-name> in resource group <resource-group-name>",
+    "Create a virtual machine scale set named <vmss-name> in resource group <resource-group-name>",
+    "Create a virtual machine with Standard_D2s_v5 size in <resource-group-name>",
+    "Create a VM with Standard_E4s_v3 size and no public IP in <resource-group-name>",
+    "Create a VMSS with 3 instances in <resource-group-name>",
+    "Create a Windows VM with password authentication in resource group <resource-group-name>",
+    "Create Linux VM <vm-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name>",
+    "Create Linux VMSS with SSH authentication in <resource-group-name>",
+    "Create scale set <vmss-name> using SSH public key content 'ssh-ed25519 AAAAC3...' in <resource-group-name>",
+    "Create VM <vm-name> in <location> with SSH key authentication",
+    "Deploy a new VM with a 128GB Premium SSD OS disk in resource group <resource-group-name>",
+    "Deploy a virtual machine scale set with Rolling upgrade policy and 5 instances"
+  ],
+  "create_azure_managed_disk": [
+    "Create a 128 GB managed disk named <disk-name> in resource group <resource-group>",
+    "Create a 128 GB managed disk named <disk-name> in resource group <resource-group> with on-demand bursting enabled",
+    "Create a 128 GB Premium_LRS disk named <disk-name> in resource group <resource-group> with performance tier P30",
+    "Create a 64 GB Standard_LRS Linux disk named <disk-name> in resource group <resource-group> in zone 1",
+    "Create a data disk from LUN 0 of gallery image version <image-version-resource-id> in resource group <resource-group>",
+    "Create a disk <disk-name> in resource group <resource-group> with customer-managed encryption using disk encryption set <disk-encryption-set-id>",
+    "Create a disk from snapshot <snapshot-resource-id> in resource group <resource-group>",
+    "Create a disk ready for upload named <disk-name> in resource group <resource-group> with upload size 20972032 bytes",
+    "Create a managed disk <disk-name> in resource group <resource-group> from blob <blob-uri>",
+    "Create a managed disk <disk-name> in resource group <resource-group> in eastus",
+    "Create a managed disk <disk-name> in resource group <resource-group> with encryption type EncryptionAtRestWithPlatformAndCustomerKeys",
+    "Create a managed disk <disk-name> in resource group <resource-group> with network access policy DenyAll and disk access <disk-access-resource-id>",
+    "Create a managed disk <disk-name> in resource group <resource-group> with tags env=prod team=infra",
+    "Create a managed disk from gallery image version <image-version-resource-id> in resource group <resource-group>",
+    "Create a new Premium_LRS disk called <disk-name> in resource group <resource-group> with 256 GB",
+    "Create a shared managed disk named <disk-name> in resource group <resource-group> with 512 GB and max shares set to 3",
+    "Create a V2 hypervisor generation disk named <disk-name> in resource group <resource-group> with 128 GB",
+    "Create an Azure managed disk named <disk-name> in resource group <resource-group> as a Trusted Launch upload disk with UploadWithSecurityData type and TrustedLaunch security type",
+    "Create an UltraSSD_LRS disk named <disk-name> in resource group <resource-group> with 256 GB, 10000 IOPS, and 500 MBps throughput"
+  ],
+  "update_azure_compute_vm_and_vmss": [
+    "Add tags to scale set <vmss-name> in resource group <resource-group-name>",
+    "Add tags to VM <vm-name> in resource group <resource-group-name>",
+    "Change the size of VM <vm-name> to Standard_D4s_v3",
+    "Change upgrade policy to Rolling for <vmss-name>",
+    "Deallocate and power off VM <vm-name> to stop billing for compute resources while preserving the VM",
+    "Deallocate VM <vm-name> in resource group <resource-group-name> to release compute resources while keeping the VM",
+    "Enable automatic OS upgrades on VMSS <vmss-name>",
+    "Power off and shut down VM <vm-name> in resource group <resource-group-name>",
+    "Power on and start VM <vm-name> in resource group <resource-group-name>",
+    "Restart VM <vm-name> in resource group <resource-group-name>",
+    "Set the environment=production tag on Azure virtual machine <vm-name>",
+    "Start VM <vm-name> in resource group <resource-group-name> without waiting for completion",
+    "Stop the running virtual machine <vm-name> and power it off in resource group <resource-group-name>",
+    "Stop VM <vm-name> in resource group <resource-group-name> and skip the OS shutdown",
+    "Update the capacity of scale set <vmss-name> to 10",
+    "Update VM <vm-name> to enable boot diagnostics in resource group <resource-group-name>"
+  ],
+  "update_azure_managed_disk": [
+    "Change the encryption type of disk <disk-name> in resource group <resource-group> to EncryptionAtRestWithPlatformAndCustomerKeys",
+    "Change the network access policy of disk <disk-name> to DenyAll",
+    "Change the performance tier of disk <disk-name> in resource group <resource-group> to P40",
+    "Change the SKU of disk <disk-name> to Premium_LRS",
+    "Resize disk <disk-name> in resource group <resource-group> to 512 GB",
+    "Set disk access on disk <disk-name> in resource group <resource-group> to <disk-access-resource-id> with network access policy AllowPrivate",
+    "Set the IOPS limit on ultra disk <disk-name> in resource group <resource-group> to 10000",
+    "Set the max shares on disk <disk-name> in resource group <resource-group> to 2",
+    "Update disk <disk-name> in resource group <resource-group> to 256 GB",
+    "Update disk <disk-name> in resource group <resource-group> to use disk encryption set <disk-encryption-set-id>",
+    "Update disk <disk-name> in resource group <resource-group> with tags env=staging",
+    "Update disk <disk-name> to enable bursting",
+    "Update disk <disk-name> to Standard_LRS SKU with 512 GB size and tags env=dev",
+    "Update the throughput of disk <disk-name> in resource group <resource-group> to 500 MBps"
+  ],
+  "delete_azure_managed_disk": [
+    "Delete disk <disk-name> in resource group <resource-group> in my subscription",
+    "Delete the managed disk <disk-name> in resource group <resource-group>",
+    "Remove managed disk <disk-name> from resource group <resource-group>"
+  ],
   "create_azure_storage": [
-    "Create a new blob container named documents with container public access in storage account <account>",
     "Create a new storage account called testaccount123 in East US region",
     "Create a new storage account with Data Lake Storage Gen2 enabled",
+    "Create a one-time import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
     "Create a storage account with premium performance and LRS replication",
-    "Create the container using blob public access in storage account <account>",
+    "Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Create an autoimport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone>in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>",
+    "Create an expansion job to increase the storage capacity of the Azure Managed Lustre filesystem <filesystem_name> to <new_size_tib> TiB in resource group <resource_group_name>",
+    "Create Storage account <account> in <resource-group> in <location> and explicitly enable Shared Key authentication for an isolated test",
+    "Create Storage account <account> in <resource-group> in <location> with Shared Key authentication disabled",
     "Create the storage container mycontainer in storage account <account>"
   ],
-  "create_azure_managed_lustre": [
-    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
+  "create_azure_netapp_files_accounts": [
+    "Create a NetApp Files account called <account> in location <location> in resource group <resource_group>",
+    "Create an Azure NetApp Files account named <account> in <location> in resource group <resource_group>"
+  ],
+  "update_azure_netapp_files_accounts": [
+    "Set the tags on Azure NetApp Files account <account> in resource group <resource_group> to {\"environment\":\"production\"}"
   ],
   "update_azure_managed_lustre_filesystems": [
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
+  "manage_azure_managed_lustre_sync_jobs": [
+    "Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Cancel the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Cancel the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Delete the autoimport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Delete the expansion job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Delete the one-time import job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>"
+  ],
   "upload_azure_storage_blobs": [
-    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>",
-    "Upload a local file to my Azure blob storage container",
-    "Put file <local-file-path> into blob <blob> in storage container <container> on account <account>"
+    "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
   "get_azure_cache_for_redis_details": [
     "Get Redis clusters",
@@ -422,6 +1102,12 @@
     "Show me my Redis caches",
     "Show me my Redis resources",
     "Show me the Redis resources in my subscription"
+  ],
+  "create_azure_cache_for_redis": [
+    "Create a new Redis cluster with name <resource_name>, SKU <sku_name>",
+    "Create a new Redis resource for me",
+    "Create a new Redis resource named <resource_name> with SKU <sku_name> in resource group <resource_group_name>",
+    "Create a Redis cache named <resource_name> with SKU <sku_name> in resource group <resource_group_name>"
   ],
   "browse_azure_marketplace_products": [
     "Get details about marketplace product <product_name>",
@@ -441,11 +1127,11 @@
     "List all Event Grid topics in my subscription",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>",
     "List all Event Grid topics in subscription <subscription>",
-    "List all Event Hubs in my namespace <namespace_name>",
     "List all Event Hubs namespaces in my subscription",
     "List Event Grid subscriptions for subscription <subscription> in location <location>",
     "List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name>",
     "List Event Grid subscriptions for topic <topic_name> in subscription <subscription>",
+    "List the Event Hub entities inside Event Hubs namespace <namespace_name>; do not return namespace details",
     "Show all Event Grid subscriptions in my subscription",
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "Show me all Event Grid subscriptions for topic <topic_name>",
@@ -454,13 +1140,70 @@
     "Show me the details of service bus <service_bus_name> topic <topic_name>",
     "Show me the Event Grid topics in my subscription"
   ],
+  "get_azure_device_provisioning_service": [
+    "Get details for Device Provisioning Service <service_name> in resource group <resource_group_name>",
+    "Retrieve the ID scope, allocation policy, endpoints, and linked IoT Hubs for DPS instance <service_name>",
+    "Show the configuration of DPS instance <service_name> in subscription <subscription_id>"
+  ],
+  "validate_azure_device_provisioning_onboarding": [
+    "Check whether enrollment group <enrollment_group_id> is consistently configured with the linked IoT Hubs in DPS <service_name>",
+    "Compare this public device certificate chain with the selected DPS enrollment and explain compatibility limitations",
+    "Validate the existing DPS individual enrollment <registration_id> in service <service_name> and explain blockers or unverified conditions",
+    "Validate these 10 X.509 devices against enrollment group <enrollment_group_id> in DPS <service_name> before production rollout"
+  ],
+  "get_azure_iot_hub": [
+    "Get details for IoT Hub <hub_name> in resource group <resource_group_name>",
+    "Retrieve IoT Hub <hub_name> metadata from resource group <resource_group_name>",
+    "Show IoT Hub <hub_name> in resource group <resource_group_name> for subscription <subscription_id>"
+  ],
+  "get_azure_iot_hub_routing_endpoint_health": [
+    "Get the current routing endpoint health for endpoint <endpoint_name> on IoT Hub <hub_name>",
+    "Show routing endpoint health for IoT Hub <hub_name> in resource group <resource_group_name>"
+  ],
+  "get_azure_iot_hub_routing_endpoint_diagnostics": [
+    "Check whether routing endpoint <endpoint_name> on IoT Hub <hub_name> has a missing target, unavailable metrics, or observed delivery failures in the past six hours",
+    "Get routing endpoint diagnostics metrics for IoT Hub <hub_name> from <start_time> through <end_time>",
+    "Show routing endpoint diagnostics evidence for IoT Hub <hub_name> in resource group <resource_group_name>",
+    "Show which routing metrics returned no data for IoT Hub <hub_name> without assuming the hub is idle or healthy"
+  ],
+  "get_azure_iot_operations": [
+    "Get details for Azure IoT Operations instance <instance_name> in resource group <resource_group_name>",
+    "List all Azure IoT Operations instances in my subscription",
+    "Show the Azure IoT Operations instance <instance_name> in resource group <resource_group_name>",
+    "What Azure IoT Operations instances do I have in resource group <resource_group_name>?"
+  ],
+  "list_azure_iot_hub_devices": [
+    "List devices in IoT Hub <hub_name> in resource group <resource_group_name>",
+    "List the registered devices for IoT Hub <hub_name> in subscription <subscription_id>",
+    "Show the registered devices in IoT Hub <hub_name>"
+  ],
+  "get_azure_iot_hub_device": [
+    "Get the device identity for <device_id> in IoT Hub <hub_name>",
+    "Show device <device_id> in IoT Hub <hub_name> in resource group <resource_group_name>"
+  ],
+  "get_azure_iot_hub_device_statistics": [
+    "How many devices are registered in IoT Hub <hub_name>?",
+    "Show device statistics for IoT Hub <hub_name> in resource group <resource_group_name>"
+  ],
+  "get_azure_iot_hub_device_twin": [
+    "Get the device twin for <device_id> in IoT Hub <hub_name>",
+    "Show desired and reported properties for device <device_id> in IoT Hub <hub_name>"
+  ],
+  "run_azure_iot_hub_query": [
+    "Find devices in IoT Hub <hub_name> where reported batteryLevel is less than 20",
+    "Find devices in IoT Hub <hub_name> where tag environment equals 'production'",
+    "Run an IoT Hub device query equivalent to \"SELECT * FROM devices\" against IoT Hub <hub_name> in resource group <resource_group_name>; do not use the device-list operation",
+    "Run the query \"SELECT * FROM devices WHERE status = 'enabled'\" against IoT Hub <hub_name>"
+  ],
   "edit_azure_data_analytics_resources": [
+    "Create a new Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name>",
     "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
-    "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
+    "Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> and explicitly enable SAS authentication",
+    "Create Standard Event Hubs namespace <namespace_name> in <resource_group_name> in <location> with SAS authentication disabled",
+    "Delete Azure Event Hubs namespace <namespace_name> in resource group <resource_group_name>",
     "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
-    "Delete my namespace <namespace_name> in my resource group <resource_group_name>",
     "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
@@ -470,10 +1213,74 @@
     "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
     "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
   ],
+  "get_azure_file_shares": [
+    "Check if file share name <file_share_name> is available in <location> in subscription <subscription>",
+    "Get details of file share <file_share_name> in resource group <resource_group_name>",
+    "Is the file share name <file_share_name> available in <location>?",
+    "List all file shares in my subscription",
+    "Show me the file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the file shares in resource group <resource_group_name>",
+    "Verify availability of file share name <file_share_name> in <location>",
+    "What file shares exist in resource group <resource_group_name>?"
+  ],
+  "manage_azure_file_shares": [
+    "Create a file share named <file_share_name> in location <location> with resource group <resource_group_name>",
+    "Create a new file share <file_share_name> in resource group <resource_group_name>",
+    "Create an NFS file share <file_share_name> in location <location> in resource group <resource_group_name> with NFS encryption in transit enabled",
+    "Create file share <file_share_name> in resource group <resource_group_name> with 100 GB storage",
+    "Create NFS share <file_share_name> in <resource_group_name> in <location> with root squashing and encrypted transit",
+    "Create NFS share <file_share_name> in <resource_group_name> in <location>; explicitly enabled no root squashing and unencrypted transit for an isolated test",
+    "Delete the file share <file_share_name> from resource group <resource_group_name>",
+    "Disable NFS encryption in transit on file share <file_share_name> in resource group <resource_group_name>",
+    "Enable NFS encryption in transit for file share <file_share_name> in resource group <resource_group_name>",
+    "Modify file share <file_share_name> in resource group <resource_group_name> with new settings",
+    "Remove file share <file_share_name> in resource group <resource_group_name>",
+    "Set up a new file share <file_share_name> in resource group <resource_group_name>",
+    "Update file share <file_share_name> in resource group <resource_group_name>",
+    "Update the provisioned storage for file share <file_share_name> to 200 GB"
+  ],
+  "get_azure_file_share_snapshots": [
+    "Get snapshot <snapshot_id> for file share <file_share_name>",
+    "List all snapshots for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the snapshots of file share <file_share_name> in resource group <resource_group_name>"
+  ],
+  "manage_azure_file_share_snapshots": [
+    "Create a snapshot for file share <file_share_name> in resource group <resource_group_name>",
+    "Create a snapshot of file share <file_share_name> in resource group <resource_group_name>",
+    "Delete the snapshot <snapshot_id> from file share <file_share_name> in resource group <resource_group_name>",
+    "Remove snapshot <snapshot_id> from file share <file_share_name>",
+    "Take a snapshot of file share <file_share_name>",
+    "Update metadata for snapshot <snapshot_id> of file share <file_share_name>",
+    "Update the snapshot <snapshot_id> of file share <file_share_name> in resource group <resource_group_name>"
+  ],
+  "get_azure_file_share_private_endpoint_connections": [
+    "Get private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name>",
+    "List all private endpoint connections for file share <file_share_name> in resource group <resource_group_name>",
+    "Show me the private endpoint connections for file share <file_share_name>",
+    "What private endpoint connections exist for file share <file_share_name>?"
+  ],
+  "manage_azure_file_share_private_endpoint_connections": [
+    "Approve the private endpoint connection <connection_name> for file share <file_share_name> in resource group <resource_group_name>",
+    "Change the status of private endpoint connection <connection_name> to Rejected",
+    "Reject private endpoint connection <connection_name> for file share <file_share_name>",
+    "Update private endpoint connection <connection_name> status to Approved for file share <file_share_name>"
+  ],
+  "get_azure_file_shares_planning_information": [
+    "Get Azure Files provisioning recommendations for <provisioned_storage_in_gib> GiB in location <location> in subscription <subscription>",
+    "Get the Azure Files share service limits in my subscription for location <location>",
+    "Get the file share limits for subscription <subscription> in location <location>",
+    "Get the recommended Azure File Shares provisioning settings for <provisioned_storage_in_gib> GiB in location <location>",
+    "Show me Azure File Shares usage statistics in location <location>",
+    "Show me provisioning recommendations for <provisioned_storage_in_gib> GiB of Azure File Shares storage in location <location>",
+    "Use Azure File Shares service limits to show provisioning constants for location <location>; do not use Azure resource quota usage",
+    "Use Azure File Shares usage data for subscription <subscription> in location <location>; do not use Azure resource-provider quota usage",
+    "Use Azure File Shares usage statistics for subscription <subscription> in location <location>; do not use Azure resource-provider quota usage"
+  ],
   "get_azure_data_explorer_kusto_details": [
     "List all Data Explorer clusters in my subscription",
     "List all databases in the Data Explorer cluster <cluster_name>",
     "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
+    "Run `print value=1` three times in database <database_name> at cluster URI <cluster_uri> using the same server session and report each call's elapsed time",
     "Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>",
     "Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>",
     "Show me my Data Explorer clusters",
@@ -508,15 +1315,19 @@
     "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Get the configuration of AKS cluster <cluster-name> in resource group <resource-group>",
     "List all AKS clusters in my subscription",
+    "List all Azure Container Apps in my subscription",
     "List all Azure Container Registries in my subscription",
     "List all container registry repositories in my subscription",
+    "List container apps in resource group <resource_group_name>",
     "List container registries in resource group <resource_group_name>",
     "List nodepools for AKS cluster <cluster-name> in <resource-group>",
     "List repositories in the container registry <registry_name>",
+    "Show me my Azure Container Apps",
     "Show me my Azure Container Registries",
     "Show me my Azure Kubernetes Service clusters",
     "Show me my container registry repositories",
     "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
+    "Show me the container apps in resource group <resource_group_name>",
     "Show me the container registries in my subscription",
     "Show me the container registries in resource group <resource_group_name>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
@@ -527,6 +1338,18 @@
     "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
     "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
+  ],
+  "delete_azure_compute_vm_and_vmss": [
+    "Delete scale set <vmss-name> in resource group <resource-group-name>",
+    "Delete scale set <vmss-name> that does not exist in resource group <resource-group-name>",
+    "Delete VM <vm-name> in resource group <resource-group-name>",
+    "Delete VM <vm-name> that does not exist in resource group <resource-group-name>",
+    "Destroy virtual machine scale set <vmss-name> in resource group <resource-group-name>",
+    "Destroy VM <vm-name> in resource group <resource-group-name>",
+    "Force delete VM <vm-name> in resource group <resource-group-name> using force-deletion",
+    "Force delete VMSS <vmss-name> in resource group <resource-group-name> using force-deletion",
+    "Remove virtual machine <vm-name> from resource group <resource-group-name>",
+    "Remove VMSS <vmss-name> from resource group <resource-group-name>"
   ],
   "get_azure_virtual_desktop_details": [
     "List all host pools in my subscription",
@@ -540,6 +1363,15 @@
     "Show all the SignalRs information in <resource_group_name>",
     "Show me the details of SignalR <signalr_name>",
     "Show me the network information of SignalR runtime <signalr_name>"
+  ],
+  "get_azure_service_fabric_managed_cluster_nodes": [
+    "Get all nodes in Service Fabric managed cluster <cluster_name> in resource group <resource_group_name>",
+    "Get node <node_name> from Service Fabric managed cluster <cluster_name>",
+    "Show me the nodes and their status for Service Fabric managed cluster <cluster_name>"
+  ],
+  "restart_azure_service_fabric_managed_cluster_nodes": [
+    "Restart node <node_name_1> in node type <node_type_name> on managed cluster <cluster_name>",
+    "Restart nodes <node_name_1> and <node_name_2> in Service Fabric managed cluster <cluster_name> UD by UD"
   ],
   "get_azure_confidential_ledger_entries": [
     "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
@@ -561,7 +1393,6 @@
     "Send broadcast SMS to <phone-number-1> and <phone-number-2> saying \"Urgent notification\"",
     "Send email to multiple recipients: <email-address-1>, <email-address-2>",
     "Send email with CC to <email-address-1> and <email-address-2>",
-    "Send email with custom sender name <sender-name>",
     "Send email with reply-to address set to <email-address>",
     "Send HTML-formatted email to <email-address> with subject <subject>",
     "Send SMS from my communication service to <phone-number-1>",
@@ -581,5 +1412,531 @@
     "Transcribe audio with raw profanity output from file <file_path>",
     "Transcribe speech from audio file <file_path> with profanity filtering",
     "Transcribe the audio file <file_path> in Spanish language"
+  ],
+  "synthesize_text_to_speech": [
+    "Convert text to OGG/Opus format audio file",
+    "Convert text to speech and save to output.wav",
+    "Convert text to speech with Spanish language and save to spanish-audio.wav",
+    "Create audio file from text in French language with appropriate voice",
+    "Create MP3 audio file from text \"Welcome to Azure\" with high quality format",
+    "Generate speech audio from text \"Hello world\" using Azure Speech Services",
+    "Generate speech with custom voice model using endpoint ID <endpoint-id>",
+    "Synthesize long text content to audio file with streaming",
+    "Synthesize speech from \"Hello, welcome to Azure\" and save to welcome.wav",
+    "Synthesize speech with voice en-US-JennyNeural from text \"Azure AI Services\""
+  ],
+  "get_azure_storage_sync_services": [
+    "Get the details of Storage Sync Service <service-name> in resource group <resource-group-name>",
+    "List all Storage Sync Services in resource group <resource-group-name>"
+  ],
+  "get_azure_storage_sync_groups": [
+    "Get the details of sync group <syncgroup-name> in service <service-name>"
+  ],
+  "get_azure_storage_sync_cloud_endpoints": [
+    "Get the details of cloud endpoint <endpoint-name> in sync group <syncgroup-name>",
+    "List all cloud endpoints in sync group <syncgroup-name>"
+  ],
+  "get_azure_storage_sync_registered_servers": [
+    "Get the details of registered server <server-name> in service <service-name>",
+    "List all registered servers in service <service-name>"
+  ],
+  "get_azure_storage_sync_server_endpoints": [
+    "Get the details of server endpoint <endpoint-name> in sync group <syncgroup-name>",
+    "List all server endpoints in sync group <syncgroup-name>"
+  ],
+  "create_azure_storage_sync_services": [
+    "Create a new Storage Sync Service named <service-name> in resource group <resource-group-name> at location <location>"
+  ],
+  "create_azure_storage_sync_groups": [
+    "Create a new sync group named <syncgroup-name> in service <service-name>"
+  ],
+  "create_azure_storage_sync_cloud_endpoints": [
+    "Create a new cloud endpoint named <endpoint-name> for Azure file share <share-name> in storage account <storage-account-name>"
+  ],
+  "create_azure_storage_sync_server_endpoints": [
+    "Create a new server endpoint on server <server-name> pointing to local path <local-path> in sync group <syncgroup-name>"
+  ],
+  "update_azure_storage_sync_services": [
+    "Update Storage Sync Service <service-name> with new tags"
+  ],
+  "update_azure_storage_sync_registered_servers": [
+    "Update registered server <server-name> configuration in service <service-name>"
+  ],
+  "update_azure_storage_sync_cloud_endpoints": [
+    "Update cloud endpoint <endpoint-name> in sync group <syncgroup-name> to enumerate Azure file share changes every 7 days"
+  ],
+  "update_azure_storage_sync_server_endpoints": [
+    "Update server endpoint <endpoint-name> with cloud tiering enabled and tiering policy in sync group <syncgroup-name>"
+  ],
+  "delete_azure_storage_sync_services": [
+    "Delete the Storage Sync Service <service-name> from resource group <resource-group-name>"
+  ],
+  "delete_azure_storage_sync_groups": [
+    "Delete the sync group <syncgroup-name> from service <service-name>"
+  ],
+  "delete_azure_storage_sync_cloud_endpoints": [
+    "Delete the cloud endpoint <endpoint-name> from sync group <syncgroup-name>"
+  ],
+  "delete_azure_storage_sync_registered_servers": [
+    "Unregister server <server-name> from service <service-name>"
+  ],
+  "delete_azure_storage_sync_server_endpoints": [
+    "Delete the server endpoint <endpoint-name> from sync group <syncgroup-name>"
+  ],
+  "trigger_azure_storage_sync_cloud_endpoint_change_detection": [
+    "Trigger change detection on cloud endpoint <endpoint-name> in sync group <syncgroup-name> in service <service-name> for directory path <path>"
+  ],
+  "generate_azure_platform_landing_zones": [
+    "Check if a platform landing zone already exists for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Check parameter status for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Configure a multi-region landing zone with hub-spoke architecture for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Download the generated landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Generate a platform landing zone",
+    "Generate a platform landing zone and create a new migrate project with name <migrate-project-name> in resource group <resource-group-name>",
+    "Generate a platform landing zone for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Set up a single region landing zone with Azure Firewall for migrate project <migrate-project-name>",
+    "Start landing zone generation for migrate project <migrate-project-name>",
+    "Update the landing zone parameters for migrate project <migrate-project-name> in resource group <resource-group-name>",
+    "Verify if all parameters are set for migrate project <migrate-project-name>"
+  ],
+  "get_azure_landing_zone_modification_guidance": [
+    "Get Azure Migrate Platform Landing Zone guidance for configuring DDoS protection in an existing landing zone",
+    "Get guidance for changing resource naming patterns in my Landing Zone",
+    "Get guidance for enabling DDoS protection in my Landing Zone",
+    "Get guidance for implementing zero trust in my Platform Landing Zone",
+    "Get guidance for updating management groups in my Platform Landing Zone",
+    "How can I disable a policy in my Platform Landing Zone?",
+    "How do I turn off Bastion in my Platform Landing Zone?",
+    "List all available policies by archetype in my Landing Zone",
+    "Show me how to change IP address ranges in my Platform Landing Zone",
+    "Show me how to modify network topology in my Landing Zone",
+    "Use Azure Migrate Platform Landing Zone guidance to find policy assignments related to storage encryption in the landing-zone policy catalog"
+  ],
+  "get_azure_appservice_details": [
+    "Get app service details for <app-service-resource-id>",
+    "Get the deployment <deployment-id> for web app <webapp> in resource group <resource_group>",
+    "Get the details for web app <webapp> in resource group <resource_group>",
+    "List the Azure App Service diagnostic detectors for web app <webapp> in resource group <resource_group>",
+    "List the deployments for web app <webapp> in resource group <resource_group>",
+    "List the web apps in my subscription",
+    "Show me the web apps in my resource group <resource_group>",
+    "Use Azure App Service diagnostics to diagnose web app <webapp> in resource group <resource_group> with detector <detector_name>",
+    "Use Azure App Service diagnostics to diagnose web app <webapp> in resource group <resource_group> with detector <detector_name> between <start_time> and <end_time> with interval <interval>"
+  ],
+  "get_azure_appservice_sensitive_details": [
+    "Get the application settings for web app <webapp> in resource group <resource_group>",
+    "List the application settings for web app <webapp> in resource group <resource_group>"
+  ],
+  "update_azure_appservice_resources": [
+    "Add application setting <setting-name> with <setting-value> to web app <webapp> in resource group <resource_group>",
+    "Delete application setting <setting-name> from web app <webapp> in resource group <resource_group>",
+    "Set application setting <setting-name> with <setting-value> to web app <webapp> in resource group <resource_group>"
+  ],
+  "change_state_azure_appservice_resources": [
+    "Restart the web app <app> in resource group <resource_group>",
+    "Soft restart the web app <app> in resource group <resource_group> waiting for restart to complete",
+    "Start the web app <app> in resource group <resource_group>",
+    "Stop the web app <app> in resource group <resource_group>"
+  ],
+  "get_azure_monitor_instrumentation_learning_resource": [
+    "Get the onboarding learning resource at path <resource_path>",
+    "List all available Azure Monitor onboarding learning resources",
+    "Show me all learning resource paths for Azure Monitor instrumentation",
+    "Use Azure Monitor instrumentation onboarding to get the learning resource file at path <resource_path>",
+    "Use Azure Monitor instrumentation onboarding to get the learning-resource content at path <resource_path>",
+    "What learning resources are available for Azure Monitor instrumentation onboarding?"
+  ],
+  "guide_azure_monitor_instrumentation": [
+    "After completing the previous Azure Monitor instrumentation step, get the next action for session <session_id> with completion note <completion_note>",
+    "Analyze workspace <workspace_path> and return the first Azure Monitor instrumentation step",
+    "Begin guided Azure Monitor onboarding for project at <workspace_path> and give me step one",
+    "Continue Azure Monitor instrumentation onboarding by returning the next orchestrator action for session <session_id> after completion note <completion_note>",
+    "Continue instrumentation enhancement flow by sending selected keys <enhancement_keys> to session <session_id>",
+    "Get the next Azure Monitor instrumentation onboarding action for session <session_id> after I completed <completion_note>",
+    "Send brownfield code analysis findings JSON <findings_json> to Azure Monitor instrumentation session <session_id> after analysis was requested",
+    "Send chosen enhancement option keys <enhancement_keys> to Azure Monitor instrumentation onboarding session <session_id>",
+    "Send completed brownfield telemetry analysis <findings_json> to Azure Monitor instrumentation onboarding session <session_id>",
+    "Start Azure Monitor instrumentation orchestration for workspace <workspace_path>",
+    "Submit brownfield analysis findings <findings_json> to Azure Monitor instrumentation session <session_id>",
+    "Submit enhancement selection keys <enhancement_keys> for Azure Monitor instrumentation session <session_id> after enhancement options are presented"
+  ],
+  "get_azure_device_registry_details": [
+    "List all Device Registry namespaces in my subscription",
+    "List Device Registry namespaces in resource group <resource_group_name>",
+    "Show me the Device Registry namespaces in subscription <subscription>",
+    "What Device Registry namespaces do I have in my Azure subscription?"
+  ],
+  "get_azure_backup_details": [
+    "Check backup status for resource <resource_id> in location <location>",
+    "Check operation <operation_id> for protected item <protected_item> in container <container> and Azure fabric of RSV vault <vault_name>, resource group <resource_group>, subscription <subscription> and tenant <tenant>",
+    "Find all resources and sub-resources in resource group <resource_group> that are not protected by Azure Backup",
+    "Find unprotected resources of type <resource_type> in my subscription",
+    "Find unprotected SQL databases and file shares discovered by backup vaults in my subscription",
+    "Get asynchronous operation <operation_id> at vault scope for Recovery Services vault <vault_name> in resource group <resource_group> and subscription <subscription>",
+    "Get backup job <job_id> from vault <vault_name> in resource group <resource_group>",
+    "Get backup policy <policy_name> from vault <vault_name> in resource group <resource_group>",
+    "Get details of Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Get Private Endpoint Connection <pe_name> on vault <vault_name> in resource group <resource_group>",
+    "Get protected item details for <item_name> in vault <vault_name> and resource group <resource_group>",
+    "Get recovery points for protected item <item_name> in vault <vault_name> and resource group <resource_group>",
+    "Get Resource Guard <resource_guard> in resource group <resource_group>",
+    "Get the managed identity details, including principal ID, tenant ID, and attached user-assigned identities, for backup vault <vault_name> in resource group <resource_group>",
+    "Get the RSV protection container details for storage account <storage_account_name> in vault <vault_name> in resource group <resource_group>",
+    "Get vault <vault_name> in resource group <resource_group> and include all extended posture fields",
+    "Is container <container_name> registered in vault <vault_name> under resource group <resource_group>?",
+    "List all Private Endpoint Connections on Recovery Services vault <vault_name> in resource group <resource_group>",
+    "List all Resource Guards in resource group <resource_group>",
+    "List available recovery points for <item_name> in vault <vault_name> under resource group <resource_group>",
+    "List protectable items in vault <vault_name> in resource group <resource_group>",
+    "List storage accounts available for registration as Azure File share backup containers in vault <vault_name> and resource group <resource_group>",
+    "Look up storage account <storage_account_name> in RSV vault <vault_name> in resource group <resource_group>",
+    "Show available Azure File share backup containers for Recovery Services vault <vault_name>",
+    "Show backup status of protected item <item_name> in vault <vault_name> under resource group <resource_group>",
+    "Show me all items that can be backed up in vault <vault_name> under resource group <resource_group>",
+    "Show me Azure resources that are not backed up for resource type <resource_type>",
+    "Show me every MUA Resource Guard in my subscription",
+    "Show me information about Azure Backup vault <vault_name> in resource group <resource_group>",
+    "Show me the details of backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Show me the Private Endpoints attached to Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Show me the status of backup job <job_id> in vault <vault_name> under resource group <resource_group>",
+    "Show the current workload-specific inclusion or exclusion settings and all protected-item properties for <item_name> in vault <vault_name> and resource group <resource_group>",
+    "Show the full schedule, retention, and tiering details for backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Show the full security posture of vault <vault_name> in resource group <resource_group> including soft delete, immutability, encryption, and MUA",
+    "Show the identity type and attached user-assigned identity resource IDs for Data Protection backup vault <vault_name> in resource group <resource_group>",
+    "Show the status and actual job IDs, if any, for RSV operation <operation_id> in vault <vault_name>, resource group <resource_group> and subscription <subscription>; do not treat the operation ID as a job",
+    "What is the backup status of <resource_id> in location <location> in my subscription?"
+  ],
+  "create_azure_backup_resources": [
+    "Create a backup policy named <policy_name> for AzureIaasVM in vault <vault_name> in resource group <resource_group>",
+    "Create a Private Endpoint named <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> using subnet <subnet_id> and auto-approve it",
+    "Create a Recovery Services vault named <vault_name> in resource group <resource_group> in region <location> with vault-type 'rsv'",
+    "Create a Resource Guard named <resource_guard> in resource group <resource_group> in region <location>",
+    "Create a SQL backup policy <policy_name> with weekly full on Sundays at 02:00, differential on Wednesdays, and 60-minute log frequency in vault <vault_name> under resource group <resource_group>",
+    "Create a weekly VM policy <policy_name> on Mondays at 03:00 with 8 weekly, 12 monthly, 5 yearly retention and archive after 90 days in vault <vault_name> under resource group <resource_group>",
+    "Create an Azure Disk backup policy <policy_name> with daily, weekly, and monthly retention tiers and vault tier copy enabled in vault <vault_name> under resource group <resource_group>",
+    "Create an Enhanced VM backup policy <policy_name> with hourly schedule every 4 hours starting 08:00 for 12 hours in vault <vault_name> under resource group <resource_group>",
+    "Create Backup vault <vault_name> with vault-type 'dpp' in <resource_group> in <location>, rejecting the request if the vault exists",
+    "Create Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> in subnet <subnet_id> and link it to private DNS zone <dns_zone_id>",
+    "Create Recovery Services vault <vault_name> in <resource_group> in <location> and explicitly enable public network access for this test deployment",
+    "Create Recovery Services vault <vault_name> in <resource_group> in <location> with public network access disabled",
+    "Create Recovery Services vault <vault_name> in <resource_group> in <location>, but do not modify it if it already exists",
+    "Create Resource Guard <resource_guard> in <location> under resource group <resource_group> with tags env=prod,team=backup",
+    "Enable backup protection for <item_name> using policy <policy_name> in vault <vault_name> and resource group <resource_group>",
+    "Enable selective disk backup on VM <item_name> in vault <vault_name> under resource group <resource_group> excluding all attached data disks so only the OS disk is protected",
+    "Protect AKS cluster <cluster_id> with policy <policy_name> in vault <vault_name> and resource group <resource_group>, including cluster-scoped resources",
+    "Protect VM <item_name> in vault <vault_name> under resource group <resource_group> using policy <policy_name> and back up only data disks with LUNs 0,1",
+    "Provision a Private Endpoint <pe_name> for vault <vault_name> in resource group <resource_group> connected to subnet <subnet_id> with group-id AzureBackup",
+    "Set up a new backup policy called <policy_name> for AzureFileShare workload in vault <vault_name> under resource group <resource_group>",
+    "Set up a new backup vault called <vault_name> in <location> under resource group <resource_group> with vault-type 'dpp'",
+    "Set up a new MUA Resource Guard called <resource_guard> in <location> under resource group <resource_group> excluding operations deleteProtection,updatePolicy",
+    "Set up private connectivity for Recovery Services vault <vault_name> in resource group <resource_group> by creating Private Endpoint <pe_name> in subnet <subnet_id>",
+    "Start protecting my Azure VM by enabling backup on <item_name> in vault <vault_name> under resource group <resource_group>"
+  ],
+  "update_azure_backup_settings": [
+    "Add a monthly retention of 12 months on the 1st of every month to backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Add a weekly retention of 4 weeks on Sundays to backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Add a yearly retention of 5 years on the first Sunday of January to backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Approve pending Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action approve",
+    "Attach user-assigned managed identity <identity_id> to Recovery Services vault <vault_name> in resource group <resource_group> by setting identity type to UserAssigned",
+    "Change existing Enhanced Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to Hourly every 4 hours starting 08:00 for a 12-hour window, asserting Enhanced subtype and keeping existing positive daily retention",
+    "Change Standard Daily VM policy <policy_name> with positive daily retention in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday at 03:00 with explicit weekly retention of 8 weeks on Sunday and instant recovery retention of 5 days, removing daily retention and preserving monthly and yearly tiers",
+    "Change the backup policy attached to VM <item_name> in vault <vault_name> under resource group <resource_group> to <policy_name>",
+    "Change the identity type of Azure Backup vault <vault_name> in resource group <resource_group> to SystemAssigned",
+    "Change Weekly VM policy <policy_name> with no daily retention in RSV vault <vault_name> under resource group <resource_group> to Daily at 03:00 and supply daily retention of 30 days, preserving existing long-term tiers",
+    "Configure customer-managed key encryption on vault <vault_name> in resource group <resource_group> using key <key_name> from key vault <key_vault_uri> with system-assigned identity",
+    "Configure immutability state Unlocked with type AsPerPolicy on vault <vault_name> in resource group <resource_group>",
+    "Delete Private Endpoint Connection <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Delete Resource Guard <resource_guard> from resource group <resource_group>",
+    "Delete the MUA Resource Guard <resource_guard> from resource group <resource_group>",
+    "Detach Private Endpoint <pe_name> from Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Disable archive tiering explicitly using smart-tier false for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving unrelated settings",
+    "Disable multi-user authorization on vault <vault_name> in resource group <resource_group>",
+    "Disable public network access on Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Enable CMK encryption on vault <vault_name> using user-assigned identity <identity_id> and key <key_name> from <key_vault_uri>",
+    "Enable cross-region restore on GRS-enabled Recovery Services vault <vault_name> in resource group <resource_group> with vault-type rsv",
+    "Enable multi-user authorization on vault <vault_name> in resource group <resource_group> with resource guard <resource_guard_id>",
+    "Enable recommended archive tiering using smart-tier true for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, without supplying archive mode or days",
+    "Enable soft delete with 30 days retention for vault <vault_name> under resource group <resource_group>",
+    "Enable time-based immutability on vault <vault_name> with 90 days retention in resource group <resource_group>",
+    "For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window duration to 24 hours, preserving its interval and start",
+    "For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, change only the hourly window start to 08:00, preserving its interval and duration",
+    "For existing Enhanced Hourly VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, override its time zone with India Standard Time and set the hourly window start to 08:00 local, converted to 02:30 UTC, preserving interval and duration",
+    "For existing Enhanced Hourly VM policy <policy_name> with a 12-hour window in RSV vault <vault_name> under resource group <resource_group>, change only the hourly interval to 6 hours, preserving the window start, duration, retention, and tags",
+    "Link Resource Guard <resource_guard_id> to backup vault <vault_name> in resource group <resource_group> to enable MUA",
+    "Merge policy tags environment=test,owner=team into VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving all unmentioned tags and schedule and retention fields",
+    "Modify the daily retention to 60 days for backup policy <policy_name> in vault <vault_name> under resource group <resource_group>",
+    "Negative test: assert Enhanced subtype on existing Standard VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>; expect rejection, not subtype migration",
+    "Negative test: change Standard Daily VM policy <policy_name> with instant recovery retention of 2 days in RSV vault <vault_name> under resource group <resource_group> to Weekly on Sunday with explicit weekly retention of 8 weeks on Sunday, omitting instant recovery retention; expect rejection suggesting --instant-rp-retention-days 5 without silently changing the existing value",
+    "Negative test: request archive mode CopyOnExpiry for RSV VM policy <policy_name> in vault <vault_name> under resource group <resource_group>; expect rejection because update accepts TierAfter or TierRecommended",
+    "Negative test: switch Daily VM policy <policy_name> with positive daily retention to Weekly on Sunday in RSV vault <vault_name> under resource group <resource_group> without explicit weekly retention weeks and days; expect rejection rather than silent removal of daily retention",
+    "Negative test: switch Weekly VM policy <policy_name> with no daily retention to Daily at 03:00 in RSV vault <vault_name> under resource group <resource_group> without supplying daily retention; expect rejection",
+    "Reject Private Endpoint Connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> with action reject and description \"Not authorized\"",
+    "Remove the Resource Guard <resource_guard> in resource group <resource_group>",
+    "Remove the vault-side private endpoint connection <pe_name> on vault <vault_name> in resource group <resource_group>",
+    "Reset the disk exclusion settings for the protected VM <item_name> in vault <vault_name> and resource group <resource_group>",
+    "Respond to the pending private link connection <pe_name> on Recovery Services vault <vault_name> in resource group <resource_group> by approving it",
+    "Restore a soft-deleted backup item for datasource <datasource_id> in vault <vault_name> and resource group <resource_group>",
+    "Restore default ApplicationConsistent snapshot behavior for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>",
+    "Set archive mode TierAfter with archive after 90 days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, preserving other policy settings",
+    "Set archive mode TierRecommended without archive days for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>",
+    "Set immutability to Unlocked with policy-based type on vault <vault_name> in resource group <resource_group>",
+    "Set snapshot consistency to CrashConsistent for VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group>, leaving schedule and retention unchanged",
+    "Set soft delete state to AlwaysOn with 14 days retention for vault <vault_name> in resource group <resource_group>",
+    "Set up customer-managed encryption for backup vault <vault_name> in resource group <resource_group>",
+    "Turn off MUA on backup vault <vault_name> in resource group <resource_group>",
+    "Turn on cross-region restore for GRS-enabled DPP backup vault <vault_name> under resource group <resource_group> with vault-type dpp",
+    "Turn on MUA for DPP backup vault <vault_name> in resource group <resource_group> using Resource Guard <resource_guard_id>",
+    "Turn on soft delete with 14 day retention on Azure Backup vault <vault_name> in resource group <resource_group>",
+    "Undelete the accidentally deleted backup for VM <datasource_id> in vault <vault_name> under resource group <resource_group>",
+    "Unlink the Resource Guard from vault <vault_name> in resource group <resource_group> and disable MUA",
+    "Update Azure Backup vault <vault_name> in resource group <resource_group> to enable soft delete",
+    "Update backup policy <policy_name> in vault <vault_name> in resource group <resource_group> to change the schedule time to 04:00",
+    "Update Daily VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> with comma-separated schedule times 02:00,14:00, reconciling all retention times and leaving schedule-specific limits to Azure",
+    "Update existing Enhanced VM policy <policy_name> in RSV vault <vault_name> under resource group <resource_group> to 7 days of instant recovery retention and instant recovery resource-group prefix restorecache, preserving the existing suffix and all omitted settings",
+    "Update the selective disk configuration on VM <item_name> in vault <vault_name> under resource group <resource_group> to exclude LUNs 0,2"
+  ],
+  "refresh_azure_backup_containers": [
+    "Discover file shares in backup container <container_name> on Recovery Services vault <vault_name> under resource group <resource_group>",
+    "Inquire the registered storage account <storage_account> on vault <vault_name> in resource group <resource_group> to discover Azure File shares available for backup",
+    "Kick off backup container refresh on vault <vault_name> in resource group <resource_group> before registering my storage account for Azure Files backup",
+    "Onboard my storage account <storage_account> for Azure Files backup on vault <vault_name> under resource group <resource_group> without acquiring a storage account lock",
+    "Refresh Azure VM backup containers on Recovery Services vault <vault_name> in resource group <resource_group>",
+    "Refresh backup containers on vault <vault_name> in resource group <resource_group> to discover new Azure File share storage accounts",
+    "Register storage account <storage_account> with Recovery Services vault <vault_name> in resource group <resource_group> as an Azure File share backup container",
+    "Trigger container discovery on Recovery Services vault <vault_name> under resource group <resource_group> so the vault picks up newly authorized storage accounts"
+  ],
+  "get_azure_terraform_documentation": [
+    "Get AzAPI docs for Microsoft.Network/virtualNetworks",
+    "Get AzAPI Terraform provider documentation for Microsoft.Compute/virtualMachines with API version 2024-07-01",
+    "Get AzAPI Terraform provider documentation for Microsoft.Storage/storageAccounts",
+    "Get the data source documentation for azurerm_subscription",
+    "Get the documentation for avm-res-storage-storageaccount version 0.1.0",
+    "Get the documentation for azurerm_virtual_network",
+    "Get the documentation for the avm-ptn-aiml-ai-foundry pattern module",
+    "Get the documentation for the latest version of Azure Verified Module avm-res-network-virtualnetwork",
+    "Get the Terraform AzureRM provider documentation for the 'sku' argument of azurerm_storage_account",
+    "List all available Azure Verified Modules",
+    "List the AVM pattern modules available for Terraform",
+    "Show all versions of avm-res-network-virtualnetwork",
+    "Show all versions of the avm-ptn-aiml-ai-foundry pattern module",
+    "Show me the available AVM modules for Terraform",
+    "Show me the Terraform provider arguments for azurerm_storage_account",
+    "What versions are available for avm-res-storage-storageaccount?"
+  ],
+  "generate_azure_terraform_export_and_validation_commands": [
+    "Export all resources in resource group my-rg to Terraform",
+    "Export resource group my-rg to Terraform using the azapi provider",
+    "Export the resource /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> to Terraform",
+    "Generate an aztfexport command for /subscriptions/<subscription>/resourceGroups/<resource-group>/providers/Microsoft.Storage/storageAccounts/<account> using the azapi provider without running the export",
+    "Generate an aztfexport command that uses a resource graph query to export all storage accounts in my subscription",
+    "Generate an aztfexport command to export a single Azure resource to Terraform",
+    "Generate an aztfexport command to export all resources in my-rg with the azapi provider without running the export",
+    "Generate an aztfexport query command to export resources matching \"type == 'Microsoft.Storage/storageAccounts'\"",
+    "Validate a Terraform plan JSON file in ./plan-output against Azure policies with high severity filter",
+    "Validate my Terraform plan file against Azure-Proactive-Resiliency-Library-v2 policies",
+    "Validate Terraform files in ./infra using the avmsec policy set",
+    "Validate Terraform files in ./my-terraform-folder against Azure security policies"
+  ],
+  "get_azure_sre_agent_resources": [
+    "Generate a YAML workflow for a tool named <tool_name>",
+    "Get a complete list of all indexed knowledge base documents stored in SRE Agent <agent_name> memory without filtering",
+    "Get the definition of custom tool <tool_name> from SRE Agent <agent_name>",
+    "List all Azure SRE Agent resources in my subscription",
+    "List all skills available on SRE Agent <agent_name>",
+    "List the active incidents on SRE Agent <agent_name>",
+    "List the active threads on SRE Agent <agent_name>",
+    "List the common prompts on SRE Agent <agent_name>",
+    "List the connectors configured on SRE Agent <agent_name>",
+    "List the custom tools attached to SRE Agent <agent_name>",
+    "List the hook activation states for thread <thread_id> on SRE Agent <agent_name>",
+    "List the hooks configured for SRE Agent <agent_name>",
+    "List the incident response plans configured on SRE Agent <agent_name>",
+    "List the scheduled tasks on SRE Agent <agent_name>",
+    "Search the SRE Agent knowledge base for <text>",
+    "Show me the common prompt <prompt_name> on SRE Agent <agent_name>",
+    "Show me the details of connector <connector_name> on SRE Agent <agent_name>",
+    "Show me the details of hook <hook_name> on SRE Agent <agent_name>",
+    "Show me the details of SRE Agent <agent_name> in resource group <resource_group>",
+    "Show me the scheduled task <task_id> on SRE Agent <agent_name>",
+    "Show me the SRE Agent documentation for the topic <topic>",
+    "Show me thread <thread_id> on SRE Agent <agent_name>",
+    "Use SRE Agent architecture planning for these requirements: <requirements>",
+    "Validate the following SRE Agent workflow YAML"
+  ],
+  "test_azure_sre_agent_connector": [
+    "Test the connector <connector_name> on SRE Agent <agent_name> and list its tools"
+  ],
+  "manage_azure_sre_agent_resources": [
+    "Activate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name>",
+    "Add a new skill called <skill_name> to SRE Agent <agent_name>",
+    "Create a custom tool called <tool_name> on SRE Agent <agent_name>",
+    "Create a Kusto connector on SRE Agent <agent_name>",
+    "Deactivate hook <hook_name> on thread <thread_id> of SRE Agent <agent_name>",
+    "Delete knowledge base document <name> from SRE Agent <agent_name>",
+    "Delete the skill <skill_name> from SRE Agent <agent_name>",
+    "Permanently remove and erase common prompt <prompt_name> from SRE Agent <agent_name>",
+    "Remove and permanently delete hook <hook_name> from SRE Agent <agent_name>",
+    "Remove the connector <connector_name> from SRE Agent <agent_name>",
+    "Use SRE Agent sub-agent management to create sub-agent <name> on SRE Agent <agent_name>",
+    "Use SRE Agent sub-agent management to delete sub-agent <name> from SRE Agent <agent_name>"
+  ],
+  "create_azure_sre_agent_mcp_connector": [
+    "Create an MCP connector on SRE Agent <agent_name>"
+  ],
+  "operate_azure_sre_agent_resources": [
+    "Apply the workflow YAML to SRE Agent <agent_name>",
+    "Create a common prompt called <prompt_name> on SRE Agent <agent_name>",
+    "Pause the scheduled task <task_id> on SRE Agent <agent_name>",
+    "Resume the scheduled task <task_id> on SRE Agent <agent_name>"
+  ],
+  "setup_azure_sre_agent_incident_integrations": [
+    "Configure the PagerDuty incident-management integration for SRE Agent <agent_name>",
+    "Configure the ServiceNow incident-management integration for SRE Agent <agent_name>"
+  ],
+  "ingest_azure_sre_agent_events_and_memories": [
+    "Add a document called <name> to the SRE Agent knowledge base",
+    "Create a new incident investigation for SRE Agent <agent_name> with title <title>",
+    "Enable a new incident response plan on SRE Agent <agent_name> with alert filter <filter> and handler <handler>",
+    "Reindex the knowledge base documents for SRE Agent <agent_name>"
+  ],
+  "interact_with_azure_sre_agent_threads_and_tasks": [
+    "Investigate <issue> on SRE Agent <agent_name> in yolo mode, automatically granting all pending approvals without waiting",
+    "Schedule a recurring task on SRE Agent <agent_name> that runs every Monday",
+    "Send a message to thread <thread_id> on SRE Agent <agent_name>",
+    "Start a new thread on SRE Agent <agent_name>",
+    "Use SRE Agent <agent_name> to investigate this issue: <issue>"
+  ],
+  "delete_azure_sre_agent_threads_and_tasks": [
+    "Delete the scheduled task <task_id> from SRE Agent <agent_name>",
+    "Delete thread <thread_id> from SRE Agent <agent_name>"
+  ],
+  "derive_azure_infrastructure_insights": [
+    "Analyze my Azure infrastructure and surface patterns to help me plan my next project",
+    "Analyze my tenant and give me insights about the overall infrastructure",
+    "Analyze subscription <subscription_id> for architectural patterns",
+    "Generate insights about my Azure environment to help me plan a new data analytics platform",
+    "Generate insights from my current subscription",
+    "Use Azure Insights to analyze my existing Azure environment and summarize its deployed resources",
+    "Use Azure Insights to analyze what is deployed across my Azure environment and highlight notable infrastructure patterns",
+    "What insights can you derive about my subscription to help me plan a containerized microservices workload on AKS?"
+  ],
+  "prepare_azure_resiliency_file": [
+    "Prepare `C:\\workspace\\architecture.md` as a local attachment and return an attachment ID; do not assess the architecture yet",
+    "Prepare `C:\\workspace\\infra\\main.bicep` for review"
+  ],
+  "use_azure_resiliency_agent": [
+    "Assess an App Service API, PostgreSQL Flexible Server, and Redis architecture in East US 2 for availability-zone resiliency",
+    "Assess this application architecture for resiliency; the target region has not been selected yet",
+    "Check whether Service Group `ContosoAppFleetSG` is enrolled in a Standard Usage Plan",
+    "Correct the attached ARM JSON while preserving resource names, API versions, and parameter names",
+    "Correct the attached Bicep without changing existing resource names, parameters, or module relationships",
+    "Correct the attached Terraform while preserving resource addresses, variables, and provider constraints",
+    "Create a new zone-resilient Azure Container Registry from scratch in East US 2 and generate ARM JSON",
+    "Explain the difference between resiliency, high availability, and zone redundancy in Azure",
+    "Generate resilient infrastructure-as-code for this architecture; ask me which format to use",
+    "Generate zone-resilient Bicep for an App Service API with PostgreSQL and Redis in East US 2",
+    "How should I begin improving the resiliency of a new Azure application?",
+    "List the available Standard Azure Resilience Management Usage Plans",
+    "List the members of Azure Service Group `ContosoAppFleetSG`",
+    "List the resources included in or excluded from the goal for Service Group `ContosoAppFleetSG`",
+    "Review the attached `main.bicep`, parameter file, and local modules for availability-zone resiliency",
+    "Review the attached ARM template and parameter file for resiliency gaps",
+    "Review the attached Terraform root module and local child modules for zone resiliency",
+    "Review this ARM JSON for availability-zone resiliency while preserving its resource name: `{\"type\":\"Microsoft.Web/serverfarms\",\"apiVersion\":\"2024-11-01\",\"name\":\"contoso-plan\",\"location\":\"eastus2\",\"sku\":{\"name\":\"P1v3\"},\"properties\":{\"zoneRedundant\":false}}`",
+    "Review this Bicep for availability-zone resiliency while preserving the resource name: `resource plan 'Microsoft.Web/serverfarms@2024-11-01' = { name: 'contoso-plan' location: 'eastus2' sku: { name: 'P1v3' } properties: { zoneRedundant: false } }`",
+    "Review this Terraform for availability-zone resiliency while preserving the resource address: `resource \"azurerm_service_plan\" \"api\" { name = \"contoso-plan\" location = \"East US 2\" resource_group_name = \"contoso-rg\" os_type = \"Linux\" sku_name = \"P1v3\" zone_balancing_enabled = false }`",
+    "Show the parent, criticality, and resource-type summary for Service Group `ContosoAppFleetSG`",
+    "Show the zonal-resiliency goal assignment for Service Group `ContosoAppFleetSG`",
+    "Show which visible Service Groups have a zonal-resiliency goal assigned",
+    "Use the attached architecture diagram to identify availability-zone resiliency gaps before deployment",
+    "What does zone resilience mean for an Azure workload?"
+  ],
+  "manage_azure_resiliency_goals": [
+    "Assign a zonal-resiliency goal to Service Group `ContosoAppFleetSG` and ask for confirmation before changing Azure",
+    "Exclude storage account `<storage-account-name>` from the goal for Service Group `ContosoAppFleetSG` with the reason that a custom resiliency solution is used"
+  ],
+  "manage_azure_resiliency_usage_plans": [
+    "Attach an existing Standard Usage Plan to Service Group `ContosoAppFleetSG` only after explicit confirmation",
+    "Create a Standard Azure Resilience Management Usage Plan and ask me for every required value before confirmation"
+  ],
+  "manage_azure_service_groups": [
+    "Add resource group `contoso-rg` as a direct scope member of Service Group `ContosoAppFleetSG`",
+    "Create a nested Azure Service Group under `ContosoAppFleetSG` and ask for confirmation before writing"
+  ],
+  "assess_azure_zonal_resiliency": [
+    "Check the zonal-resiliency prerequisites and blockers for Azure resource `<resource-id>` without making changes",
+    "Show the zonal-resiliency posture of Service Group `ContosoAppFleetSG`"
+  ],
+  "generate_azure_zonal_resiliency_remediation": [
+    "Generate a Bicep replacement scaffold for existing non-zonal NAT Gateway `<resource-id>`",
+    "Generate a PowerShell script to enable zone redundancy on existing Azure resource `<resource-id>`"
+  ],
+  "manage_azure_zonal_resiliency": [
+    "Enable zone redundancy on Azure resource `<resource-id>` only after explicit confirmation"
+  ],
+  "inspect_azure_application_discovery": [
+    "Check whether Discovery Agent `<agent-name>` has Reader access for resource group `<resource-group-name>` without assigning access",
+    "Display the current unchanged automatic-Discovery arrangement preview for Plan Group `<plan-group-id>` revision `<revision>` without applying it",
+    "List the available Discovery Agents for subscription `<subscription-id>`",
+    "List the previous saved Azure application discoveries for subscription `<subscription-id>` without running discovery again",
+    "Show the selected application-resource boundary report from my saved discovery"
+  ],
+  "manage_azure_application_discovery": [
+    "Assign Reader access to Discovery Agent `<agent-name>` for resource group `<resource-group-name>` only after confirmation",
+    "Create a Discovery Agent for subscription `<subscription-id>` and ask for confirmation before creating it",
+    "Create a Service Group arrangement from my latest saved application discovery",
+    "Rename and regroup the proposed automatic-Discovery Service Group arrangement, then show the updated preview",
+    "The Discovery Agent is already configured; run a fresh application discovery for subscription `<subscription-id>`",
+    "Undo the last change to my saved Discovery arrangement"
+  ],
+  "execute_azure_discovery_service_group_plan": [
+    "Apply Plan Group `<plan-group-id>` revision `<revision>` only after showing the exact arrangement and receiving confirmation",
+    "Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing"
+  ],
+  "assess_azure_data_resiliency": [
+    "Analyze why Azure Backup jobs are failing across subscription `<subscription-id>` in the last 7 days and recommend only evidence-backed next steps",
+    "Assess Azure Backup protected-versus-unprotected coverage for Service Group `ContosoAppFleetSG` and attach the complete posture report and chart",
+    "Evaluate Azure VM Backup eligibility for resources `<resource-id-1>` and `<resource-id-2>` without changing Azure",
+    "Explain the restore options and provide the verified recovery portal route for protected resource `<resource-id>` without performing a restore",
+    "Help me configure Azure Site Recovery for VM `<resource-id>` using the supported portal guidance; do not execute ASR configuration",
+    "Help me enable Azure Files Backup for storage account `<resource-id>` using the supported portal workflow; do not perform unsupported native enablement"
+  ],
+  "orchestrate_azure_backup_changes": [
+    "Assess and safely enable Azure VM Backup for `<resource-id>` by guiding vault, policy, disk selection, confirmation, protection, and verification",
+    "Enable Backup for VM `<resource-id>` using existing vault `<vault-name>`, policy `<policy-name>`, and all disks, while still validating eligibility and asking for confirmation",
+    "Guide me through creating the right Recovery Services vault and VM Backup policy for resources `<resource-id-1>` and `<resource-id-2>`",
+    "Improve the Azure Backup security posture of vault `<vault-name>` through the minimum supported confirmed changes"
+  ],
+  "generate_azure_backup_automation": [
+    "Generate a native PowerShell script to configure Azure VM Backup for `<resource-id>` without executing it",
+    "Generate a validated REST script to configure Azure VM Backup for `<resource-id>`",
+    "Generate an Azure CLI script to configure Azure VM Backup for `<resource-id>` without changing Azure",
+    "Generate ARM JSON, Bicep, and Terraform Azure VM Backup automation as separate authoritative artifacts",
+    "Generate one PowerShell script to retrigger the selected failed Azure Backup jobs",
+    "Generate the confirmed customer-run PowerShell script for deleting Recovery Services vault `<vault-name>` after showing its impact"
+  ],
+  "analyze_stay_resilient_drill_outcomes": [
+    "Analyze the recent runs of drill `<drill-name>`, compare their outcomes and failed resources, and attach the complete supporting list",
+    "Compare several drills across my visible Service Groups and explain their different readiness blockers, monitoring dependencies, Recovery Plan relationships, and recent outcomes",
+    "Compare the failed-resource patterns across drills `<drill-name-1>` and `<drill-name-2>` and explain the evidence behind their different outcomes",
+    "Correlate drill `<drill-name>` readiness observations, monitoring evidence, failed resources, and historical runs into one diagnosis"
+  ],
+  "orchestrate_stay_resilient_drill_prerequisites": [
+    "Coordinate the goal, enrollment, Recovery Plan, monitoring, identity, and resource decisions needed before creating the drill for `<service-group>`",
+    "Discover the missing prerequisites for a new drill on `<service-group>`, explain their dependencies, and keep one conversation through the final confirmed proposal",
+    "Guide me through setting up a drill for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, Recovery Plan, and monitoring choices are not yet settled",
+    "Help me choose between SLI and health-model monitoring, resolve the required Recovery Plan and usage enrollment, and then propose the complete drill setup for confirmation"
+  ],
+  "compare_stay_resilient_recovery_plans": [
+    "Compare plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and explain why their resource blockers and recovery outcomes differ",
+    "Compare several Recovery Plans across my visible Service Groups and explain their different blockers, protection choices, recovery groups, and job outcomes",
+    "Compare the recent recovery outcomes and failed-resource patterns of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and attach the complete supporting list",
+    "Correlate the protection choices, recovery order, failed resources, drill relationships, and historical outcomes of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>`"
+  ],
+  "orchestrate_stay_resilient_recovery_prerequisites": [
+    "Coordinate the goal, enrollment, protection, recovery-group, runbook, and resource decisions needed before creating a Recovery Plan for `<service-group>`",
+    "Discover the missing prerequisites and supported protection choices for a new Recovery Plan, then keep one conversation through the confirmed proposal",
+    "Guide me through setting up recovery for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, protection choices, groups, and resources are not yet settled",
+    "Help me design recovery groups, settle protection for several resources, resolve enrollment dependencies, and present one complete plan proposal for confirmation"
   ]
 }
