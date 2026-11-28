@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed `compute disk create` and `compute disk update` splitting `--tags` on spaces instead of commas, as documented, which merged comma-separated tags into a single tag."

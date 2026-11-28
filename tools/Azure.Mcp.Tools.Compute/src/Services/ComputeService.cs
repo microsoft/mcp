@@ -1611,12 +1611,12 @@ public class ComputeService(
             diskData.Tags.Clear();
             if (!string.IsNullOrEmpty(tags))
             {
-                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var pair in tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     var parts = pair.Split('=', 2);
                     if (parts.Length == 2)
                     {
-                        diskData.Tags[parts[0]] = parts[1];
+                        diskData.Tags[parts[0].Trim()] = parts[1].Trim();
                     }
                 }
             }
@@ -1712,12 +1712,12 @@ public class ComputeService(
             diskPatch.Tags.Clear();
             if (!string.IsNullOrEmpty(tags))
             {
-                foreach (var pair in tags.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var pair in tags.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 {
                     var parts = pair.Split('=', 2);
                     if (parts.Length == 2)
                     {
-                        diskPatch.Tags[parts[0]] = parts[1];
+                        diskPatch.Tags[parts[0].Trim()] = parts[1].Trim();
                     }
                 }
             }
