@@ -229,7 +229,7 @@ internal static class StructuredArtifactMarkdownRenderer
             foreach ((string name, double value) in points)
             {
                 markdown.Append("| ")
-                    .Append(EscapeTableCell(name))
+                    .Append(MarkdownRenderingHelpers.EscapeTableCell(name))
                     .Append(" | ")
                     .Append(FormatNumber(value))
                     .AppendLine(" |");
@@ -302,7 +302,7 @@ internal static class StructuredArtifactMarkdownRenderer
             }
 
             markdown.Append("| Category | ")
-                .Append(string.Join(" | ", chartSeries.Select(item => EscapeTableCell(item.Name))))
+                .Append(string.Join(" | ", chartSeries.Select(item => MarkdownRenderingHelpers.EscapeTableCell(item.Name))))
                 .AppendLine(" |")
                 .Append("|---|")
                 .Append(string.Concat(chartSeries.Select(_ => "---:|")))
@@ -310,7 +310,7 @@ internal static class StructuredArtifactMarkdownRenderer
             for (int index = 0; index < categories.Count; index++)
             {
                 markdown.Append("| ")
-                    .Append(EscapeTableCell(categories[index]))
+                    .Append(MarkdownRenderingHelpers.EscapeTableCell(categories[index]))
                     .Append(" | ")
                     .Append(string.Join(" | ", chartSeries.Select(item => FormatNumber(item.Values[index]))))
                     .AppendLine(" |");
@@ -494,13 +494,13 @@ internal static class StructuredArtifactMarkdownRenderer
         foreach (ZonalPostureResource row in rows)
         {
             builder.Append("| [")
-                .Append(EscapeLinkLabel(row.Label))
+                .Append(MarkdownRenderingHelpers.EscapeLinkLabel(row.Label))
                 .Append("](")
-                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId))
                 .Append(") | ")
-                .Append(EscapeTableCell(row.ResourceType))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType))
                 .Append(" | ")
-                .Append(EscapeTableCell(row.Status))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.Status))
                 .AppendLine(" |");
         }
 

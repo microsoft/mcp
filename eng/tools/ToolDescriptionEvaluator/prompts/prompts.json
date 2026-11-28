@@ -905,5 +905,51 @@
   ],
   "resiliencyagent_zonalresiliency_manage": [
     "Enable zone redundancy on Azure resource `<resource-id>` only after explicit confirmation"
+  ],
+  "resiliencyagent_dataresiliency_generate": [
+    "Generate an Azure CLI script to configure Azure VM Backup for `<resource-id>` without changing Azure",
+    "Generate a native PowerShell script to configure Azure VM Backup for `<resource-id>` without executing it",
+    "Generate a validated REST script to configure Azure VM Backup for `<resource-id>`",
+    "Generate ARM JSON, Bicep, and Terraform Azure VM Backup automation as separate authoritative artifacts",
+    "Generate the confirmed customer-run PowerShell script for deleting Recovery Services vault `<vault-name>` after showing its impact",
+    "Generate one PowerShell script to retrigger the selected failed Azure Backup jobs"
+  ],
+  "resiliencyagent_dataresiliency_get": [
+    "Assess Azure Backup protected-versus-unprotected coverage for Service Group `ContosoAppFleetSG` and attach the complete posture report and chart",
+    "Analyze why Azure Backup jobs are failing across subscription `<subscription-id>` in the last 7 days and recommend only evidence-backed next steps",
+    "Evaluate Azure VM Backup eligibility for resources `<resource-id-1>` and `<resource-id-2>` without changing Azure",
+    "Explain the restore options and provide the verified recovery portal route for protected resource `<resource-id>` without performing a restore",
+    "Help me configure Azure Site Recovery for VM `<resource-id>` using the supported portal guidance; do not execute ASR configuration",
+    "Help me enable Azure Files Backup for storage account `<resource-id>` using the supported portal workflow; do not perform unsupported native enablement"
+  ],
+  "resiliencyagent_dataresiliency_manage": [
+    "Assess and safely enable Azure VM Backup for `<resource-id>` by guiding vault, policy, disk selection, confirmation, protection, and verification",
+    "Enable Backup for VM `<resource-id>` using existing vault `<vault-name>`, policy `<policy-name>`, and all disks, while still validating eligibility and asking for confirmation",
+    "Improve the Azure Backup security posture of vault `<vault-name>` through the minimum supported confirmed changes",
+    "Guide me through creating the right Recovery Services vault and VM Backup policy for resources `<resource-id-1>` and `<resource-id-2>`"
+  ],
+  "resiliencyagent_drills_get": [
+    "Compare several drills across my visible Service Groups and explain their different readiness blockers, monitoring dependencies, Recovery Plan relationships, and recent outcomes",
+    "Analyze the recent runs of drill `<drill-name>`, compare their outcomes and failed resources, and attach the complete supporting list",
+    "Correlate drill `<drill-name>` readiness observations, monitoring evidence, failed resources, and historical runs into one diagnosis",
+    "Compare the failed-resource patterns across drills `<drill-name-1>` and `<drill-name-2>` and explain the evidence behind their different outcomes"
+  ],
+  "resiliencyagent_drills_manage": [
+    "Guide me through setting up a drill for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, Recovery Plan, and monitoring choices are not yet settled",
+    "Discover the missing prerequisites for a new drill on `<service-group>`, explain their dependencies, and keep one conversation through the final confirmed proposal",
+    "Help me choose between SLI and health-model monitoring, resolve the required Recovery Plan and usage enrollment, and then propose the complete drill setup for confirmation",
+    "Coordinate the goal, enrollment, Recovery Plan, monitoring, identity, and resource decisions needed before creating the drill for `<service-group>`"
+  ],
+  "resiliencyagent_recoveryplans_get": [
+    "Compare several Recovery Plans across my visible Service Groups and explain their different blockers, protection choices, recovery groups, and job outcomes",
+    "Compare the recent recovery outcomes and failed-resource patterns of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and attach the complete supporting list",
+    "Correlate the protection choices, recovery order, failed resources, drill relationships, and historical outcomes of plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>`",
+    "Compare plans `<recoveryplan-name-1>` and `<recoveryplan-name-2>` and explain why their resource blockers and recovery outcomes differ"
+  ],
+  "resiliencyagent_recoveryplans_manage": [
+    "Guide me through setting up recovery for Service Group `<service-group>` when its zonal goal, Standard Usage Plan, protection choices, groups, and resources are not yet settled",
+    "Discover the missing prerequisites and supported protection choices for a new Recovery Plan, then keep one conversation through the confirmed proposal",
+    "Help me design recovery groups, settle protection for several resources, resolve enrollment dependencies, and present one complete plan proposal for confirmation",
+    "Coordinate the goal, enrollment, protection, recovery-group, runbook, and resource decisions needed before creating a Recovery Plan for `<service-group>`"
   ]
 }
