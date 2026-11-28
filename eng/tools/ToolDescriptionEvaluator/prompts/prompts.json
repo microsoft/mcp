@@ -875,5 +875,35 @@
     "List all recommendations in my subscription",
     "Show me Advisor recommendations in the subscription <subscription>",
     "List all Advisor recommendations in the subscription <subscription>"
+  ],
+  "resiliencyagent_discovery_execute": [
+    "Execute the latest persisted Discovery Service Group arrangement and ask for explicit confirmation before writing",
+    "Apply Plan Group `<plan-group-id>` revision `<revision>` only after showing the exact arrangement and receiving confirmation"
+  ],
+  "resiliencyagent_discovery_get": [
+    "List the previous saved Azure application discoveries for subscription `<subscription-id>` without running discovery again",
+    "Show the selected application-resource boundary report from my saved discovery",
+    "Display the current unchanged automatic-Discovery arrangement preview for Plan Group `<plan-group-id>` revision `<revision>` without applying it",
+    "List the available Discovery Agents for subscription `<subscription-id>`",
+    "Check whether Discovery Agent `<agent-name>` has Reader access for resource group `<resource-group-name>` without assigning access"
+  ],
+  "resiliencyagent_discovery_manage": [
+    "Create a Discovery Agent for subscription `<subscription-id>` and ask for confirmation before creating it",
+    "Assign Reader access to Discovery Agent `<agent-name>` for resource group `<resource-group-name>` only after confirmation",
+    "The Discovery Agent is already configured; run a fresh application discovery for subscription `<subscription-id>`",
+    "Create a Service Group arrangement from my latest saved application discovery",
+    "Rename and regroup the proposed automatic-Discovery Service Group arrangement, then show the updated preview",
+    "Undo the last change to my saved Discovery arrangement"
+  ],
+  "resiliencyagent_zonalresiliency_generate": [
+    "Generate a PowerShell script to enable zone redundancy on existing Azure resource `<resource-id>`",
+    "Generate a Bicep replacement scaffold for existing non-zonal NAT Gateway `<resource-id>`"
+  ],
+  "resiliencyagent_zonalresiliency_get": [
+    "Show the zonal-resiliency posture of Service Group `ContosoAppFleetSG`",
+    "Check the zonal-resiliency prerequisites and blockers for Azure resource `<resource-id>` without making changes"
+  ],
+  "resiliencyagent_zonalresiliency_manage": [
+    "Enable zone redundancy on Azure resource `<resource-id>` only after explicit confirmation"
   ]
 }

@@ -6226,7 +6226,7 @@
     },
     {
       "name": "assess_azure_zonal_resiliency",
-      "description": "Assess deployed zonal-resiliency posture, prerequisites, blockers, eligibility, and enablement readiness for existing Azure resources or Service Groups. Use for questions about current zone redundancy and whether a supported existing resource can be changed. The conversational agent can clarify scope and returns authoritative posture and prerequisite artifacts. This tool does not change Azure and does not generate scripts or templates. A completed backend reply is authoritative and terminal: present it and stop. Never retry, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
+      "description": "Show current deployed zonal-resiliency posture for existing Azure Service Groups or resources, including prerequisites, blockers, eligibility, and enablement readiness. Use for questions about current zone redundancy and whether a supported existing resource can be changed. The conversational agent can clarify scope and returns authoritative posture and prerequisite artifacts. This tool does not change Azure and does not generate scripts or templates. A completed backend reply is authoritative and terminal: present it and stop. Never retry, act on suggestedNextSteps, infer another operation, or call another Resiliency Agent tool without a new explicit user request.",
       "toolMetadata": {
         "destructive": {
           "value": false,

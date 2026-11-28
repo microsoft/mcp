@@ -345,7 +345,7 @@ public sealed class ResiliencyAgentServiceTests
             StringComparison.Ordinal);
         Assert.Contains("Needs \\| review", markdown, StringComparison.Ordinal);
         Assert.Contains(
-            "[storage (one)](https://portal.azure.com/#@/resource/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/storage%20%28one%29)",
+            @"[storage \(one\)](https://portal.azure.com/#@/resource/subscriptions/sub-1/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/storage%20%28one%29)",
             markdown,
             StringComparison.Ordinal);
         Assert.Contains("| Microsoft.Storage/storageAccounts | ZoneRedundant |", markdown, StringComparison.Ordinal);

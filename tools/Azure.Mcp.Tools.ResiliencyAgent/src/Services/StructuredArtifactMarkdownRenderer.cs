@@ -265,13 +265,13 @@ internal static class StructuredArtifactMarkdownRenderer
         foreach (ZonalPostureResource row in rows)
         {
             builder.Append("| [")
-                .Append(EscapeLinkLabel(row.Label))
+                .Append(MarkdownRenderingHelpers.EscapeLinkLabel(row.Label))
                 .Append("](")
-                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId))
                 .Append(") | ")
-                .Append(EscapeTableCell(row.ResourceType))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType))
                 .Append(" | ")
-                .Append(EscapeTableCell(row.Status))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.Status))
                 .AppendLine(" |");
         }
 
@@ -360,16 +360,16 @@ internal static class StructuredArtifactMarkdownRenderer
         foreach (ZonalAssessmentResource row in rows)
         {
             string blockingReasons = row.BlockingReasons.Count > 0
-                ? string.Join("<br>", row.BlockingReasons.Select(EscapeTableCell))
+                ? string.Join("<br>", row.BlockingReasons.Select(MarkdownRenderingHelpers.EscapeTableCell))
                 : "None";
             builder.Append("| [")
-                .Append(EscapeLinkLabel(row.Label))
+                .Append(MarkdownRenderingHelpers.EscapeLinkLabel(row.Label))
                 .Append("](")
-                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId))
                 .Append(") | ")
-                .Append(EscapeTableCell(row.ResourceType))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType))
                 .Append(" | ")
-                .Append(EscapeTableCell(row.Status))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.Status))
                 .Append(" | ")
                 .Append(blockingReasons)
                 .AppendLine(" |");
@@ -440,15 +440,15 @@ internal static class StructuredArtifactMarkdownRenderer
         foreach (ZonalEnablementResource row in rows)
         {
             builder.Append("| [")
-                .Append(EscapeLinkLabel(row.Label))
+                .Append(MarkdownRenderingHelpers.EscapeLinkLabel(row.Label))
                 .Append("](")
-                .Append(BuildPortalResourceUrl(row.ResourceId))
+                .Append(MarkdownRenderingHelpers.BuildPortalResourceUrl(row.ResourceId))
                 .Append(") | ")
-                .Append(EscapeTableCell(row.ResourceType))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.ResourceType))
                 .Append(" | ")
-                .Append(EscapeTableCell(row.Status))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.Status))
                 .Append(" | ")
-                .Append(EscapeTableCell(row.Remarks))
+                .Append(MarkdownRenderingHelpers.EscapeTableCell(row.Remarks))
                 .AppendLine(" |");
         }
 
