@@ -1,0 +1,5 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed POSIX non-terminal npm shutdown forwarding to deliver each request once, preserve requests during startup, and stop the owned server group when its wrapper or native server exits. Terminal and Windows startup paths are unchanged."
+  - section: "Bugs Fixed"
+    description: "Fixed the npm launcher reporting success when the server process was terminated by a signal."

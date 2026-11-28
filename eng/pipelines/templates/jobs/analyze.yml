@@ -26,8 +26,11 @@ jobs:
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
-  - pwsh: node --test eng/npm/test/wrapper.test.js
-    displayName: "Run npm wrapper tests"
+  - pwsh: |
+      $testFiles = @(Get-ChildItem -LiteralPath 'eng/npm/test' -Filter '*.test.js' | ForEach-Object FullName)
+      node --test --test-reporter=tap @testFiles
+      exit $LASTEXITCODE
+    displayName: "Run npm launcher and wrapper tests"
     workingDirectory: $(Build.SourcesDirectory)
 
   # Run AOT analysis only on Linux x64
@@ -61,8 +64,11 @@ jobs:
     inputs:
       version: '24.x'
 
-  - pwsh: node --test eng/npm/test/wrapper.test.js
-    displayName: "Run npm wrapper tests"
+  - pwsh: |
+      $testFiles = @(Get-ChildItem -LiteralPath 'eng/npm/test' -Filter '*.test.js' | ForEach-Object FullName)
+      node --test --test-reporter=tap @testFiles
+      exit $LASTEXITCODE
+    displayName: "Run npm launcher and wrapper tests"
     workingDirectory: $(Build.SourcesDirectory)
 
 - job: NpmWrapperTests_macOS
@@ -81,6 +87,9 @@ jobs:
     inputs:
       version: '24.x'
 
-  - pwsh: node --test eng/npm/test/wrapper.test.js
-    displayName: "Run npm wrapper tests"
+  - pwsh: |
+      $testFiles = @(Get-ChildItem -LiteralPath 'eng/npm/test' -Filter '*.test.js' | ForEach-Object FullName)
+      node --test --test-reporter=tap @testFiles
+      exit $LASTEXITCODE
+    displayName: "Run npm launcher and wrapper tests"
     workingDirectory: $(Build.SourcesDirectory)
