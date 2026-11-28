@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Preserve tierMinimumUnits on pricing get so a tiered meter keeps the volume threshold for each price."
