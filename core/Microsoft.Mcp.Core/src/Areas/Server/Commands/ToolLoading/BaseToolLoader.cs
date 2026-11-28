@@ -469,6 +469,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         {
             meta[McpHelper.LocalRequiredHintMetaKey] = metadata.LocalRequired;
         }
+        Microsoft.Mcp.Core.Areas.Server.McpApps.McpAppRegistry.AddToolMeta(command.Id, meta);
         tool.Meta = meta;
 
         var options = command.GetCommand().Options
