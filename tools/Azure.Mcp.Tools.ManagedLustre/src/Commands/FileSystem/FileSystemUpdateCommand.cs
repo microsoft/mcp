@@ -33,17 +33,17 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
     {
         base.ValidateOptions(options, validationResult);
 
-        if (string.IsNullOrWhiteSpace(options.MaintenanceDay) &&
+        if (!options.MaintenanceDay.HasValue &&
             string.IsNullOrWhiteSpace(options.MaintenanceTime) &&
-            string.IsNullOrWhiteSpace(options.RootSquashMode))
+            !options.RootSquashMode.HasValue)
         {
             validationResult.Errors.Add("At least one of maintenance-day/time or root-squash fields must be provided.");
         }
 
-        ManagedLustreCommonValidators.ValidateRootSquashOptions(validationResult, options.RootSquashMode, options.NoSquashNidList, options.SquashUid, options.SquashGid);
+        ManagedLustreCommonValidators.ValidateRootSquashOptions(validationResult, options.RootSquashMode?.ToString(), options.NoSquashNidList, options.SquashUid, options.SquashGid);
 
-        var updateWithMaintenance = !string.IsNullOrWhiteSpace(options.MaintenanceDay) || !string.IsNullOrWhiteSpace(options.MaintenanceTime);
-        if ((string.IsNullOrWhiteSpace(options.MaintenanceDay) || string.IsNullOrWhiteSpace(options.MaintenanceTime)) && updateWithMaintenance)
+        var updateWithMaintenance = options.MaintenanceDay.HasValue || !string.IsNullOrWhiteSpace(options.MaintenanceTime);
+        if ((!options.MaintenanceDay.HasValue || string.IsNullOrWhiteSpace(options.MaintenanceTime)) && updateWithMaintenance)
         {
             validationResult.Errors.Add("When updating maintenance window, both --maintenance-day and --maintenance-time must be specified.");
         }
@@ -57,9 +57,9 @@ public sealed class FileSystemUpdateCommand(IManagedLustreService service, ILogg
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Name,
-                options.MaintenanceDay,
+                options.MaintenanceDay?.ToString(),
                 options.MaintenanceTime,
-                options.RootSquashMode,
+                options.RootSquashMode?.ToString(),
                 options.NoSquashNidList,
                 options.SquashUid,
                 options.SquashGid,

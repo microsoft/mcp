@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Deploy.Commands.Infrastructure;
     Id = "942b5c00-01dd-4ca0-9596-4cf650ff7934",
     Name = "get",
     Title = "Get IaC (Infrastructure as Code) Rules",
-    Description = "Retrieves curated IaC rules and best practices for creating Bicep or Terraform files compatible with Azure Developer CLI (azd) or Azure CLI deployments. Covers Azure resource configuration standards, naming requirements, and deployment tool constraints that differ from generic IaC guidance. Returns a formatted rules document. Specify deployment tool (AzCli or AZD), IaC type (bicep or terraform), and target resource types.",
+    Description = "Retrieves curated IaC rules and best practices for creating Bicep or Terraform files compatible with Azure Developer CLI (azd) or Azure CLI deployments. Covers Azure resource configuration standards, naming requirements, and deployment tool constraints that differ from generic IaC guidance. Returns a formatted rules document. Specify deployment tool, IaC type, and target resource types.",
     OperationPlane = ToolOperationPlane.NotApplicable,
     Destructive = false,
     Idempotent = true,
@@ -31,7 +31,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
         try
         {
             context.Activity?
-                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
+                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool.ToString())
                 .AddTag(DeployTelemetryTags.IacType, options.IacType)
                 .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
@@ -41,7 +41,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger) : BaseComma
                 .ToArray();
 
             string iacRules = IaCRulesTemplateUtil.GetIaCRules(
-                options.DeploymentTool,
+                options.DeploymentTool.ToString(),
                 options.IacType ?? string.Empty,
                 resourceTypes ?? []);
 

@@ -46,12 +46,6 @@ internal static class DrillActionValidation
         }
     }
 
-    private static readonly HashSet<string> s_modes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Failover",
-        "TestFailover"
-    };
-
     private static readonly HashSet<string> s_attestations = new(StringComparer.OrdinalIgnoreCase)
     {
         "Success",
@@ -71,14 +65,6 @@ internal static class DrillActionValidation
         }
     }
 
-    public static void ValidateMode(string mode, ValidationResult validationResult)
-    {
-        if (!s_modes.Contains(mode))
-        {
-            validationResult.Errors.Add("The drill mode must be either Failover or TestFailover.");
-        }
-    }
-
     public static void ValidateAttestation(string attestation, ValidationResult validationResult)
     {
         if (!s_attestations.Contains(attestation))
@@ -86,9 +72,6 @@ internal static class DrillActionValidation
             validationResult.Errors.Add("The drill attestation must be either Success or Failed.");
         }
     }
-
-    public static string NormalizeMode(string mode) =>
-        mode.Equals("Failover", StringComparison.OrdinalIgnoreCase) ? "Failover" : "TestFailover";
 
     public static string NormalizeAttestation(string attestation) =>
         attestation.Equals("Success", StringComparison.OrdinalIgnoreCase) ? "Success" : "Failed";

@@ -49,13 +49,6 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
             validationResult.Errors.Add("Each --source-locations value must be a non-empty Azure location.");
         }
 
-        if (options.UserConsent is not null &&
-            !string.Equals(options.UserConsent, "Unspecified", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(options.UserConsent, "Allowed", StringComparison.OrdinalIgnoreCase))
-        {
-            validationResult.Errors.Add("--user-consent must be Unspecified or Allowed when specified.");
-        }
-
         RecoveryPlanValidation.ValidateSelectedResourceIds(
             options.SelectedResourceIds,
             options.ServiceGroup,
@@ -72,7 +65,7 @@ public sealed class RecoveryPlanValidateForFailoverCommand(
                 options.RecoveryPlan,
                 options.SourceLocations ?? [],
                 options.SelectedResourceIds,
-                options.UserConsent,
+                options.UserConsent?.ToString(),
                 options.Tenant,
                 cancellationToken);
 

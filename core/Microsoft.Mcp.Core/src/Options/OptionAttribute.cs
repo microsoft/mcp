@@ -14,6 +14,10 @@ namespace Microsoft.Mcp.Core.Options;
 /// </list>
 /// Apply this attribute to override any of these defaults.
 /// </para>
+/// <para>
+/// For a closed set of named string values, use an enum property (nullable when optional).
+/// Its member names are validated during binding and exposed as JSON Schema enum values.
+/// </para>
 /// </summary>
 [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
 public sealed class OptionAttribute : Attribute

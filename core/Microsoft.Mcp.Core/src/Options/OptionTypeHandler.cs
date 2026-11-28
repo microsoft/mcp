@@ -4,6 +4,7 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Microsoft.Mcp.Core.Extensions;
 
 namespace Microsoft.Mcp.Core.Options;
@@ -13,6 +14,8 @@ namespace Microsoft.Mcp.Core.Options;
 /// </summary>
 public sealed class OptionTypeHandler
 {
+    private static readonly ConditionalWeakTable<Option, string[]> s_enumValues = new();
+
     public OptionDescriptor Descriptor { get; }
     public Option Option { get; }
     public Func<ParseResult, object?> Binder { get; }
@@ -79,6 +82,7 @@ public sealed class OptionTypeHandler
         {
             // Handle enum options as Option<string> with constrained values.
             var names = Enum.GetNames(type);
+            s_enumValues.Add(option, names);
             var allowed = string.Join(", ", names);
             var namesSet = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
             option.Validators.Add(result =>
@@ -116,6 +120,10 @@ public sealed class OptionTypeHandler
 
         return optionAndBinder.Value;
     }
+
+    // Enum options bind as strings; discovery must retain the same names that the binder validates.
+    internal static IReadOnlyList<string>? GetEnumValues(Option option) =>
+        s_enumValues.TryGetValue(option, out var values) ? values : null;
 
     private static (Option, Func<ParseResult, object?>)? CreateOptionAndBinder(
         Type type,

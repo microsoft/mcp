@@ -32,7 +32,6 @@ public sealed class DrillStartCommand(ILogger<DrillStartCommand> logger, IResili
     {
         base.ValidateOptions(options, validationResult);
         DrillActionValidation.ValidateResourceNames(options.ServiceGroup, options.Drill, validationResult);
-        DrillActionValidation.ValidateMode(options.Mode, validationResult);
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, DrillStartOptions options, CancellationToken cancellationToken)
@@ -42,7 +41,7 @@ public sealed class DrillStartCommand(ILogger<DrillStartCommand> logger, IResili
             string operationId = await _resilienceManagementService.StartDrillAsync(
                 options.ServiceGroup,
                 options.Drill,
-                DrillActionValidation.NormalizeMode(options.Mode),
+                options.Mode.ToString(),
                 options.Tenant,
                 cancellationToken);
 

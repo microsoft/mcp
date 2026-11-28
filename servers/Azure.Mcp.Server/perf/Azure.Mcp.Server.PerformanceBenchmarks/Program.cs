@@ -5,6 +5,7 @@ using Azure.Mcp.Server.Perf;
 using BenchmarkDotNet.Running;
 
 // --count-tools             : emit tool count + exact token count (names+descriptions)
+// --enum-parameters <exe> <sample> <output> [baseline] : measure enum parameter schema and call tokens
 // --mcp-startup <exe> [serverArgs...]      : time full MCP client initialize+tools/list via SDK (stdio)
 // --mcp-startup-http <exe> [serverArgs...] : time full MCP client initialize+tools/list via SDK (HTTP transport)
 // --mcp-resource <exe> [serverArgs...]     : sample CPU/memory/handles across idle/startup/discovery/steady/soak phases (HTTP transport)
@@ -15,6 +16,17 @@ using BenchmarkDotNet.Running;
 if (args.Length > 0 && args[0] == "--count-tools")
 {
     await ToolCountMeasurement.RunCountToolsAsync();
+    return;
+}
+
+if (args.Length > 0 && args[0] == "--enum-parameters")
+{
+    if (args.Length is not (4 or 5))
+    {
+        throw new ArgumentException("Usage: --enum-parameters <exe> <sample.json> <output.json> [baseline.json]");
+    }
+
+    await EnumParameterMeasurement.RunAsync(args[1], args[2], args[3], args.Length == 5 ? args[4] : null);
     return;
 }
 

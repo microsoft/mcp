@@ -36,6 +36,16 @@ public class OptionInfo(
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ElementType { get; set; } = elementType;
 
+    /// <summary>Allowed names for a scalar enum option.</summary>
+    [JsonPropertyName("enum")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? EnumValues { get; set; }
+
+    /// <summary>Allowed names for each element of an enum collection option.</summary>
+    [JsonPropertyName("elementEnum")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<string>? ElementEnumValues { get; set; }
+
     [JsonPropertyName("required")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool Required { get; set; } = required;

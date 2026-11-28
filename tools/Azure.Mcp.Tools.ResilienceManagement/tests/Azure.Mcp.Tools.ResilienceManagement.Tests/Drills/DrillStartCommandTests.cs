@@ -52,8 +52,10 @@ public sealed class DrillStartCommandTests : CommandUnitTestsBase<DrillStartComm
     }
 
     [Theory]
-    [InlineData("Unsupported", "drill mode")]
-    [InlineData("fail/over", "drill mode")]
+    [InlineData("Unsupported", "--mode")]
+    [InlineData("fail/over", "--mode")]
+    [InlineData("0", "--mode")]
+    [InlineData("Failover,TestFailover", "--mode")]
     public async Task ExecuteAsync_RejectsInvalidMode(string mode, string expectedMessage)
     {
         var response = await ExecuteCommandAsync("--service-group", "sg1", "--drill", "drill1", "--mode", mode);

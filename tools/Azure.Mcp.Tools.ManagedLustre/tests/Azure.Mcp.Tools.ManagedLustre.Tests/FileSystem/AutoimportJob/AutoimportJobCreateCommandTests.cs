@@ -67,11 +67,12 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
     }
 
     [Theory]
-    [InlineData("Fail")]
-    [InlineData("Skip")]
-    [InlineData("OverwriteIfDirty")]
-    [InlineData("OverwriteAlways")]
-    public async Task ExecuteAsync_Succeeds_WithDifferentConflictResolutionModes(string conflictMode)
+    [InlineData("Fail", "Fail")]
+    [InlineData("Skip", "Skip")]
+    [InlineData("OverwriteIfDirty", "OverwriteIfDirty")]
+    [InlineData("OverwriteAlways", "OverwriteAlways")]
+    [InlineData("sKiP", "Skip")]
+    public async Task ExecuteAsync_Succeeds_WithDifferentConflictResolutionModes(string conflictMode, string expectedMode)
     {
         // Arrange
         Service.CreateAutoimportJobAsync(
@@ -79,7 +80,7 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Is(conflictMode),
+            Arg.Is(expectedMode),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
@@ -102,7 +103,7 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            conflictMode,
+            expectedMode,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
             Arg.Any<bool?>(),
@@ -112,9 +113,10 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
     }
 
     [Theory]
-    [InlineData("Enable")]
-    [InlineData("Disable")]
-    public async Task ExecuteAsync_Succeeds_WithDifferentAdminStatus(string adminStatus)
+    [InlineData("Enable", "Enable")]
+    [InlineData("Disable", "Disable")]
+    [InlineData("dIsAbLe", "Disable")]
+    public async Task ExecuteAsync_Succeeds_WithDifferentAdminStatus(string adminStatus, string expectedStatus)
     {
         // Arrange
         Service.CreateAutoimportJobAsync(
@@ -124,7 +126,7 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string[]?>(),
-            Arg.Is(adminStatus),
+            Arg.Is(expectedStatus),
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
@@ -147,11 +149,30 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string[]?>(),
-            adminStatus,
+            expectedStatus,
             Arg.Any<bool?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("--conflict-resolution-mode", "Invalid")]
+    [InlineData("--conflict-resolution-mode", "0")]
+    [InlineData("--admin-status", "Invalid")]
+    [InlineData("--admin-status", "0")]
+    public async Task ExecuteAsync_RejectsInvalidEnumBeforeCallingService(string option, string value)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", _subscription,
+            "--resource-group", _resourceGroup,
+            "--filesystem-name", _fileSystemName,
+            option, value);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(option, response.Message);
+        Assert.DoesNotContain(Service.ReceivedCalls(),
+            call => call.GetMethodInfo().Name == nameof(IManagedLustreService.CreateAutoimportJobAsync));
     }
 
     [Theory]
@@ -270,4 +291,3 @@ public class AutoimportJobCreateCommandTests : SubscriptionCommandUnitTestsBase<
             Arg.Any<CancellationToken>());
     }
 }
-

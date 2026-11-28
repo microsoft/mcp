@@ -14,14 +14,14 @@ public sealed class AutoimportJobCreateOptions : ISubscriptionOption
     [Option(Description = "The name of the autoimport job. If not specified, a timestamped name will be generated.")]
     public string? JobName { get; set; }
 
-    [Option(Description = "How the autoimport job handles conflicts. Fail: stop immediately on conflict. Skip: pass over the conflict. OverwriteIfDirty: delete and re-import if conflicting type, dirty, or currently released. OverwriteAlways: extends OverwriteIfDirty to include releasing restored but not dirty files. Default: Skip. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways.")]
-    public string? ConflictResolutionMode { get; set; }
+    [Option(Description = "How the autoimport job handles conflicts. Fail: stop immediately on conflict. Skip: pass over the conflict. OverwriteIfDirty: delete and re-import if conflicting type, dirty, or currently released. OverwriteAlways: extends OverwriteIfDirty to include releasing restored but not dirty files. Default: Skip.")]
+    public AutoimportConflictResolutionMode? ConflictResolutionMode { get; set; }
 
     [Option(Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data --autoimport-prefixes /logs")]
     public string[]? AutoimportPrefixes { get; set; }
 
-    [Option(Description = ManagedLustreOptionDescriptions.AdminStatus)]
-    public string? AdminStatus { get; set; }
+    [Option(Description = "Whether the autoimport job is active. Defaults to Enable.")]
+    public AutoimportAdminStatus? AdminStatus { get; set; }
 
     [Option(Description = "Whether to enable deletions during auto import. This only affects overwrite-dirty mode. Default: false.")]
     public bool? EnableDeletions { get; set; }

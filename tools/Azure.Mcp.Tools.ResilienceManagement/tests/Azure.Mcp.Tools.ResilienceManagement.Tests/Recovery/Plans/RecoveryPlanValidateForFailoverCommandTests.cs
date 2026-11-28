@@ -29,13 +29,36 @@ public sealed class RecoveryPlanValidateForFailoverCommandTests : CommandUnitTes
 
     [Theory]
     [InlineData("--service-group sg1 --recoveryplan plan1", "source-locations or --selected-resource-ids")]
-    [InlineData("--service-group sg1 --recoveryplan plan1 --source-locations eastus --user-consent Denied", "Unspecified or Allowed")]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --source-locations eastus --user-consent Denied", "--user-consent")]
+    [InlineData("--service-group sg1 --recoveryplan plan1 --source-locations eastus --user-consent 0", "--user-consent")]
     public async Task ExecuteAsync_RejectsInvalidInput(string args, string expectedMessage)
     {
         var response = await ExecuteCommandAsync(args);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains(expectedMessage, response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(Service.ReceivedCalls(),
+            call => call.GetMethodInfo().Name == nameof(IResilienceManagementService.ValidateRecoveryPlanForFailoverAsync));
+    }
+
+    [Theory]
+    [InlineData("unspecified", "Unspecified")]
+    [InlineData("allowed", "Allowed")]
+    public async Task ExecuteAsync_NormalizesConsent(string consent, string expectedConsent)
+    {
+        Service.ValidateRecoveryPlanForFailoverAsync(
+            "sg1", "plan1", Arg.Any<IReadOnlyList<string>>(), null, expectedConsent, null, Arg.Any<CancellationToken>())
+            .Returns(new RecoveryPlanValidateForFailoverResult("operation-id", []));
+
+        var response = await ExecuteCommandAsync(
+            "--service-group", "sg1",
+            "--recoveryplan", "plan1",
+            "--source-locations", "eastus",
+            "--user-consent", consent);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await Service.Received(1).ValidateRecoveryPlanForFailoverAsync(
+            "sg1", "plan1", Arg.Any<IReadOnlyList<string>>(), null, expectedConsent, null, Arg.Any<CancellationToken>());
     }
 
     [Fact]
