@@ -32,6 +32,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
   - [Authentication](#authentication)
     - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
     - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+    - [Azure AI Search with Resource-Level Access](#azure-ai-search-with-resource-level-access)
     - [Service Principal Returns 403 for OneLake Operations in VS Code](#service-principal-returns-403-for-onelake-operations-in-vs-code)
     - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
     - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
@@ -392,6 +393,50 @@ This error indicates that the access token doesn't have sufficient permissions t
     ```
 
     This will prompt you to select your desired account for authentication.
+
+### Azure AI Search with Resource-Level Access
+
+The Search index and knowledge commands connect directly to the named Search service. They do not need to discover
+subscriptions or require subscription-wide roles. `search service list` is different: it discovers services through the
+management plane and still requires access to the requested subscription or resource group.
+
+If a direct Search command returns 401 or 403, check the following:
+
+- **Identity and tenant:** Confirm that MCP uses the same identity and tenant as your working SDK client. In VS Code,
+  the default credential chain can prefer the VS Code account over Azure CLI. Specify `--tenant <tenant-id>` on the
+  Search command to select the service's tenant. Use a GUID to avoid tenant enumeration; tenant display names require
+  discovery permissions. Omitting `--tenant` continues to use the default credential context.
+- **Operation permissions:** Getting or listing indexes, knowledge bases, or knowledge sources requires permission
+  to read their definitions. Querying documents and retrieving content require separate content permissions.
+  The current `search index query` and `search knowledge base retrieve` implementations first read the definition,
+  so they require both types of permission. Search Index Data Reader alone does not grant definition access.
+  Ask your administrator for the required permissions at the Search resource scope, using appropriate built-in or
+  custom roles. Do not grant subscription-wide Owner or Contributor merely to enable these commands.
+  See the [Search role and operation matrix](https://learn.microsoft.com/azure/search/search-security-rbac).
+- **Service configuration:** Check that role-based access is enabled, role assignments have propagated, and the
+  service's firewall or private-endpoint configuration permits requests from the MCP host. A 403 does not by itself
+  prove that the selected tenant or RBAC role is wrong.
+
+For **local Azure CLI authentication**, sign in to the target tenant even when no subscription is available:
+
+```powershell
+az login --tenant <tenant-id> --allow-no-subscriptions
+$env:AZURE_TOKEN_CREDENTIALS = "AzureCliCredential"
+azmcp search index get --service <service> --index <index> --tenant <tenant-id>
+```
+
+For an MCP server launched by an IDE, set `AZURE_TOKEN_CREDENTIALS` in that server's environment and restart it;
+setting the variable in an unrelated terminal does not update a running server. Tenant selection does not change
+the identity or grant additional permissions.
+
+For **remote HTTP authentication**, use the configured server authentication strategy rather than signing in with
+Azure CLI on the server. With OBO, the requested tenant must match the authenticated caller's tenant; `--tenant` cannot
+switch to another caller or bypass their permissions. With hosting-environment identity, that identity needs the
+appropriate resource-scoped permissions.
+
+Support for querying/retrieving with content-reader-only permissions, without preliminary definition reads, is tracked
+separately in [#4053](https://github.com/microsoft/mcp/issues/4053). The current commands do not silently fall back to a
+different query or retrieval mode when definition access is denied.
 
 ### Service Principal Returns 403 for OneLake Operations in VS Code
 

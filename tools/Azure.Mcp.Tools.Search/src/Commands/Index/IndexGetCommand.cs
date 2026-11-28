@@ -39,6 +39,7 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
             var indexes = await _searchService.GetIndexDetails(
                 options.Service,
                 options.Index,
+                options.Tenant,
                 cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
@@ -51,6 +52,15 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger, ISearchServ
 
         return context.Response;
     }
+
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        RequestFailedException { Status: 401 } requestFailed when !requestFailed.Message.Contains("InvalidAuthenticationTokenTenant", StringComparison.OrdinalIgnoreCase) =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        RequestFailedException { Status: 403 } requestFailed =>
+            SearchErrorMessages.Authorization(requestFailed, SearchErrorMessages.Definitions),
+        _ => base.GetErrorMessage(ex)
+    };
 
     public sealed record IndexGetCommandResult(List<IndexInfo> Indexes);
 }

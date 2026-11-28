@@ -16,6 +16,43 @@ namespace Azure.Mcp.Tools.Search.Tests.Index;
 
 public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, ISearchService>
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("11111111-1111-1111-1111-111111111111")]
+    [InlineData("Target tenant")]
+    public async Task ExecuteAsync_ForwardsTenant(string? tenant)
+    {
+        string[] args = ["--service", "service123", "--index", "index1", "--query", "*"];
+        var response = await ExecuteCommandAsync(tenant is null ? args : [.. args, "--tenant", tenant]);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Contains(CommandDefinition.Options, option => option.Name == "--tenant");
+        await Service.Received(1).QueryIndex("service123", "index1", "*", null, null, tenant, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(404)]
+    public async Task ExecuteAsync_PreservesServiceStatus(int status)
+    {
+        Service.QueryIndex("service123", "index1", "*", null, null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, "Search request failed"));
+
+        var response = await ExecuteCommandAsync("--service", "service123", "--index", "index1", "--query", "*");
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.Contains("Search request failed", response.Message);
+        if (status is 401 or 403)
+        {
+            Assert.Contains(SearchErrorMessages.Query, response.Message);
+        }
+        else
+        {
+            Assert.DoesNotContain(SearchErrorMessages.Query, response.Message);
+        }
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsResults_WhenSearchSucceeds()
     {
@@ -46,6 +83,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
@@ -82,6 +120,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -98,6 +137,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(expectedQueryType),
             Arg.Is<string?>(s => s == null),
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -116,6 +156,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
             Arg.Is<string?>(semanticConfiguration),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -136,6 +177,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(IndexQueryType.Semantic),
             Arg.Is<string?>(semanticConfiguration),
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -153,6 +195,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -168,6 +211,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Is<IndexQueryType?>(t => t == null),
             Arg.Is<string?>(s => s == null),
+            null,
             Arg.Any<CancellationToken>());
     }
 
@@ -199,6 +243,7 @@ public class IndexQueryCommandTests : CommandUnitTestsBase<IndexQueryCommand, IS
             Arg.Is(queryText),
             Arg.Any<IndexQueryType?>(),
             Arg.Any<string?>(),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 

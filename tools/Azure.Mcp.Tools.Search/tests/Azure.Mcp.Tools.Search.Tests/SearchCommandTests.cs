@@ -30,6 +30,7 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
         {
             Settings.ResourceBaseName = SanitizedValue;
             Settings.SubscriptionName = SanitizedSubscriptionName;
+            Settings.TenantId = EmptyGuid;
         }
     }
 
@@ -124,7 +125,8 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             "search_index_get",
             new()
             {
-                { "service", Settings.ResourceBaseName }
+                { "service", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
             });
 
         var indexes = result.AssertProperty("indexes");
@@ -139,7 +141,8 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             new()
             {
                 { "service", Settings.ResourceBaseName },
-                { "index", IndexName }
+                { "index", IndexName },
+                { "tenant", Settings.TenantId }
             });
 
         var indexes = result.AssertProperty("indexes");
@@ -162,7 +165,8 @@ public class SearchCommandTests(ITestOutputHelper output, TestProxyFixture fixtu
             {
                 { "service", Settings.ResourceBaseName },
                 { "index", IndexName },
-                { "query", "*" }
+                { "query", "*" },
+                { "tenant", Settings.TenantId }
             });
 
         var results = result.AssertProperty("results");

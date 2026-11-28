@@ -15,6 +15,58 @@ namespace Azure.Mcp.Tools.Search.Tests.Index;
 
 public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearchService>
 {
+    [Theory]
+    [InlineData(null)]
+    [InlineData("11111111-1111-1111-1111-111111111111")]
+    [InlineData("Target tenant")]
+    public async Task ExecuteAsync_ForwardsTenant(string? tenant)
+    {
+        string[] args = ["--service", "service123", "--index", "index1"];
+        var response = await ExecuteCommandAsync(tenant is null ? args : [.. args, "--tenant", tenant]);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Contains(CommandDefinition.Options, option => option.Name == "--tenant");
+        await Service.Received(1).GetIndexDetails("service123", "index1", tenant, TestContext.Current.CancellationToken);
+    }
+
+    [Theory]
+    [InlineData(401)]
+    [InlineData(403)]
+    [InlineData(404)]
+    public async Task ExecuteAsync_PreservesServiceStatus(int status)
+    {
+        Service.GetIndexDetails("service123", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(status, "Search request failed", "SearchError", null));
+
+        var response = await ExecuteCommandAsync("--service", "service123");
+
+        Assert.Equal((HttpStatusCode)status, response.Status);
+        Assert.Contains("Search request failed", response.Message);
+        if (status is 401 or 403)
+        {
+            Assert.Contains(SearchErrorMessages.Definitions, response.Message);
+            Assert.Contains("--tenant", response.Message);
+            Assert.Contains("do not require subscription-wide discovery permissions", response.Message);
+            Assert.DoesNotContain("az login", response.Message);
+        }
+        else
+        {
+            Assert.DoesNotContain(SearchErrorMessages.Definitions, response.Message);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_PreservesTenantMismatchMessage_On401()
+    {
+        Service.GetIndexDetails("service123", null, null, Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(401, "InvalidAuthenticationTokenTenant: token tenant mismatch"));
+
+        var response = await ExecuteCommandAsync("--service", "service123");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("Authentication failed due to a tenant mismatch.", response.Message);
+    }
+
     [Fact]
     public async Task ExecuteAsync_ReturnsIndexes_WhenIndexesExist()
     {
@@ -26,6 +78,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is("service123"),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            null,
             Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
@@ -42,6 +95,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Any<string>(),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -61,6 +115,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
@@ -83,6 +138,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([expectedDefinition]);
 
@@ -108,6 +164,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            null,
             Arg.Any<CancellationToken>())
             .Returns([]);
 
@@ -131,6 +188,7 @@ public class IndexGetCommandTests : CommandUnitTestsBase<IndexGetCommand, ISearc
         Service.GetIndexDetails(
             Arg.Is(serviceName),
             Arg.Is(indexName),
+            null,
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
