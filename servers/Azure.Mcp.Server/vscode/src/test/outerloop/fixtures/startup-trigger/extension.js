@@ -10,7 +10,7 @@
 //      will only spawn it if a chat client actually invokes a tool from
 //      that server, which doesn't happen headlessly in CI.
 //
-//   2. Independently of (1), spawn `npx @azure/mcp@latest server start`
+//   2. Independently of (1), spawn the MCP server under test
 //      from the extension host itself, drive the JSON-RPC handshake as
 //      a stdio MCP client, call the keyvault secret get tool with bogus
 //      args, and capture the resulting `elicitation/create` request
@@ -18,7 +18,7 @@
 //      that log.
 //
 // This proves: VS Code 1.118+ runs the extension host correctly, accepts
-// our MCP server contribution, and the latest published Azure MCP server
+// our MCP server contribution, and the selected Azure MCP server
 // still emits the destructive-tool elicitation prompt verbatim.
 //
 // Env vars (set by the spec on _electron.launch):
@@ -28,6 +28,7 @@
 //                            provider's proxy and the in-extension client
 //                            share this same log; the spec greps it.
 //   - MCP_TEST_NODE_PATH:    absolute path to node.exe (process.execPath).
+//   - MCP_SERVER_EXECUTABLE: absolute path to the MCP server binary under test.
 
 'use strict';
 
@@ -49,9 +50,10 @@ async function activate(context) {
     const proxyScript = process.env.MCP_TEST_PROXY_SCRIPT;
     const proxyLog = process.env.MCP_TEST_PROXY_LOG;
     const nodePath = process.env.MCP_TEST_NODE_PATH;
+    const serverExecutable = process.env.MCP_SERVER_EXECUTABLE;
 
-    if (!proxyScript || !proxyLog || !nodePath) {
-        consoleLog(`missing env vars: MCP_TEST_PROXY_SCRIPT=${proxyScript} MCP_TEST_PROXY_LOG=${proxyLog} MCP_TEST_NODE_PATH=${nodePath}`);
+    if (!proxyScript || !proxyLog || !nodePath || !serverExecutable) {
+        consoleLog(`missing env vars: MCP_TEST_PROXY_SCRIPT=${proxyScript} MCP_TEST_PROXY_LOG=${proxyLog} MCP_TEST_NODE_PATH=${nodePath} MCP_SERVER_EXECUTABLE=${serverExecutable}`);
         return;
     }
 
@@ -65,7 +67,7 @@ async function activate(context) {
     };
     context.subscriptions.push({ dispose: () => { try { logStream.end(); } catch { } } });
 
-    fileLog('EXT', `activate proxyScript=${proxyScript} nodePath=${nodePath}`);
+    fileLog('EXT', `activate proxyScript=${proxyScript} nodePath=${nodePath} serverExecutable=${serverExecutable}`);
 
     // ---- (1) MCP server definition provider registration --------------------
     try {
@@ -80,7 +82,10 @@ async function activate(context) {
                         SERVER_LABEL,
                         nodePath,
                         [proxyScript],
-                        { MCP_PROXY_LOG: proxyLog }
+                        {
+                            MCP_PROXY_LOG: proxyLog,
+                            MCP_SERVER_EXECUTABLE: serverExecutable
+                        }
                     );
                     consoleLog(`provideMcpServerDefinitions returning: ${SERVER_LABEL}`);
                     fileLog('EXT', `provideMcpServerDefinitions returning ${SERVER_LABEL}`);
@@ -114,15 +119,79 @@ async function activate(context) {
 }
 
 async function driveMcpClient(fileLog) {
-    const isWindows = process.platform === 'win32';
-    fileLog('CLIENT', 'spawning npx -y @azure/mcp@latest server start --mode all');
-    const child = spawn('npx', ['-y', '@azure/mcp@latest', 'server', 'start', '--mode', 'all'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        shell: isWindows
+    const serverExecutable = process.env.MCP_SERVER_EXECUTABLE;
+    if (!serverExecutable) {
+        const msg = 'MCP_SERVER_EXECUTABLE env var is required';
+        consoleLog(msg);
+        fileLog('CLIENT', msg);
+        throw new Error(msg);
+    }
+    if (!fs.existsSync(serverExecutable)) {
+        const msg = `MCP_SERVER_EXECUTABLE not found at '${serverExecutable}'`;
+        consoleLog(msg);
+        fileLog('CLIENT', msg);
+        throw new Error(msg);
+    }
+
+    // Pending request id -> resolver
+    const pending = new Map();
+    let nextId = 1;
+    let elicitationSeen = false;
+    let failureReported = false;
+
+    function handleFailure(details) {
+        if (elicitationSeen || failureReported) return;
+        failureReported = true;
+        const msg = `MCP server startup failure: ${details}. executable='${serverExecutable}'`;
+        consoleLog(msg);
+        fileLog('CLIENT', `STARTUP_FAILURE executable='${serverExecutable}' ${details}`);
+        const err = new Error(msg);
+        for (const { reject } of pending.values()) {
+            try { reject(err); } catch { }
+        }
+        pending.clear();
+    }
+
+    fileLog('CLIENT', `spawning ${serverExecutable} server start --mode all`);
+
+    // Test launch seam: if the configured executable is a JavaScript file (used by lifecycle unit tests),
+    // run it via Node.js so that Windows executes it without requiring shell: true.
+    const isJsScript = serverExecutable.toLowerCase().endsWith('.js');
+    const spawnExe = isJsScript ? process.execPath : serverExecutable;
+    const spawnArgs = isJsScript ? [serverExecutable, 'server', 'start', '--mode', 'all'] : ['server', 'start', '--mode', 'all'];
+
+    const child = spawn(spawnExe, spawnArgs, {
+        stdio: ['pipe', 'pipe', 'pipe']
     });
 
-    child.on('error', err => fileLog('CLIENT', `child error: ${err.message}`));
-    child.on('exit', (code, signal) => fileLog('CLIENT', `child exited code=${code} signal=${signal}`));
+    let exitCode = null;
+    let exitSignal = null;
+
+    child.on('error', err => {
+        fileLog('CLIENT', `child error: ${err.message}`);
+        handleFailure(`error=${err.message}`);
+    });
+
+    child.on('exit', (code, signal) => {
+        exitCode = code;
+        exitSignal = signal;
+        fileLog('CLIENT', `child exited code=${code} signal=${signal}`);
+    });
+
+    child.on('close', (code, signal) => {
+        fileLog('CLIENT', `child closed code=${code} signal=${signal}`);
+        const effectiveCode = (code !== null && code !== undefined) ? code : exitCode;
+        const effectiveSignal = signal ?? exitSignal;
+        if (!elicitationSeen) {
+            handleFailure(`unexpected exit code=${effectiveCode} signal=${effectiveSignal}`);
+        } else if (pending.size > 0) {
+            const err = new Error(`MCP server connection closed after elicitation (code=${effectiveCode} signal=${effectiveSignal}).`);
+            for (const { reject } of pending.values()) {
+                try { reject(err); } catch { }
+            }
+            pending.clear();
+        }
+    });
 
     const errLines = readline.createInterface({ input: child.stderr });
     errLines.on('line', line => fileLog('STDERR', line));
@@ -133,10 +202,10 @@ async function driveMcpClient(fileLog) {
         child.stdin.write(line + '\n');
     };
 
-    // Pending request id -> resolver
-    const pending = new Map();
-    let nextId = 1;
     const request = (method, params) => {
+        if (failureReported) {
+            return Promise.reject(new Error(`MCP server startup failed before request '${method}'. executable='${serverExecutable}'`));
+        }
         const id = nextId++;
         return new Promise((resolve, reject) => {
             pending.set(id, { resolve, reject });
@@ -144,8 +213,6 @@ async function driveMcpClient(fileLog) {
         });
     };
     const notify = (method, params) => send({ jsonrpc: '2.0', method, params });
-
-    let elicitationSeen = false;
 
     const outLines = readline.createInterface({ input: child.stdout });
     outLines.on('line', line => {
@@ -216,4 +283,4 @@ async function driveMcpClient(fileLog) {
 
 function deactivate() { }
 
-module.exports = { activate, deactivate };
+module.exports = { activate, deactivate, driveMcpClient };
