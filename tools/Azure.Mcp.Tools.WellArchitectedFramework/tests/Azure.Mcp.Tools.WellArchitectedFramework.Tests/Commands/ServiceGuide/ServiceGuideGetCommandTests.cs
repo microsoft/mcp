@@ -107,8 +107,20 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         // Check for the key parts of the multi-line response
         Assert.Contains($"For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
         Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
-        var serviceGuideUrlPrefix = "https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides";
+        var serviceGuideUrlPrefix = "https://learn.microsoft.com/azure/well-architected/service-guides";
         Assert.Contains(serviceGuideUrlPrefix, result.Guidance[0]);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ReturnsRenderedLearnLink_WhenServiceGuideIsAvailable()
+    {
+        var response = await ExecuteCommandAsync("--service app-service");
+        var result = ValidateAndDeserializeResponse(response, WellArchitectedFrameworkJsonContext.Default.ServiceGuideGetCommandResult);
+
+        Assert.Contains(
+            "https://learn.microsoft.com/azure/well-architected/service-guides/app-service-web-apps",
+            result.Guidance[0]);
+        Assert.DoesNotContain("raw.githubusercontent.com", result.Guidance[0]);
     }
 
     [Fact]
@@ -164,7 +176,7 @@ public class ServiceGuideGetCommandTests : CommandUnitTestsBase<ServiceGuideGetC
         Assert.Contains("For detailed Azure Well-Architected Framework guidance on", result.Guidance[0]);
         Assert.Contains("please refer to the markdown file at this URL:", result.Guidance[0]);
         // azure-sql-database.md should be present in the URL regardless of input variation
-        Assert.Contains("https://raw.githubusercontent.com/MicrosoftDocs/well-architected/main/well-architected/service-guides/azure-sql-database.md", result.Guidance[0]);
+        Assert.Contains("https://learn.microsoft.com/azure/well-architected/service-guides/azure-sql-database", result.Guidance[0]);
     }
 
     /// <summary>
