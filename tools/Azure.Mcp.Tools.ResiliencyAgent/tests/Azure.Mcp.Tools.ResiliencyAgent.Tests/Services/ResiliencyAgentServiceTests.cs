@@ -485,6 +485,44 @@ public sealed class ResiliencyAgentServiceTests
     }
 
     [Theory]
+    [InlineData(null)]
+    [InlineData("application/json")]
+    public void ReadArtifact_RendersZonalPostureWhenMetadataTypeIsMissingOrDifferent(
+        string? metadataType)
+    {
+        const string resourceId =
+            "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.EventHub/namespaces/ehns";
+        using JsonDocument document = CreateDataArtifact(
+            $$"""
+            {
+              "resiliencyAgentArtifactType": "GetZonalPosture",
+              "summary": {
+                "totalResources": 1,
+                "resilientResources": 1,
+                "nonResilientResources": 0
+              },
+              "resources": {
+                "Microsoft.EventHub/namespaces": [{
+                  "resourceId": "{{resourceId}}",
+                  "status": "Enabled"
+                }]
+              }
+            }
+            """,
+            metadataType);
+
+        AgentArtifact artifact = Assert.Single(
+            ResiliencyAgentService.ReadArtifact(document.RootElement));
+
+        Assert.Equal("zonal-resiliency", artifact.Family);
+        Assert.Contains("# Zonal Posture Report", artifact.Content, StringComparison.Ordinal);
+        Assert.Contains(
+            $"[ehns](https://portal.azure.com/#@/resource{resourceId})",
+            artifact.Content,
+            StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(
         """
         {
@@ -587,18 +625,25 @@ public sealed class ResiliencyAgentServiceTests
     }
 
     private static JsonDocument CreateDataArtifact(string data) =>
-        JsonDocument.Parse(
+        CreateDataArtifact(data, "resiliencyagent");
+
+    private static JsonDocument CreateDataArtifact(string data, string? metadataType)
+    {
+        string metadata = metadataType is null
+            ? string.Empty
+            : $",\n              \"metadata\": {{ \"type\": {JsonSerializer.Serialize(metadataType)} }}";
+        return JsonDocument.Parse(
             $$"""
             {
               "name": "zonal-posture-report",
-              "description": "Assessment",
-              "metadata": { "type": "resiliencyagent" },
+              "description": "Assessment"{{metadata}},
               "parts": [{
                 "kind": "data",
                 "data": {{data}}
               }]
             }
             """);
+    }
 
     private static IEnumerable<string> EnumerateScalarText(JsonElement element)
     {

@@ -2,11 +2,17 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using System.Text.Json;
+using Azure.Mcp.Tools.ResiliencyAgent.Commands;
 using Azure.Mcp.Tools.ResiliencyAgent.Commands.Discovery;
 using Azure.Mcp.Tools.ResiliencyAgent.Models;
 using Azure.Mcp.Tools.ResiliencyAgent.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Mcp.Core.Commands;
+using Microsoft.Mcp.Core.Models.Command;
 using Microsoft.Mcp.Tests.Client;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -206,5 +212,74 @@ public sealed class DiscoveryExecuteCommandTests
             "conv-discovery");
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.Status);
+        await Service.DidNotReceive().SendAsync(
+            Arg.Any<string>(),
+            "task-discovery",
+            Arg.Any<string>(),
+            Arg.Any<IReadOnlyList<AgentAttachment>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Theory]
+    [InlineData("decline")]
+    [InlineData("cancel")]
+    public async Task ExecuteAsync_WhenConfirmationIsNotAccepted_DoesNotContinueBackendTask(
+        string action)
+    {
+        Service.SendAsync(
+                "conv-discovery",
+                Arg.Is<string?>(taskId => taskId == null),
+                Arg.Is<string>(request => request.Contains("latest arrangement", StringComparison.Ordinal)),
+                Arg.Any<IReadOnlyList<AgentAttachment>>(),
+                Arg.Any<CancellationToken>())
+            .Returns(new AgentTurn(
+                "conv-discovery",
+                "task-discovery",
+                "input-required",
+                false,
+                true,
+                "Execute the latest arrangement?",
+                []));
+        McpServer server = CreateElicitationServer(action);
+        var context = new CommandContext { McpServer = server };
+
+        CommandResponse response = await ((IBaseCommand)Command).ExecuteAsync(
+            context,
+            CommandDefinition.Parse(
+                [
+                    "--request",
+                    "Execute the latest arrangement",
+                    "--conversation-id",
+                    "conv-discovery",
+                ]),
+            TestContext.Current.CancellationToken);
+        ResiliencyAgentCommandResult result = ValidateAndDeserializeResponse(
+            response,
+            ResiliencyAgentJsonContext.Default.ResiliencyAgentCommandResult,
+            HttpStatusCode.BadRequest);
+
+        Assert.Equal("canceled", result.State);
+        await Service.DidNotReceive().SendAsync(
+            Arg.Any<string>(),
+            "task-discovery",
+            Arg.Any<string>(),
+            Arg.Any<IReadOnlyList<AgentAttachment>>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    private static McpServer CreateElicitationServer(string action)
+    {
+        McpServer server = Substitute.For<McpServer>();
+        server.ClientCapabilities.Returns(new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability { Form = new() },
+        });
+        server.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+            .Returns(new JsonRpcResponse
+            {
+                Id = new RequestId(1),
+                Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = action }),
+            });
+        return server;
     }
 }

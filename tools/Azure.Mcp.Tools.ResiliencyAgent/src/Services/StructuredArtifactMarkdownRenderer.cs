@@ -47,6 +47,18 @@ internal static class StructuredArtifactMarkdownRenderer
         string? format,
         JsonElement data)
     {
+        if (IsZonalResiliencyArtifact(data)
+            && TryRenderResiliencyAgent(artifactName, data, out RenderedMarkdown zonalResiliency))
+        {
+            return new AgentArtifact(
+                ResolveMarkdownFileName(artifactName, zonalResiliency.FileName),
+                description,
+                "text/markdown",
+                zonalResiliency.Content,
+                format,
+                zonalResiliency.Family);
+        }
+
         if (string.Equals(format, "datagrid", StringComparison.OrdinalIgnoreCase)
             && TryRenderDataGrid(artifactName, data, out RenderedMarkdown grid))
         {
@@ -84,6 +96,14 @@ internal static class StructuredArtifactMarkdownRenderer
         }
 
         return null;
+    }
+
+    private static bool IsZonalResiliencyArtifact(JsonElement data)
+    {
+        string? artifactType = ReadString(data, "resiliencyAgentArtifactType");
+        return string.Equals(artifactType, "GetZonalPosture", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artifactType, "CheckPrerequisites", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(artifactType, "SetZonalPosture", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool TryRenderDataGrid(
