@@ -519,6 +519,56 @@ public class SqlService(IAzureService azureService, ILogger<SqlService> logger)
     }
 
     /// <summary>
+    /// Lists the current sensitivity labels on the columns of an Azure SQL database.
+    /// Reads classification metadata through the management plane; no table data is read.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>A list of column sensitivity labels</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<List<SqlDatabaseSensitivityLabel>> ListSensitivityLabelsAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription));
+
+        var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, cancellationToken);
+        var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
+        var labels = new List<SqlDatabaseSensitivityLabel>();
+
+        await foreach (var label in databaseResource.Value.GetCurrentSensitivityLabelsAsync(cancellationToken: cancellationToken))
+        {
+            var data = label.Data;
+            labels.Add(new(
+                SchemaName: data.SchemaName,
+                TableName: data.TableName,
+                ColumnName: data.ColumnName,
+                LabelName: data.LabelName,
+                LabelId: data.LabelId,
+                InformationType: data.InformationType,
+                InformationTypeId: data.InformationTypeId,
+                Rank: data.Rank?.ToString()
+            ));
+        }
+
+        _logger.LogInformation(
+            "Successfully listed SQL database sensitivity labels. Server: {Server}, Database: {Database}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+            serverName, databaseName, resourceGroup, labels.Count);
+
+        return labels;
+    }
+
+    /// <summary>
     /// Creates a firewall rule for an Azure SQL Server.
     /// Firewall rules control which IP addresses are allowed to connect to the SQL server.
     /// </summary>

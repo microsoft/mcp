@@ -5,6 +5,7 @@ using Azure.Mcp.Tools.Sql.Commands.Database;
 using Azure.Mcp.Tools.Sql.Commands.ElasticPool;
 using Azure.Mcp.Tools.Sql.Commands.EntraAdmin;
 using Azure.Mcp.Tools.Sql.Commands.FirewallRule;
+using Azure.Mcp.Tools.Sql.Commands.SensitivityLabel;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,8 @@ public class SqlSetup : IAreaSetup
         services.AddSingleton<DatabaseRenameCommand>();
         services.AddSingleton<DatabaseUpdateCommand>();
         services.AddSingleton<DatabaseDeleteCommand>();
+
+        services.AddSingleton<SensitivityLabelListCommand>();
 
         services.AddSingleton<ServerGetCommand>();
         services.AddSingleton<ServerCreateCommand>();
@@ -58,6 +61,11 @@ public class SqlSetup : IAreaSetup
         database.AddCommand<DatabaseRenameCommand>(serviceProvider);
         database.AddCommand<DatabaseUpdateCommand>(serviceProvider);
         database.AddCommand<DatabaseDeleteCommand>(serviceProvider);
+
+        var sensitivityLabel = new CommandGroup("sensitivity-label", "SQL database sensitivity label (data classification) operations");
+        database.AddSubGroup(sensitivityLabel);
+
+        sensitivityLabel.AddCommand<SensitivityLabelListCommand>(serviceProvider);
 
         var server = new CommandGroup("server", "SQL server operations");
         sql.AddSubGroup(server);

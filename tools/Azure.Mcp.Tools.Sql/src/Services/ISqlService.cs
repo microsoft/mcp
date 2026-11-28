@@ -164,6 +164,22 @@ public interface ISqlService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lists the current sensitivity labels on the columns of a SQL database.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="databaseName">The name of the database</param>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A list of column sensitivity labels</returns>
+    Task<List<SqlDatabaseSensitivityLabel>> ListSensitivityLabelsAsync(
+        string serverName,
+        string databaseName,
+        string resourceGroup,
+        string subscription,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Creates a firewall rule for a SQL server.
     /// </summary>
     /// <param name="serverName">The name of the SQL server</param>

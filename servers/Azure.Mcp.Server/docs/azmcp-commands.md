@@ -5535,6 +5535,13 @@ azmcp sql db rename --subscription <subscription> \
                     --database <current-database-name> \
                     --new-database-name <new-database-name>
 
+# List the current sensitivity labels (data classification) on the columns of a SQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp sql db sensitivity-label list --subscription <subscription> \
+                                    --resource-group <resource-group> \
+                                    --server <server-name> \
+                                    --database <database-name>
+
 # Update an existing SQL database (applies only the provided configuration changes)
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db update --subscription <subscription> \

@@ -1617,6 +1617,9 @@ Unused-resource examples cover Advisor Cost/IdleResources. Follow-ups require a 
 | sql_db_get | Show me the Azure SQL database <database_name> in server <server_name> | none |
 | sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> | none |
 | sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> | none |
+| sql_db_sensitivity-label_list | List the sensitivity labels on the columns of SQL database <database_name> on server <server_name> | none |
+| sql_db_sensitivity-label_list | Which columns in Azure SQL database <database_name> on server <server_name> are classified as confidential? | none |
+| sql_db_sensitivity-label_list | Show me the data classification for SQL database <database_name> on server <server_name> | none |
 | sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> | none |
 | sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU | none |
 
