@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Mcp.Core.Helpers;
+using Microsoft.Mcp.Core.Services.Azure.Authentication;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -31,6 +32,8 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             (nameof(endpoint), endpoint),
             (nameof(from), from),
             (nameof(message), message));
+
+        EnsureSupportedCloud(AzureService.CloudConfiguration.CloudType);
 
         AzureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint,
@@ -110,6 +113,8 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             (nameof(from), from),
             (nameof(subject), subject),
             (nameof(message), message));
+
+        EnsureSupportedCloud(AzureService.CloudConfiguration.CloudType);
 
         AzureService.ValidateAzureServiceEndpoint(
             endpoint: endpoint,
@@ -195,5 +200,17 @@ public class CommunicationService(IAzureService azureService, ILogger<Communicat
             _logger.LogError(ex, "Failed to send email from {Sender} to {ToCount} recipient(s)", from, to.Length);
             throw;
         }
+    }
+
+    private static void EnsureSupportedCloud(AzureCloudConfiguration.AzureCloud cloud)
+    {
+        if (cloud is AzureCloudConfiguration.AzureCloud.AzurePublicCloud
+            or AzureCloudConfiguration.AzureCloud.AzureUSGovernmentCloud)
+        {
+            return;
+        }
+
+        throw new NotSupportedException(
+            $"Azure Communication Services is not supported in the configured Azure cloud. Value given: '{cloud}'.");
     }
 }
