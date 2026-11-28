@@ -1,0 +1,9 @@
+<linker>
+  <assembly fullname="Microsoft.AspNetCore.Components.Endpoints">
+    <attribute fullname="System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute">
+      <argument>Trimming</argument>
+      <argument>IL2101</argument>
+      <property name="Justification">Malformed .NET 11.0.0 embedded linker XML; https://github.com/dotnet/aspnetcore/issues/70236.</property>
+    </attribute>
+  </assembly>
+</linker>

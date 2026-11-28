@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <RepoRoot>$(MSBuildThisFileDirectory)</RepoRoot>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -44,6 +44,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(IsServerProject)' == 'true'">
+    <!-- Keep the .NET version out of server output paths (bin/Debug/azmcp) so docs and scripts survive framework upgrades. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- .NET Tool Package settings -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>

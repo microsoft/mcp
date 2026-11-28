@@ -315,7 +315,7 @@ Set `TestMode` to `Record` in `tools/Azure.Mcp.Tools.ResilienceManagement/tests/
 dotnet test --project tools/Azure.Mcp.Tools.ResilienceManagement/tests/Azure.Mcp.Tools.ResilienceManagement.Tests/Azure.Mcp.Tools.ResilienceManagement.Tests.csproj
 ```
 
-This repository uses .NET SDK 10, Microsoft Testing Platform, and xUnit v3. Use `--project`, and pass MTP options without a `--` separator.
+This repository uses .NET SDK 11, Microsoft Testing Platform, and xUnit v3. Use `--project`, and pass MTP options without a `--` separator.
 
 The failover, finalize, reprotect, retry, and resume not-found theory cases verify invocation and missing-resource handling only. They do not replace successful lifecycle coverage with qualified recovery resources, a failed job for retry, and a paused `ManualAction` job for resume.
 

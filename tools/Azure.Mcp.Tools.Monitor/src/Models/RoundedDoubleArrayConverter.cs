@@ -38,7 +38,11 @@ namespace Azure.Mcp.Tools.Monitor.Models
             writer.WriteStartArray();
             foreach (var item in value)
             {
-                writer.WriteNumberValue(Math.Round(item, 2));
+                // Preserve the scaled midpoint rounding used before .NET 11.
+                var rounded = Math.Abs(item) < 1e16
+                    ? Math.Round(item * 100, MidpointRounding.ToEven) / 100
+                    : item;
+                writer.WriteNumberValue(rounded);
             }
             writer.WriteEndArray();
         }
