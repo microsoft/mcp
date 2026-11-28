@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Improved `azureterraform azapi get` handling of unavailable API versions: it now falls back to the latest stable version with a note instead of failing, accepts `Type@version` input, and suggests close matches for unknown resource types."
