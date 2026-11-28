@@ -1,0 +1,3 @@
+changes:
+  - section: "Bugs Fixed"
+    description: "Fixed the npm launcher reporting success when the server process was terminated by a signal."
