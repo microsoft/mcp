@@ -13,6 +13,7 @@ namespace Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 [CommandMetadata(
     Id = "a7a882cd-1729-49ed-b349-2a79f8c7de56",
     Name = "show",
+    NamespaceOperationName = "get",
     Title = "Get Workbook",
     Description = """
         Retrieve full workbook details via ARM API (includes serializedData content).

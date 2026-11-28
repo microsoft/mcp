@@ -87,7 +87,12 @@ public static partial class ServiceCollectionExtensions
         else if (serverStartOptions.Mode == ModeTypes.NamespaceProxy)
         {
             // Server is configured with either '--mode namespace' or no mode at all, configure for namespace mode.
-            services.AddSingleton<NamespaceToolLoader>();
+            services.AddSingleton(sp => new NamespaceToolLoader(
+                sp.GetRequiredService<ICommandContextAccessor>(),
+                sp.GetRequiredService<ICommandFactory>(),
+                sp.GetRequiredService<IOptions<ServerRuntimeConfiguration>>(),
+                sp.GetRequiredService<ILogger<NamespaceToolLoader>>(),
+                useRelativeNames: sp.GetRequiredService<IOptions<McpServerConfiguration>>().Value.UseRelativeNamespaceCommandNames));
             services.AddSingleton<IToolLoader>(sp =>
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();

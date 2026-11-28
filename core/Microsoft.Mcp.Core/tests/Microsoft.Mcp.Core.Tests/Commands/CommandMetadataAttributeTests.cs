@@ -11,15 +11,15 @@ namespace Microsoft.Mcp.Core.Tests.Commands;
 public sealed class CommandMetadataAttributeTests
 {
     [Fact]
-    public void CommandMetadataAttribute_AllPropertiesAreRequired()
+    public void CommandMetadataAttribute_ContractPropertiesAreRequiredExceptNamespaceOverride()
     {
         var properties = typeof(CommandMetadataAttribute).GetProperties(
             BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
         Assert.NotEmpty(properties);
-        Assert.All(properties, property => Assert.True(
-            property.IsDefined(typeof(RequiredMemberAttribute), inherit: false),
-            $"{property.Name} must be required."));
+        Assert.All(properties, property => Assert.Equal(
+            property.Name != nameof(CommandMetadataAttribute.NamespaceOperationName),
+            property.IsDefined(typeof(RequiredMemberAttribute), inherit: false)));
     }
 
     [Theory]
@@ -49,5 +49,34 @@ public sealed class CommandMetadataAttributeTests
             LocalRequired = false
         };
         Assert.Equal(expected, attr.IsValid());
+    }
+
+    [Theory]
+    [InlineData(null, true)]
+    [InlineData("get", true)]
+    [InlineData("list", true)]
+    [InlineData("", false)]
+    [InlineData(" ", false)]
+    [InlineData("show", false)]
+    [InlineData("GET", false)]
+    public void CommandMetadataAttribute_ValidatesNamespaceOperation(string? operation, bool expected)
+    {
+        var attribute = new CommandMetadataAttribute
+        {
+            Id = "id",
+            Name = "show",
+            NamespaceOperationName = operation,
+            Title = "Title",
+            Description = "Description",
+            OperationPlane = ToolOperationPlane.Control,
+            Destructive = false,
+            Idempotent = true,
+            OpenWorld = false,
+            ReadOnly = true,
+            Secret = false,
+            LocalRequired = false
+        };
+
+        Assert.Equal(expected, attribute.IsValid());
     }
 }
