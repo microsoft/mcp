@@ -2309,6 +2309,7 @@
         "bicepschema_get",
         "get_azure_bestpractices_ai_app",
         "get_azure_bestpractices_get",
+        "get_azure_bestpractices_get_coding_agent",
         "wellarchitectedframework_serviceguide_get"
       ]
     },

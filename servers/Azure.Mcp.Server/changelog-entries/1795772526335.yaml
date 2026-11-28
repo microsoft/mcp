@@ -1,0 +1,3 @@
+﻿changes:
+  - section: "Features Added"
+    description: "Added the 'get azure bestpractices get_coding_agent' tool, which returns focused Azure best-practices guidance for AI coding agents without requiring resource or action arguments."

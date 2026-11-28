@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.AzureBestPractices.Commands;
+using Azure.Mcp.Tools.AzureBestPractices.Commands.CodingAgent;
+using Azure.Mcp.Tools.AzureBestPractices.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
 using Microsoft.Mcp.Core.Commands;
@@ -16,8 +18,10 @@ public class AzureBestPracticesSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IAzureBestPracticesService, AzureBestPracticesService>();
         services.AddSingleton<BestPracticesCommand>();
         services.AddSingleton<AIAppBestPracticesCommand>();
+        services.AddSingleton<CodingAgentBestPracticesGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -44,6 +48,7 @@ public class AzureBestPracticesSetup : IAreaSetup
 
         bestPractices.AddCommand<BestPracticesCommand>(serviceProvider);
         bestPractices.AddCommand<AIAppBestPracticesCommand>(serviceProvider);
+        bestPractices.AddCommand<CodingAgentBestPracticesGetCommand>(serviceProvider);
 
         return bestPractices;
     }

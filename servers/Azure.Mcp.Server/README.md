@@ -1534,7 +1534,7 @@ The Azure MCP Server provides tools for interacting with **45+ Azure service are
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Backup** - Recovery Services vault management, backup policies, protection, jobs, recovery points, governance, and disaster recovery
-- 🛡️ **Azure Best Practices** - Secure, production-grade guidance
+- 🛡️ **Azure Best Practices** - Secure, production-grade guidance, including a focused coding-agent guide for AI agents writing Azure code
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
 - � **Azure Compute** - Virtual Machine, Virtual Machine Scale Set, and Disk management
