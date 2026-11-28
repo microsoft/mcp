@@ -176,3 +176,23 @@ if ($protectedFs) {
 }
 
 Write-Host "Undelete test infrastructure setup complete." -ForegroundColor Cyan
+
+# ─── Protected IaaS VM for read-path tests ───
+# Protects the dedicated Linux VM in the VM backup vault. Enabling protection runs a
+# ConfigureBackup job, so read tests have a protected item, a container and a backup job.
+$vmRsvVaultName = $DeploymentOutputs["VMRSVVAULTNAME"]
+$backupVmName = $DeploymentOutputs["BACKUPVMNAME"]
+
+Write-Host "Protecting $backupVmName in $vmRsvVaultName..." -ForegroundColor Yellow
+$vmRsvVault = Get-AzRecoveryServicesVault -Name $vmRsvVaultName -ResourceGroupName $ResourceGroupName
+$existingVmItem = Get-AzRecoveryServicesBackupItem -VaultId $vmRsvVault.ID -BackupManagementType AzureVM -WorkloadType AzureVM -ErrorAction SilentlyContinue | Where-Object {
+    $_.VirtualMachineId -like "*/virtualMachines/$backupVmName"
+}
+
+if (-not $existingVmItem) {
+    $vmPolicy = Get-AzRecoveryServicesBackupProtectionPolicy -VaultId $vmRsvVault.ID -Name "DefaultPolicy"
+    Enable-AzRecoveryServicesBackupProtection -VaultId $vmRsvVault.ID -Policy $vmPolicy -Name $backupVmName -ResourceGroupName $ResourceGroupName
+    Write-Host "$backupVmName protected in $vmRsvVaultName." -ForegroundColor Green
+} else {
+    Write-Host "$backupVmName already protected in $vmRsvVaultName." -ForegroundColor Gray
+}

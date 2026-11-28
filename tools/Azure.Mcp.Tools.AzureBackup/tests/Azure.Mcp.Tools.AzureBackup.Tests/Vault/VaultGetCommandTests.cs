@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Net;
+using Azure.Identity;
 using Azure.Mcp.Tests.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands;
 using Azure.Mcp.Tools.AzureBackup.Commands.Vault;
@@ -129,6 +130,25 @@ public class VaultGetCommandTests : SubscriptionCommandUnitTestsBase<VaultGetCom
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_ListVaults_CredentialUnavailable_Returns401WithSignInGuidance()
+    {
+        var subscription = "sub123";
+
+        Service.ListVaultsAsync(
+            Arg.Is(subscription),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("No credential available"));
+
+        var response = await ExecuteCommandAsync("--subscription", subscription);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("az login", response.Message);
     }
 
     [Fact]

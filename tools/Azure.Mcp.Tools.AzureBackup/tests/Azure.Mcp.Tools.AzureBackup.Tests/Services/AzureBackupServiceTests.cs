@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Tools.AzureBackup.Models;
 using Azure.Mcp.Tools.AzureBackup.Services;
 using Azure.Mcp.Tools.AzureBackup.Services.Policy;
 using Microsoft.Extensions.Logging;
+using Microsoft.Mcp.Core.Commands;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
@@ -852,6 +854,169 @@ public class AzureBackupServiceTests
 
         Assert.Contains("RSV SDK error", ex.Message);
         Assert.Contains("DPP SDK error", ex.Message);
+    }
+
+    // ------------------------------------------------------------------
+    // NEW-7 regression: when both vault listings fail without a
+    // RequestFailedException, sign-in failures and same-type failures must
+    // surface unchanged instead of becoming InvalidOperationException (422).
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithCredentialUnavailable_RethrowsCredentialUnavailable_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var rsvError = new CredentialUnavailableException("RSV: no credential available");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(rsvError);
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("DPP: no credential available"));
+
+        var ex = await Assert.ThrowsAsync<CredentialUnavailableException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(rsvError, ex);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_DppAuthFailedRsvGeneric_RethrowsAuthenticationFailed_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var dppError = new AuthenticationFailedException("DPP: token request failed");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("RSV: generic failure"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(dppError);
+
+        var ex = await Assert.ThrowsAsync<AuthenticationFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(dppError, ex);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_RfeTakesPrecedenceOverAuthFailure_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("RSV: no credential available"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(403, "Forbidden", "AuthorizationFailed", null));
+
+        var ex = await Assert.ThrowsAsync<RequestFailedException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Equal(403, ex.Status);
+    }
+
+    [Fact]
+    public async Task ListVaultsAsync_BothFailWithSameExceptionType_RethrowsOriginal_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        var rsvError = new HttpRequestException("RSV: connection reset");
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(rsvError);
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("DPP: connection reset"));
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(() =>
+            _service.ListVaultsAsync(sub, resourceGroup: null, vaultType: null, tenant: null, cancellationToken: CancellationToken.None));
+
+        Assert.Same(rsvError, ex);
+    }
+
+    [Fact]
+    public async Task FindUnprotectedResourcesAsync_BothVaultListingsFailWithCredentialUnavailable_RethrowsCredentialUnavailable_New7()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        _rsvOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("RSV: no credential available"));
+        _dppOps.ListVaultsAsync(sub, tenant: null, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new CredentialUnavailableException("DPP: no credential available"));
+
+        await Assert.ThrowsAsync<CredentialUnavailableException>(() =>
+            _service.FindUnprotectedResourcesAsync(sub, resourceTypeFilter: null, resourceGroup: null, tagFilter: null, tenant: null, cancellationToken: CancellationToken.None));
+    }
+
+    // ------------------------------------------------------------------
+    // NEW-6 regression: a full ARM job resource ID must be reduced to the job
+    // name before reaching the SDK, and can identify the vault type.
+    // ------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetJobAsync_FullRsvJobId_PassesJobNameToRsvOps_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        const string jobGuid = "9f1c2a3b-0000-4000-8000-123456789abc";
+        var jobId = $"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault/backupJobs/{jobGuid}";
+        _rsvOps.GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupJobInfo(jobId, jobGuid, "rsv", "Backup", "Completed", null, null, "VM", "vm1"));
+
+        var job = await _service.GetJobAsync("vault", "rg", sub, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken);
+
+        Assert.Equal(jobGuid, job.Name);
+        await _rsvOps.Received(1).GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>());
+        Assert.Single(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_FullDppJobId_InfersDppVaultType_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+        const string jobGuid = "9f1c2a3b-0000-4000-8000-123456789abc";
+        var jobId = $"/subscriptions/{sub}/resourceGroups/rg/providers/Microsoft.DataProtection/backupVaults/vault/backupJobs/{jobGuid}";
+        _dppOps.GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>())
+            .Returns(new BackupJobInfo(jobId, jobGuid, "dpp", "Backup", "Completed", null, null, "Disk", "disk1"));
+
+        await _service.GetJobAsync("vault", "rg", sub, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken);
+
+        await _dppOps.Received(1).GetJobAsync("vault", "rg", sub, jobGuid, null, Arg.Any<CancellationToken>());
+        Assert.Single(_dppOps.ReceivedCalls());
+        Assert.Empty(_rsvOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_MalformedJobId_ThrowsValidationErrorWithoutCallingAzure_New6()
+    {
+        const string sub = "22222222-2222-2222-2222-222222222222";
+
+        var ex = await Assert.ThrowsAsync<CommandValidationException>(() =>
+            _service.GetJobAsync("vault", "rg", sub, "a/b/c", vaultType: "rsv", tenant: null, TestContext.Current.CancellationToken));
+
+        Assert.Contains("--job must be", ex.Message);
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, ex.StatusCode);
+        Assert.Equal(BackupJobIdParser.InvalidFormatMessage, ex.TelemetrySafeMessage);
+        Assert.Empty(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task GetJobAsync_FullJobIdFromOtherSubscription_ThrowsWithoutCallingOps_New6()
+    {
+        // The job ID belongs to a different subscription than the one --subscription resolves to.
+        const string name = "My Production Sub";
+        const string resolvedId = "33333333-3333-3333-3333-333333333333";
+        const string jobSubscription = "22222222-2222-2222-2222-222222222222";
+        var subData = ResourceManager.Models.ResourceManagerModelFactory.SubscriptionData(
+            id: new Azure.Core.ResourceIdentifier($"/subscriptions/{resolvedId}"),
+            subscriptionId: resolvedId,
+            displayName: name,
+            tenantId: null,
+            state: ResourceManager.Resources.Models.SubscriptionState.Enabled);
+        var subResource = Substitute.For<ResourceManager.Resources.SubscriptionResource>();
+        subResource.Data.Returns(subData);
+        _azureService.GetSubscription(name, null, Arg.Any<CancellationToken>()).Returns(subResource);
+        var jobId = $"/subscriptions/{jobSubscription}/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/vault/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var ex = await Assert.ThrowsAsync<CommandValidationException>(() =>
+            _service.GetJobAsync("vault", "rg", name, jobId, vaultType: null, tenant: null, TestContext.Current.CancellationToken));
+
+        Assert.Contains(jobSubscription, ex.Message);
+        Assert.Contains(resolvedId, ex.Message);
+        Assert.Equal(BackupJobIdParser.SubscriptionMismatchTelemetryMessage, ex.TelemetrySafeMessage);
+        Assert.Empty(_rsvOps.ReceivedCalls());
+        Assert.Empty(_dppOps.ReceivedCalls());
     }
 
     // ------------------------------------------------------------------

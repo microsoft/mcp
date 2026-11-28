@@ -66,6 +66,7 @@ words:
   - saphanasystem
   - sched
   - segoe
+  - skiptoken
   - slowvm
   - smarch
   - someitem
@@ -88,6 +89,7 @@ words:
   - toint
   - toolarea
   - toolname
+  - tpid
   - triaging
   - undeletes
   - undeleting
@@ -96,3 +98,4 @@ words:
   - vaultconfig
   - vaultstorageconfig
   - vmappcontainer
+  - vmrsv

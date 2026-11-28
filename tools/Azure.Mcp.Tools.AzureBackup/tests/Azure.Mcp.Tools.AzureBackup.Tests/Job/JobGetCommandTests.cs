@@ -182,6 +182,81 @@ public class JobGetCommandTests : SubscriptionCommandUnitTestsBase<JobGetCommand
         }
     }
 
+    [Theory]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/otherRg/providers/Microsoft.RecoveryServices/vaults/v/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc", "resource group")]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/otherVault/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc", "vault")]
+    [InlineData("/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm1", "--job must be")]
+    [InlineData("a/b/c", "--job must be")]
+    [InlineData("   ", "--job must be")]
+    public async Task ExecuteAsync_RejectsMalformedJob_New6(string job, string expectedMessage)
+    {
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--job", job);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains(expectedMessage, response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_JobIdMismatchingEveryOption_ReportsAllErrorsWithSafeTelemetry_New6()
+    {
+        const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/otherRg/providers/Microsoft.RecoveryServices/vaults/otherVault/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "11111111-1111-1111-1111-111111111111",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--vault-type", "dpp",
+            "--job", jobId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+        Assert.Contains("--resource-group", response.Message);
+        Assert.Contains("--vault '", response.Message);
+        Assert.Contains("--vault-type", response.Message);
+        Assert.DoesNotContain("otherVault", response.TelemetryFailureMessage);
+        Assert.DoesNotContain("otherRg", response.TelemetryFailureMessage);
+        Assert.Contains(BackupJobIdParser.VaultMismatchTelemetryMessage, response.TelemetryFailureMessage);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_RejectsJobIdFromOtherSubscription_New6()
+    {
+        const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "11111111-1111-1111-1111-111111111111",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--job", jobId);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--subscription", response.Message);
+        Assert.Empty(Service.ReceivedCalls());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsFullArmJobId_New6()
+    {
+        const string jobId = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg/providers/Microsoft.RecoveryServices/vaults/v/backupJobs/9f1c2a3b-0000-4000-8000-123456789abc";
+        Service.GetJobAsync(
+            Arg.Is("v"), Arg.Is("rg"), Arg.Is("sub"), Arg.Is(jobId), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(new BackupJobInfo(jobId, "9f1c2a3b-0000-4000-8000-123456789abc", "rsv", "Backup", "Completed", null, null, "VM", "vm1"));
+
+        var response = await ExecuteCommandAsync(
+            "--subscription", "sub",
+            "--vault", "v",
+            "--resource-group", "rg",
+            "--job", jobId);
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+    }
+
     [Fact]
     public void BindOptions_BindsOptionsCorrectly()
     {
