@@ -10,6 +10,11 @@
       "description": "Pull request number (optional - auto-detected from git commit during compilation if not provided)",
       "minimum": 1
     },
+    "contributor": {
+      "type": "string",
+      "description": "GitHub username of the contributor (optional)",
+      "pattern": "^@?[a-zA-Z0-9-]+$"
+    },
     "changes": {
       "type": "array",
       "description": "List of changes in this PR (must have at least one)",
@@ -39,6 +44,11 @@
             "type": "string",
             "description": "Description of the change",
             "minLength": 10
+          },
+          "contributor": {
+            "type": "string",
+            "description": "GitHub username of the contributor for this specific change (optional)",
+            "pattern": "^@?[a-zA-Z0-9-]+$"
           }
         },
         "additionalProperties": false
